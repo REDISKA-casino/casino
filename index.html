@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Казино - Главная</title>
+  <style>
+    :root { --bg: #121212; --panel: #1e1e1e; --text: #e0e0e0; --accent: #ff4757; --gold: #ffd700; --success: #2ed573; }
+    body { background: var(--bg); color: var(--text); font-family: system-ui, sans-serif; margin: 0; display: flex; flex-direction: column; align-items: center; min-height: 100vh; }
+    .container { width: 100%; max-width: 500px; padding: 16px; }
+    h1 { margin: 16px 0; font-weight: 400; text-align: center; font-size: 28px; }
+    .auth-panel { background: var(--panel); padding: 20px; border-radius: 16px; margin-bottom: 20px; border: 2px solid #333; }
+    .auth-tabs { display: flex; gap: 8px; margin-bottom: 16px; }
+    .auth-tab { flex: 1; padding: 10px; border: none; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; background: #2a2a2a; color: #aaa; transition: all 0.2s; }
+    .auth-tab.active { background: var(--accent); color: white; }
+    .auth-form { display: flex; flex-direction: column; gap: 12px; }
+    .auth-input { width: 100%; padding: 12px; border: 1px solid #333; border-radius: 8px; background: #000; color: #fff; font-size: 16px; box-sizing: border-box; }
+    .auth-btn { width: 100%; padding: 14px; border: none; border-radius: 8px; font-size: 16px; font-weight: 600; cursor: pointer; transition: transform 0.1s; }
+    .auth-btn:active { transform: scale(0.98); } .auth-btn:disabled { opacity: 0.4; }
+    .btn-login { background: var(--success); color: white; } .btn-register { background: var(--accent); color: white; }
+    .btn-logout { background: #555; color: white; margin-top: 12px; }
+    .user-info { text-align: center; margin-bottom: 16px; } .user-nickname { font-size: 20px; font-weight: 600; color: var(--gold); }
+    .banned-badge { display: inline-block; background: #ff0000; color: white; padding: 4px 12px; border-radius: 12px; font-size: 12px; margin-top: 4px; }
+    .auth-error { color: #ff4757; font-size: 14px; text-align: center; min-height: 20px; }
+    .checkbox-container { display: flex; align-items: flex-start; gap: 8px; margin: 8px 0; }
+    .checkbox-container input[type="checkbox"] { margin-top: 2px; width: 18px; height: 18px; accent-color: var(--accent); cursor: pointer; flex-shrink: 0; }
+    .checkbox-label { font-size: 13px; color: #aaa; line-height: 1.4; cursor: pointer; user-select: none; }
+    .checkbox-label a { color: var(--gold); text-decoration: underline; cursor: pointer; }
+    .balance-card { background: var(--panel); padding: 20px; border-radius: 16px; text-align: center; margin-bottom: 24px; border: 2px solid #333; }
+    .balance-label { font-size: 16px; color: #aaa; margin-bottom: 8px; }
+    .balance-amount { font-size: 36px; font-weight: bold; background: linear-gradient(135deg, #ffd700, #ffa502); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+    .games-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .game-card { background: var(--panel); padding: 24px; border-radius: 16px; text-align: center; cursor: pointer; transition: transform 0.2s; border: 2px solid #333; text-decoration: none; color: var(--text); display: block; }
+    .game-card:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,0,0,0.5); }
+    .game-icon { font-size: 48px; margin-bottom: 12px; } .game-title { font-size: 18px; font-weight: 600; margin-bottom: 8px; } .game-description { font-size: 12px; color: #aaa; }
+    .crash-card { border-left: 4px solid var(--success); } .roulette-card { border-left: 4px solid var(--accent); } .slots-card { border-left: 4px solid var(--gold); } .mines-card { border-left: 4px solid #ff6b6b; }
+    .banned-message { background: rgba(255,0,0,0.1); border: 2px solid #ff0000; padding: 16px; border-radius: 12px; text-align: center; color: #ff4757; font-weight: bold; margin-bottom: 20px; }
+    .loading { text-align: center; color: #ffa502; padding: 20px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🎰 Lucky Finger <sup>©</sup></h1>
+    <div class="auth-panel" id="auth-panel">
+      <div id="login-form">
+        <div class="auth-tabs"><button class="auth-tab active" id="tab-login">Вход</button><button class="auth-tab" id="tab-register">Регистрация</button></div>
+        <div id="form-login" class="auth-form">
+          <input type="text" class="auth-input" id="login-nickname" placeholder="Никнейм" />
+          <input type="password" class="auth-input" id="login-password" placeholder="Пароль" />
+          <button class="auth-btn btn-login" id="btn-login">Войти</button>
+          <div class="auth-error" id="login-error"></div>
+        </div>
+        <div id="form-register" class="auth-form" style="display:none;">
+          <input type="text" class="auth-input" id="register-nickname" placeholder="Придумайте никнейм" />
+          <input type="password" class="auth-input" id="register-password" placeholder="Придумайте пароль" />
+          <div class="checkbox-container"><input type="checkbox" id="agree-checkbox" /><label class="checkbox-label" for="agree-checkbox">Я соглашаюсь с условиями <a href="pol.html" target="_blank">политики</a> и <a href="con.html" target="_blank">конфиденциальности</a></label></div>
+          <button class="auth-btn btn-register" id="btn-register" disabled>Зарегистрироваться</button>
+          <div class="auth-error" id="register-error"></div>
+        </div>
+      </div>
+      <div id="user-panel" style="display:none;"><div class="user-info"><div>Добро пожаловать,</div><div class="user-nickname" id="current-user"></div><div id="badge-container"></div></div><button class="auth-btn btn-logout" id="btn-logout">Выйти</button></div>
+    </div>
+    <div id="game-section" style="display:none;">
+      <div id="banned-message" class="banned-message" style="display:none;">🚫 Ваш аккаунт заблокирован администратором. Игры недоступны.</div>
+      <div class="balance-card" id="balance-card"><div class="balance-label">Ваш баланс</div><div class="balance-amount" id="main-balance">1 000 ₽</div></div>
+      <div class="games-grid" id="games-grid">
+        <a href="crash.html" class="game-card crash-card"><div class="game-icon">📈</div><div class="game-title">Обвал</div><div class="game-description">Ставка и вывод до обвала!</div></a>
+        <a href="roulette.html" class="game-card roulette-card"><div class="game-icon">🎡</div><div class="game-title">Рулетка</div><div class="game-description">Красное, чёрное или зелёное!</div></a>
+        <a href="slots.html" class="game-card slots-card"><div class="game-icon">🎰</div><div class="game-title">Слоты 777</div><div class="game-description">Крути барабаны!</div></a>
+        <a href="mines.html" class="game-card mines-card"><div class="game-icon">💣</div><div class="game-title">Минное поле</div><div class="game-description">Избегай мин, собирай выигрыш!</div></a>
+        <a href="dice.html" class="game-card slots-card"><div class="game-icon">🎲</div><div class="game-title">Кости</div><div class="game-description">Бросай кубики на удачу!</div></a>
+        <a href="horses.html" class="game-card mines-card"><div class="game-icon">🐴</div><div class="game-title">Скачки</div><div class="game-description">Ставь на лошадь и смотри забег!</div></a>
+        <a href="pyramid.html" class="game-card slots-card"><div class="game-icon">🔺</div><div class="game-title">Пирамида</div><div class="game-description">Найди алмаз под чашей! x3</div></a>
+        <a href="fishing.html" class="game-card crash-card"><div class="game-icon">🎣</div><div class="game-title">Рыбалка</div><div class="game-description">Лови рыбу разных видов!</div></a>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ЗАМЕНИТЕ НА СВОИ ДАННЫЕ:
+    const BIN_ID = '6a516a15f5f4af5e297ecf15'; // ← Замените на ваш Bin ID
+    const MASTER_KEY = '$2a$10$ESWoAwK.zv8By8WZCjzhu.zw1AIOFcUeILyVjiDrHmv62jIxygKoO'; // ← Замените на ваш Master Key
+    const API_URL = `https://api.jsonbin.io/v3/b/${BIN_ID}`;
+    
+    const ADMIN_NICKNAME = 'I-am-admin';
+    const ADMIN_PASSWORD = 'gyhev29net13579';
+    
+    let accountsCache = {};
+    let currentUser = null;
+
+    async function loadAccounts() {
+      try {
+        const response = await fetch(API_URL, {
+          headers: { 'X-Master-Key': MASTER_KEY }
+        });
+        const data = await response.json();
+        accountsCache = data.record || {};
+        if (!accountsCache[ADMIN_NICKNAME]) {
+          accountsCache[ADMIN_NICKNAME] = {
+            password: ADMIN_PASSWORD,
+            balance: 0,
+            created: new Date().toISOString(),
+            banned: false,
+            isAdmin: true
+          };
+          await saveAccounts();
+        }
+        return accountsCache;
+      } catch(e) {
+        console.error('Ошибка загрузки:', e);
+        return {};
+      }
+    }
+
+    async function saveAccounts() {
+      try {
+        await fetch(API_URL, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-Master-Key': MASTER_KEY
+          },
+          body: JSON.stringify(accountsCache)
+        });
+      } catch(e) {
+        console.error('Ошибка сохранения:', e);
+      }
+    }
+
+    function isBanned(nickname) {
+      return accountsCache[nickname] && accountsCache[nickname].banned === true;
+    }
+
+    function getUserBalance() {
+      if (!currentUser) return 1000;
+      return accountsCache[currentUser] ? (accountsCache[currentUser].balance || 0) : 1000;
+    }
+
+    async function updateBalance(newBalance) {
+      if (!currentUser || currentUser === ADMIN_NICKNAME) return;
+      if (accountsCache[currentUser]) {
+        accountsCache[currentUser].balance = newBalance;
+        await saveAccounts();
+      }
+    }
+
+    function updateMainBalance() {
+      document.getElementById('main-balance').textContent = `${getUserBalance().toLocaleString()} ₽`;
+    }
+
+    // Делаем функции доступными для других страниц
+    window.getUserBalance = getUserBalance;
+    window.updateBalance = updateBalance;
+    window.accountsCache = accountsCache;
+    window.loadAccounts = loadAccounts;
+    window.saveAccounts = saveAccounts;
+    window.ADMIN_NICKNAME = ADMIN_NICKNAME;
+    window.ADMIN_PASSWORD = ADMIN_PASSWORD;
+    window.BIN_ID = BIN_ID;
+    window.MASTER_KEY = MASTER_KEY;
+    window.API_URL = API_URL;
+
+    const agreeCheckbox = document.getElementById('agree-checkbox');
+    const btnRegister = document.getElementById('btn-register');
+    agreeCheckbox.addEventListener('change', () => btnRegister.disabled = !agreeCheckbox.checked);
+
+    function showLoginForm() {
+      document.getElementById('login-form').style.display='block'; document.getElementById('user-panel').style.display='none'; document.getElementById('game-section').style.display='none';
+      ['login-nickname','login-password','register-nickname','register-password'].forEach(id=>document.getElementById(id).value='');
+      agreeCheckbox.checked=false; btnRegister.disabled=true;
+    }
+
+    function showUserPanel(nickname) {
+      currentUser = nickname;
+      if(nickname === ADMIN_NICKNAME) { window.location.href = 'admin.html'; return; }
+      document.getElementById('login-form').style.display='none'; document.getElementById('user-panel').style.display='block';
+      document.getElementById('current-user').textContent = nickname;
+      const bc=document.getElementById('badge-container'); const bm=document.getElementById('banned-message');
+      const bal=document.getElementById('balance-card'); const gg=document.getElementById('games-grid');
+      if(isBanned(nickname)) { bc.innerHTML='<span class="banned-badge">🚫 Забанен</span>'; bm.style.display='block'; bal.style.display='none'; gg.style.display='none'; }
+      else { bc.innerHTML=''; bm.style.display='none'; bal.style.display='block'; gg.style.display='grid'; updateMainBalance(); }
+      document.getElementById('game-section').style.display='block';
+    }
+
+    document.getElementById('tab-login').addEventListener('click',function(){this.classList.add('active');document.getElementById('tab-register').classList.remove('active');document.getElementById('form-login').style.display='flex';document.getElementById('form-register').style.display='none';});
+    document.getElementById('tab-register').addEventListener('click',function(){this.classList.add('active');document.getElementById('tab-login').classList.remove('active');document.getElementById('form-register').style.display='flex';document.getElementById('form-login').style.display='none';});
+
+    btnRegister.addEventListener('click', async function() {
+      if(!agreeCheckbox.checked){document.getElementById('register-error').textContent='Необходимо согласиться';return;}
+      const n=document.getElementById('register-nickname').value.trim(); const p=document.getElementById('register-password').value.trim(); const el=document.getElementById('register-error');
+      if(!n||!p){el.textContent='Заполните все поля';return;} if(n.length<3){el.textContent='Никнейм от 3 символов';return;} if(p.length<4){el.textContent='Пароль от 4 символов';return;}
+      if(n===ADMIN_NICKNAME){el.textContent='Никнейм зарезервирован';return;}
+      await loadAccounts();
+      if(accountsCache[n]){el.textContent='Пользователь существует';return;}
+      accountsCache[n]={password:p,balance:1000,created:new Date().toISOString(),banned:false};
+      await saveAccounts();
+      el.style.color='#2ed573'; el.textContent='Успешно!'; setTimeout(()=>showUserPanel(n),500);
+    });
+
+    document.getElementById('btn-login').addEventListener('click', async function() {
+      const n=document.getElementById('login-nickname').value.trim(); const p=document.getElementById('login-password').value.trim(); const el=document.getElementById('login-error');
+      if(!n||!p){el.textContent='Заполните все поля';return;}
+      await loadAccounts();
+      if(n===ADMIN_NICKNAME && p===ADMIN_PASSWORD) { currentUser = ADMIN_NICKNAME; window.location.href='admin.html'; return; }
+      if(!accountsCache[n]){el.textContent='Не найден';return;}
+      if(accountsCache[n].password!==p){el.textContent='Неверный пароль';return;}
+      el.textContent=''; showUserPanel(n);
+    });
+
+    document.getElementById('btn-logout').addEventListener('click',()=>{currentUser=null;showLoginForm();});
+
+    (async function init(){await loadAccounts();if(currentUser){if(currentUser===ADMIN_NICKNAME){window.location.href='admin.html';return;}showUserPanel(currentUser);}else showLoginForm();})();
+  </script>
+</body>
+</html>

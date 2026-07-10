@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Админ-панель</title>
+  <style>
+    :root { --bg: #121212; --panel: #1e1e1e; --text: #e0e0e0; --accent: #ff4757; --gold: #ffd700; --success: #2ed573; }
+    body { background: var(--bg); color: var(--text); font-family: system-ui, sans-serif; margin: 0; display: flex; flex-direction: column; align-items: center; min-height: 100vh; }
+    .container { width: 100%; max-width: 600px; padding: 16px; }
+    .header { display: flex; align-items: center; justify-content: flex-end; margin-bottom: 20px; }
+    .logout-btn { background: #555; color: white; border: none; padding: 8px 16px; border-radius: 8px; font-size: 14px; cursor: pointer; font-weight: bold; }
+    h1 { margin: 16px 0; font-weight: 400; text-align: center; font-size: 24px; color: #ff6b6b; }
+    .admin-info { background: var(--panel); padding: 16px; border-radius: 12px; margin-bottom: 20px; border: 2px solid #ff6b6b; text-align: center; }
+    .stats { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin-bottom: 20px; }
+    .stat-card { background: var(--panel); padding: 16px; border-radius: 12px; text-align: center; border: 1px solid #333; }
+    .stat-value { font-size: 24px; font-weight: bold; color: var(--gold); } .stat-label { font-size: 12px; color: #aaa; margin-top: 4px; }
+    .accounts-list { background: var(--panel); border-radius: 12px; border: 1px solid #333; overflow: hidden; margin-bottom: 16px; }
+    .accounts-header { padding: 16px; border-bottom: 1px solid #333; font-weight: bold; font-size: 18px; text-align: center; background: #1a1a1a; }
+    .account-item { padding: 14px 16px; border-bottom: 1px solid #2a2a2a; } .account-item.banned { background: rgba(255,0,0,0.1); }
+    .account-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+    .account-nickname { font-weight: bold; font-size: 16px; } .account-date { font-size: 12px; color: #aaa; margin-top: 2px; }
+    .account-password { font-size: 12px; color: #ffa502; margin-top: 2px; font-family: monospace; }
+    .account-balance { color: var(--gold); font-weight: bold; font-size: 16px; text-align: right; min-width: 80px; }
+    .admin-badge-small { display: inline-block; background: #ff6b6b; color: white; padding: 2px 8px; border-radius: 8px; font-size: 10px; margin-left: 8px; }
+    .banned-badge-small { display: inline-block; background: #ff0000; color: white; padding: 2px 8px; border-radius: 8px; font-size: 10px; margin-left: 8px; }
+    .btn-group { display: flex; gap: 6px; }
+    .action-btn { border: none; padding: 8px 14px; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: bold; color: white; }
+    .btn-refill { background: #ffa502; color: #000; } .btn-ban { background: #ff4757; } .btn-unban { background: #2ed573; } .btn-delete { background: #ff6348; }
+    .refresh-btn { width: 100%; padding: 12px; border: none; border-radius: 8px; font-size: 14px; cursor: pointer; background: #ffa502; color: #000; font-weight: bold; margin-top: 16px; }
+    .loading { text-align: center; padding: 32px; color: #666; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header"><button class="logout-btn" id="logout-btn">🚪 Выйти</button></div>
+    <h1>🔧 Панель администратора</h1>
+    <div class="admin-info"><div style="font-size:18px;">👑 I-am-admin</div><div style="color:#aaa;">Управление аккаунтами</div></div>
+    <div class="stats">
+      <div class="stat-card"><div class="stat-value" id="total-accounts">0</div><div class="stat-label">Аккаунтов</div></div>
+      <div class="stat-card"><div class="stat-value" id="total-balance">0 ₽</div><div class="stat-label">Общий баланс</div></div>
+      <div class="stat-card"><div class="stat-value" id="banned-count">0</div><div class="stat-label">Забанено</div></div>
+    </div>
+    <div class="accounts-list"><div class="accounts-header">📋 Список аккаунтов</div><div id="accounts-container"><div class="loading">Загрузка...</div></div></div>
+    <button class="refresh-btn" id="refresh-btn">🔄 Обновить</button>
+  </div>
+
+  <script>
+    const BIN_ID = '6a516a15f5f4af5e297ecf15';
+    const MASTER_KEY = '$2a$10$ESWoAwK.zv8By8WZCjzhu.zw1AIOFcUeILyVjiDrHmv62jIxygKoO';
+    const API_URL = `https://api.jsonbin.io/v3/b/${BIN_ID}`;
+    const ADMIN_NICKNAME = 'I-am-admin';
+    
+    let accountsCache = {};
+
+    async function loadAccounts() {
+      try {
+        const r = await fetch(API_URL, { headers: { 'X-Master-Key': MASTER_KEY } });
+        const d = await r.json();
+        accountsCache = d.record || {};
+        return accountsCache;
+      } catch(e) { return {}; }
+    }
+
+    async function saveAccounts() {
+      await fetch(API_URL, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', 'X-Master-Key': MASTER_KEY },
+        body: JSON.stringify(accountsCache)
+      });
+    }
+
+    function renderAccounts() {
+      const container = document.getElementById('accounts-container');
+      const users = Object.entries(accountsCache).filter(([n]) => n !== ADMIN_NICKNAME);
+      let total = 0, banned = 0, html = '';
+      
+      html += `<div class="account-item"><div class="account-top"><div><div class="account-nickname">${ADMIN_NICKNAME} <span class="admin-badge-small">👑</span></div><div class="account-date">Системный</div></div><div class="account-balance">-</div></div></div>`;
+      
+      users.forEach(([n, d]) => {
+        total += d.balance || 0;
+        if (d.banned) banned++;
+        html += `<div class="account-item ${d.banned?'banned':''}">
+          <div class="account-top"><div><div class="account-nickname">${n}${d.banned?' <span class="banned-badge-small">🚫</span>':''}</div><div class="account-date">${new Date(d.created).toLocaleDateString()}</div><div class="account-password">🔑 ${d.password}</div></div><div class="account-balance">${(d.balance||0).toLocaleString()} ₽</div></div>
+          <div class="btn-group">
+            <button class="action-btn btn-refill" onclick="refill('${n}')">💰 Пополнить</button>
+            ${d.banned ? '<button class="action-btn btn-unban" onclick="unban(\''+n+'\')">✓ Разбанить</button>' : '<button class="action-btn btn-ban" onclick="ban(\''+n+'\')">🚫 Забанить</button>'}
+            <button class="action-btn btn-delete" onclick="del('${n}')">🗑</button>
+          </div></div>`;
+      });
+      
+      container.innerHTML = html || '<div class="loading">Нет аккаунтов</div>';
+      document.getElementById('total-accounts').textContent = users.length;
+      document.getElementById('total-balance').textContent = total.toLocaleString() + ' ₽';
+      document.getElementById('banned-count').textContent = banned;
+    }
+
+    window.refill = async function(n) {
+      const a = prompt('Сумма:', '100'); if(!a) return;
+      const am = parseInt(a); if(isNaN(am)||am<=0) return;
+      accountsCache[n].balance = (accountsCache[n].balance||0) + am;
+      await saveAccounts(); renderAccounts();
+    };
+    window.ban = async function(n) { if(confirm('Забанить '+n+'?')) { accountsCache[n].banned=true; await saveAccounts(); renderAccounts(); } };
+    window.unban = async function(n) { if(confirm('Разбанить '+n+'?')) { accountsCache[n].banned=false; await saveAccounts(); renderAccounts(); } };
+    window.del = async function(n) { if(confirm('Удалить '+n+'?')) { delete accountsCache[n]; await saveAccounts(); renderAccounts(); } };
+
+    document.getElementById('logout-btn').onclick = () => { window.location.href = 'index.html'; };
+    document.getElementById('refresh-btn').onclick = async () => { await loadAccounts(); renderAccounts(); };
+
+    (async () => { await loadAccounts(); renderAccounts(); })();
+  </script>
+</body>
+</html>
