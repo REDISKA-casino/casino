@@ -71,19 +71,17 @@
     
     const canvas = document.getElementById('roulette');
     const ctx = canvas.getContext('2d');
-    const SIZE = 300, CX = 150, CY = 150, R = 143, TR = 108, CR = 14;
+    const SIZE = 300, CX = 150, CY = 150, R = 143, TR = 118, CR = 14;
     
     function drawWheel(){
       const sa = 2*Math.PI/SECTORS;
       ctx.clearRect(0,0,SIZE,SIZE);
       
-      // Чёрный фон круга
       ctx.beginPath();
       ctx.arc(CX, CY, R, 0, Math.PI*2);
       ctx.fillStyle = '#000';
       ctx.fill();
       
-      // Сектора
       for(let i=0;i<SECTORS;i++){
         ctx.beginPath(); 
         ctx.moveTo(CX,CY); 
@@ -96,24 +94,22 @@
         ctx.stroke();
       }
       
-      // Цифры (низом к центру — читаются снаружи)
       ctx.fillStyle='#fff'; 
       ctx.font='bold 10px system-ui'; 
       ctx.textAlign='center'; 
       ctx.textBaseline='middle';
       for(let i=0;i<SECTORS;i++){ 
-        const midAngle = i*sa + sa/2 - Math.PI/2; // центр сектора
-        const textAngle = midAngle + Math.PI;
+        const midAngle = i*sa + sa/2 - Math.PI/2;
+        const textAngle = midAngle + Math.PI - Math.PI/2;
         const x = CX + Math.cos(midAngle) * TR;
         const y = CY + Math.sin(midAngle) * TR;
         ctx.save();
         ctx.translate(x, y);
-        ctx.rotate(textAngle); // текст низом к центру
-        ctx.fillText(i.toString(), 0, 10);
+        ctx.rotate(textAngle);
+        ctx.fillText(i.toString(), 0, 0);
         ctx.restore();
       }
       
-      // Центральный круг
       ctx.beginPath(); 
       ctx.arc(CX,CY,CR,0,Math.PI*2); 
       ctx.fillStyle='#fff'; 
