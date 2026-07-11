@@ -27,8 +27,11 @@
     .btn-group { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
     .action-btn { border: none; padding: 10px 10px; border-radius: 6px; cursor: pointer; font-size: 11px; font-weight: bold; color: white; text-align: center; }
     .btn-refill { background: #ffa502; color: #000; } .btn-reduce { background: #e67e22; color: #000; } .btn-ban { background: #ff4757; } .btn-unban { background: #2ed573; } .btn-delete { background: #ff6348; }
+    .btn-reset { background: #c0392b; color: white; }
     .refresh-btn { width: 100%; padding: 12px; border: none; border-radius: 8px; font-size: 14px; cursor: pointer; background: #ffa502; color: #000; font-weight: bold; margin-top: 16px; }
     .loading { text-align: center; padding: 32px; color: #666; }
+    .edit-input { width: 100%; padding: 6px; border: 1px solid #333; border-radius: 4px; background: #000; color: #fff; font-size: 14px; margin-bottom: 6px; box-sizing: border-box; display: none; }
+    .edit-input.active { display: block; }
   </style>
 </head>
 <body>
@@ -51,43 +54,16 @@
     const ADMIN_NICKNAME = 'I-am-admin';
     let accountsCache = {};
 
-    async function loadAcc() { 
-      try { 
-        const r = await fetch(API_URL+'/latest',{headers:{'X-Master-Key':MASTER_KEY}}); 
-        const d = await r.json(); 
-        accountsCache = d.record || {}; 
-      } catch(e) { 
-        console.error('Ошибка загрузки:', e); 
-      } 
-    }
-    
-    async function saveAcc() { 
-      try {
-        await fetch(API_URL, {
-          method: 'PUT',
-          headers: {'Content-Type':'application/json','X-Master-Key':MASTER_KEY},
-          body: JSON.stringify(accountsCache)
-        }); 
-      } catch(e) {
-        console.error('Ошибка сохранения:', e);
-        alert('Ошибка сохранения! Попробуйте позже.');
-      }
-    }
+    async function loadAcc() { try { const r = await fetch(API_URL+'/latest',{headers:{'X-Master-Key':MASTER_KEY}}); const d = await r.json(); accountsCache = d.record || {}; } catch(e) {} }
+    async function saveAcc() { try { await fetch(API_URL,{method:'PUT',headers:{'Content-Type':'application/json','X-Master-Key':MASTER_KEY},body:JSON.stringify(accountsCache)}); } catch(e) {} }
 
-    document.getElementById('logout-btn').onclick = () => {
-      localStorage.removeItem('currentUser');
-      window.location.href = 'index.html';
-    };
+    document.getElementById('logout-btn').onclick = () => { localStorage.removeItem('currentUser'); window.location.href = 'index.html'; };
 
     function render() {
       const users = Object.entries(accountsCache).filter(([n]) => n !== ADMIN_NICKNAME);
       let total = 0, banned = 0, html = '';
       
-      html += `<div class="account-item">
-        <div class="account-nickname">${ADMIN_NICKNAME} <span class="admin-badge-small">👑</span></div>
-        <div class="account-date">Системный аккаунт</div>
-        <div class="account-balance">-</div>
-      </div>`;
+      html += `<div class="account-item"><div class="account-nickname">${ADMIN_NICKNAME} <span class="admin-badge-small">👑</span></div><div class="account-date">Системный аккаунт</div><div class="account-balance">-</div></div>`;
       
       users.forEach(([n, d]) => {
         total += d.balance || 0;
@@ -96,15 +72,14 @@
           <div class="account-nickname">${n}${d.banned?' <span class="banned-badge-small">🚫</span>':''}</div>
           <div class="account-date">Создан: ${new Date(d.created).toLocaleDateString()}</div>
           <div class="account-password">🔑 Пароль: ${d.password}</div>
-          <div class="account-balance">Баланс: ${(d.balance||0).toLocaleString()} ₽</div>
+          <div class="account-balance">💰 Баланс: ${(d.balance||0).toLocaleString()} ₽</div>
+          <input type="number" class="edit-input" id="input-${n}" placeholder="Введите сумму" />
           <div class="btn-group">
-            <button class="action-btn btn-refill" onclick="window.refillAccount('${n}')">💰 Пополнить</button>
-            <button class="action-btn btn-reduce" onclick="window.reduceAccount('${n}')">📉 Уменьшить</button>
-            ${d.banned ? 
-              `<button class="action-btn btn-unban" onclick="window.unbanAccount('${n}')">✓ Разбанить</button>` : 
-              `<button class="action-btn btn-ban" onclick="window.banAccount('${n}')">🚫 Забанить</button>`
-            }
-            <button class="action-btn btn-delete" onclick="window.deleteAccount('${n}')">🗑 Удалить</button>
+            <button class="action-btn btn-refill" onclick="refill('${n}')">💰 Пополнить</button>
+            <button class="action-btn btn-reduce" onclick="reduce('${n}')">📉 Уменьшить</button>
+            <button class="action-btn btn-reset" onclick="resetBal('${n}')">💸 Сбросить до 1000</button>
+            ${d.banned ? '<button class="action-btn btn-unban" onclick="unban(\''+n+'\')">✓ Разбанить</button>' : '<button class="action-btn btn-ban" onclick="ban(\''+n+'\')">🚫 Забанить</button>'}
+            <button class="action-btn btn-delete" onclick="del('${n}')">🗑 Удалить</button>
           </div>
         </div>`;
       });
@@ -115,73 +90,49 @@
       document.getElementById('banned-count').textContent = banned;
     }
 
-    // Привязываем функции к window, чтобы они были доступны из onclick
-    window.refillAccount = async function(n) {
-      const a = prompt('Сумма пополнения:', '100'); 
-      if(!a) return;
-      const am = parseInt(a); 
-      if(isNaN(am)||am<=0) { alert('Введите число больше 0'); return; }
-      if(accountsCache[n]) {
-        accountsCache[n].balance = (accountsCache[n].balance||0) + am;
-        await saveAcc(); 
-        render();
-        alert(`Счёт ${n} пополнен на ${am}₽`);
-      }
-    };
-    
-    window.reduceAccount = async function(n) {
-      const a = prompt('Сумма уменьшения:', '100'); 
-      if(!a) return;
-      const am = parseInt(a); 
-      if(isNaN(am)||am<=0) { alert('Введите число больше 0'); return; }
-      if(accountsCache[n]) {
-        accountsCache[n].balance = Math.max(0, (accountsCache[n].balance||0) - am);
-        await saveAcc(); 
-        render();
-        alert(`Со счёта ${n} списано ${am}₽`);
-      }
-    };
-    
-    window.banAccount = async function(n) { 
-      if(confirm('Забанить аккаунт "' + n + '"?')) { 
-        if(accountsCache[n]) {
-          accountsCache[n].banned = true; 
-          await saveAcc(); 
-          render();
-          alert(`Аккаунт ${n} забанен`);
+    window.refill = async function(n) {
+      const inp = document.getElementById('input-'+n);
+      inp.classList.toggle('active');
+      if(!inp.classList.contains('active')) return;
+      inp.focus();
+      inp.onkeydown = async function(e) {
+        if(e.key === 'Enter') {
+          const am = parseInt(inp.value);
+          if(isNaN(am)||am<=0) { alert('Введите число больше 0'); return; }
+          accountsCache[n].balance = (accountsCache[n].balance||0) + am;
+          await saveAcc(); render(); alert(`Пополнено на ${am}₽`);
         }
-      } 
+      };
     };
     
-    window.unbanAccount = async function(n) { 
-      if(confirm('Разбанить аккаунт "' + n + '"?')) { 
-        if(accountsCache[n]) {
-          accountsCache[n].banned = false; 
-          await saveAcc(); 
-          render();
-          alert(`Аккаунт ${n} разбанен`);
+    window.reduce = async function(n) {
+      const inp = document.getElementById('input-'+n);
+      inp.classList.toggle('active');
+      if(!inp.classList.contains('active')) return;
+      inp.focus();
+      inp.onkeydown = async function(e) {
+        if(e.key === 'Enter') {
+          const am = parseInt(inp.value);
+          if(isNaN(am)||am<=0) { alert('Введите число больше 0'); return; }
+          accountsCache[n].balance = Math.max(0, (accountsCache[n].balance||0) - am);
+          await saveAcc(); render(); alert(`Уменьшено на ${am}₽`);
         }
-      } 
-    };
-    
-    window.deleteAccount = async function(n) { 
-      if(confirm('Удалить аккаунт "' + n + '" навсегда?')) { 
-        delete accountsCache[n]; 
-        await saveAcc(); 
-        render();
-        alert(`Аккаунт ${n} удалён`);
-      } 
+      };
     };
 
-    document.getElementById('refresh-btn').onclick = async () => { 
-      await loadAcc(); 
-      render(); 
+    window.resetBal = async function(n) {
+      if(confirm(`Сбросить баланс ${n} до 1000₽?`)) {
+        accountsCache[n].balance = 1000;
+        await saveAcc(); render(); alert('Баланс сброшен до 1000₽');
+      }
     };
     
-    (async () => { 
-      await loadAcc(); 
-      render(); 
-    })();
+    window.ban = async function(n) { if(confirm('Забанить '+n+'?')) { accountsCache[n].banned=true; await saveAcc(); render(); } };
+    window.unban = async function(n) { if(confirm('Разбанить '+n+'?')) { accountsCache[n].banned=false; await saveAcc(); render(); } };
+    window.del = async function(n) { if(confirm('Удалить '+n+'?')) { delete accountsCache[n]; await saveAcc(); render(); } };
+
+    document.getElementById('refresh-btn').onclick = async () => { await loadAcc(); render(); };
+    (async () => { await loadAcc(); render(); })();
   </script>
 </body>
 </html>
