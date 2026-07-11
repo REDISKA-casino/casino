@@ -52,7 +52,7 @@
     const API_URL = `https://api.jsonbin.io/v3/b/${BIN_ID}`;
     
     let balance = 1000, bet = 0, isSpinning = false, selectedColor = null, accountsCache = {};
-    const currentUser = sessionStorage.getItem('currentUser');
+    const currentUser = localStorage.getItem('currentUser');
     if (!currentUser) window.location.href = 'index.html';
     const SECTORS = 37, sectorColors = [];
     for(let i=0;i<SECTORS;i++){ if(i===0)sectorColors[i]='green'; else if(i%2===0)sectorColors[i]='black'; else sectorColors[i]='red'; }
