@@ -11,12 +11,13 @@
     .back-btn { background: var(--panel); color: var(--text); border: 1px solid #333; padding: 8px 16px; border-radius: 8px; font-size: 14px; cursor: pointer; text-decoration: none; display: inline-block; }
     h1 { margin: 16px 0; font-weight: 400; }
     .game-container { width: 100%; max-width: 500px; padding: 16px; }
-    .roulette-wrapper { width: 300px; height: 300px; margin: 0 auto 16px auto; position: relative; }
-    canvas { display: block; width: 300px; height: 300px; border: 2px solid #444; border-radius: 50%; background: #000; }
+    .roulette-wrapper { width: 280px; height: 280px; margin: 0 auto 16px auto; position: relative; }
+    canvas { display: block; width: 280px; height: 280px; border: 2px solid #444; border-radius: 50%; background: #000; }
     .indicator { position: absolute; top: 2px; left: 50%; transform: translateX(-50%); width: 0; height: 0; border-left: 10px solid transparent; border-right: 10px solid transparent; border-top: 18px solid #fff; z-index: 10; filter: drop-shadow(0 2px 2px rgba(0,0,0,0.8)); }
     .status-text { text-align: center; font-size: 20px; font-weight: bold; margin-bottom: 12px; min-height: 28px; }
     .bet-controls { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-bottom: 12px; }
     .color-btn { padding: 14px; border: none; border-radius: 8px; font-size: 18px; font-weight: bold; cursor: pointer; color: white; text-align: center; }
+    .color-btn:disabled { opacity: 0.5; }
     .btn-red { background: #ff4757; } .btn-black { background: #000; border: 1px solid #333; } .btn-green { background: #00b894; }
     .controls-box { background: var(--panel); padding: 16px; border-radius: 12px; text-align: center; }
     .balance-box { display: flex; justify-content: space-between; padding: 8px 0; margin-bottom: 12px; font-size: 18px; }
@@ -70,7 +71,7 @@
     
     const canvas = document.getElementById('roulette');
     const ctx = canvas.getContext('2d');
-    const SIZE = 300, CX = 150, CY = 150, R = 140, TR = 110, CR = 14;
+    const SIZE = 280, CX = 140, CY = 140, R = 130, TR = 100, CR = 12;
     
     function drawWheel(){
       const sa = 2*Math.PI/SECTORS;
@@ -80,22 +81,27 @@
         ctx.fillStyle=colors[i]==='green'?'#00b894':colors[i]==='red'?'#ff4757':'#000'; ctx.fill();
         ctx.strokeStyle='#222'; ctx.lineWidth=0.5; ctx.stroke();
       }
-      ctx.fillStyle='#fff'; ctx.font='bold 11px system-ui'; ctx.textAlign='center'; ctx.textBaseline='middle';
+      ctx.fillStyle='#fff'; ctx.font='bold 10px system-ui'; ctx.textAlign='center'; ctx.textBaseline='middle';
       for(let i=0;i<SECTORS;i++){ const a=i*sa+sa/2-Math.PI/2; ctx.fillText(i,CX+Math.cos(a)*TR,CY+Math.sin(a)*TR); }
       ctx.beginPath(); ctx.arc(CX,CY,CR,0,Math.PI*2); ctx.fillStyle='#fff'; ctx.fill(); ctx.strokeStyle='#333'; ctx.lineWidth=2; ctx.stroke();
     }
     drawWheel();
     
     function setSelected(s,...o){ s.style.border='2px solid #fff'; o.forEach(b=>{b.style.border=b.classList.contains('btn-black')?'1px solid #333':'none';}); }
-    document.getElementById('btn-red').onclick=()=>{selectedColor='red';setSelected(document.getElementById('btn-red'),document.getElementById('btn-black'),document.getElementById('btn-green'));};
-    document.getElementById('btn-black').onclick=()=>{selectedColor='black';setSelected(document.getElementById('btn-black'),document.getElementById('btn-red'),document.getElementById('btn-green'));};
-    document.getElementById('btn-green').onclick=()=>{selectedColor='green';setSelected(document.getElementById('btn-green'),document.getElementById('btn-red'),document.getElementById('btn-black'));};
+    document.getElementById('btn-red').onclick=()=>{if(isSpinning)return;selectedColor='red';setSelected(document.getElementById('btn-red'),document.getElementById('btn-black'),document.getElementById('btn-green'));};
+    document.getElementById('btn-black').onclick=()=>{if(isSpinning)return;selectedColor='black';setSelected(document.getElementById('btn-black'),document.getElementById('btn-red'),document.getElementById('btn-green'));};
+    document.getElementById('btn-green').onclick=()=>{if(isSpinning)return;selectedColor='green';setSelected(document.getElementById('btn-green'),document.getElementById('btn-red'),document.getElementById('btn-black'));};
     
     document.getElementById('btn-spin').onclick=()=>{
       if(isSpinning||!selectedColor)return;
       bet=+document.getElementById('bet-input').value;
       if(!bet||bet<=0||bet>balance){alert('Некорректная ставка');return;}
-      isSpinning=true; document.getElementById('btn-spin').disabled=true; balance-=bet; saveBal();
+      isSpinning=true; 
+      document.getElementById('btn-spin').disabled=true;
+      document.getElementById('btn-red').disabled=true;
+      document.getElementById('btn-black').disabled=true;
+      document.getElementById('btn-green').disabled=true;
+      balance-=bet; saveBal();
       
       const target=Math.floor(Math.random()*SECTORS);
       const targetAngle = 360 - ((target/SECTORS)*360 + (360/SECTORS/2));
@@ -108,7 +114,11 @@
       setTimeout(() => {
         canvas.style.transition = 'none';
         canvas.style.transform = `rotate(${targetAngle}deg)`;
-        isSpinning=false; document.getElementById('btn-spin').disabled=false;
+        isSpinning=false; 
+        document.getElementById('btn-spin').disabled=false;
+        document.getElementById('btn-red').disabled=false;
+        document.getElementById('btn-black').disabled=false;
+        document.getElementById('btn-green').disabled=false;
         const c=colors[target]; let w=0;
         if(c===selectedColor)w=c==='green'?bet*10:bet*2;
         balance+=w; saveBal();
