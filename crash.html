@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+      <!DOCTYPE html>
 <html lang="ru">
 <head>
   <meta charset="UTF-8" />
@@ -40,49 +40,43 @@
     <div class="history-box" id="history-box">История раундов</div>
   </div>
   <script>
-    const BIN_ID = '6a516a15f5f4af5e297ecf15';
-    const MASTER_KEY = '$2a$10$ESWoAwK.zv8By8WZCjzhu.zw1AIOFcUeILyVjiDrHmv62jIxygKoO';
-    const API_URL = `https://api.jsonbin.io/v3/b/${BIN_ID}`;
-    
-    let balance = 1000, bet = 0, isPlaying = false, crashMultiplier = 0, currentMultiplier = 1, animationFrameId;
-    let accountsCache = {};
-    const currentUser = localStorage.getItem('currentUser');
-    if (!currentUser) window.location.href = 'index.html';
-    
-    const MAX_CRASH = 10, SPEED_MULTIPLIER = 0.010;
-    
-    async function loadAcc() { try { const r = await fetch(API_URL+'/latest',{headers:{'X-Master-Key':MASTER_KEY}}); const d = await r.json(); accountsCache = d.record||{}; } catch(e) {} }
-    async function saveAcc() { try { await fetch(API_URL,{method:'PUT',headers:{'Content-Type':'application/json','X-Master-Key':MASTER_KEY},body:JSON.stringify(accountsCache)}); } catch(e) {} }
-    async function updateBal() { if(accountsCache[currentUser]){ accountsCache[currentUser].balance = balance; await saveAcc(); } document.getElementById('balance-display').textContent = `${balance.toLocaleString()} ₽`; }
-    
-    async function init() { await loadAcc(); balance = accountsCache[currentUser] ? (accountsCache[currentUser].balance||1000) : 1000; updateBal(); document.getElementById('status-text').textContent='Готов к игре'; resize(); }
-    
-    function resize() { const c=document.getElementById('graph'),w=document.getElementById('graph-wrapper').clientWidth,h=document.getElementById('graph-wrapper').clientHeight,dpr=window.devicePixelRatio||1; c.width=w*dpr; c.height=h*dpr; c.style.width=w+'px'; c.style.height=h+'px'; c.getContext('2d').setTransform(dpr,0,0,dpr,0,0); }
-    window.addEventListener('resize',resize);
-    
-    document.getElementById('btn-start').onclick = () => { if(isPlaying)return; bet=+document.getElementById('bet-input').value; if(!bet||bet<=0||bet>balance){alert('Некорректная ставка');return;} startRound(); };
-    document.getElementById('btn-cashout').onclick = () => { if(isPlaying) endRound(true); };
-    
-    function startRound() { isPlaying=true; document.getElementById('bet-input').disabled=true; document.getElementById('btn-start').style.display='none'; document.getElementById('btn-cashout').style.display='block'; document.getElementById('status-text').textContent='Игра идёт…'; document.getElementById('status-text').style.color='#ffa502'; balance-=bet; updateBal(); crashMultiplier=1+9*Math.pow(Math.random(),3); currentMultiplier=1; drawGraph(); }
-    
-    function drawGraph() {
-      const c=document.getElementById('graph'),ctx=c.getContext('2d'),w=document.getElementById('graph-wrapper').clientWidth,h=c.height/(window.devicePixelRatio||1);
-      ctx.clearRect(0,0,w,h); const vM=20,uH=h-vM*2,sX=w/MAX_CRASH,sY=uH/MAX_CRASH;
-      ctx.strokeStyle='#333'; ctx.lineWidth=1;
-      for(let m=0;m<=MAX_CRASH;m++){ctx.beginPath();ctx.moveTo(m*sX,0);ctx.lineTo(m*sX,h);ctx.stroke();ctx.beginPath();ctx.moveTo(0,h-m*sY-vM);ctx.lineTo(w,h-m*sY-vM);ctx.stroke();}
-      ctx.fillStyle='#444';ctx.font='11px system-ui';ctx.textAlign='right';
-      for(let m=1;m<=MAX_CRASH;m++)ctx.fillText(m.toFixed(1),16,h-m*sY-vM+4);
-      ctx.strokeStyle='#2ed573';ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(0,h-vM);
-      function animate(){if(!isPlaying)return;currentMultiplier+=SPEED_MULTIPLIER;if(currentMultiplier>=crashMultiplier){endRound(false);return;}ctx.lineTo(currentMultiplier*sX,h-currentMultiplier*sY-vM);ctx.stroke();animationFrameId=requestAnimationFrame(animate);}
-      animationFrameId=requestAnimationFrame(animate);
-    }
-    
-    function endRound(won){ isPlaying=false; cancelAnimationFrame(animationFrameId); document.getElementById('btn-start').style.display='block'; document.getElementById('btn-cashout').style.display='none'; document.getElementById('bet-input').disabled=false;
-      if(won){ const w=Math.floor(bet*currentMultiplier); balance+=w; document.getElementById('status-text').textContent=`Выведено: ${currentMultiplier.toFixed(2)}x`; document.getElementById('status-text').style.color='#2ed573'; }
-      else { document.getElementById('status-text').textContent=`Обвал на ${crashMultiplier.toFixed(2)}x`; document.getElementById('status-text').style.color='#ff4757'; }
-      updateBal(); }
-    
-    init();
+    setTimeout(async function() {
+      const BIN_ID = '6a516a15f5f4af5e297ecf15';
+      const MASTER_KEY = '$2a$10$ESWoAwK.zv8By8WZCjzhu.zw1AIOFcUeILyVjiDrHmv62jIxygKoO';
+      const API_URL = `https://api.jsonbin.io/v3/b/${BIN_ID}`;
+      let currentUser = localStorage.getItem('currentUser');
+      if (!currentUser) { window.location.href = 'index.html'; return; }
+      let balance = 1000, bet = 0, isPlaying = false, crashMultiplier = 0, currentMultiplier = 1, animationFrameId;
+      let accountsCache = {};
+      const MAX_CRASH = 10, SPEED_MULTIPLIER = 0.010;
+      async function loadAcc() { try { const r = await fetch(API_URL+'/latest',{headers:{'X-Master-Key':MASTER_KEY}}); const d = await r.json(); accountsCache = d.record||{}; } catch(e) {} }
+      async function saveAcc() { try { await fetch(API_URL,{method:'PUT',headers:{'Content-Type':'application/json','X-Master-Key':MASTER_KEY},body:JSON.stringify(accountsCache)}); } catch(e) {} }
+      async function updateBal() { if(accountsCache[currentUser]){ accountsCache[currentUser].balance = balance; await saveAcc(); } document.getElementById('balance-display').textContent = `${balance.toLocaleString()} ₽`; }
+      await loadAcc();
+      balance = accountsCache[currentUser] ? (accountsCache[currentUser].balance||1000) : 1000;
+      updateBal();
+      document.getElementById('status-text').textContent = 'Готов к игре';
+      function resize() { const c=document.getElementById('graph'),w=document.getElementById('graph-wrapper').clientWidth,h=document.getElementById('graph-wrapper').clientHeight,dpr=window.devicePixelRatio||1; c.width=w*dpr; c.height=h*dpr; c.style.width=w+'px'; c.style.height=h+'px'; c.getContext('2d').setTransform(dpr,0,0,dpr,0,0); }
+      window.addEventListener('resize',resize); resize();
+      document.getElementById('btn-start').onclick = () => { if(isPlaying)return; bet=+document.getElementById('bet-input').value; if(!bet||bet<=0||bet>balance){alert('Некорректная ставка');return;} startRound(); };
+      document.getElementById('btn-cashout').onclick = () => { if(isPlaying) endRound(true); };
+      function startRound() { isPlaying=true; document.getElementById('bet-input').disabled=true; document.getElementById('btn-start').style.display='none'; document.getElementById('btn-cashout').style.display='block'; document.getElementById('status-text').textContent='Игра идёт…'; document.getElementById('status-text').style.color='#ffa502'; balance-=bet; updateBal(); crashMultiplier=1+9*Math.pow(Math.random(),3); currentMultiplier=1; drawGraph(); }
+      function drawGraph() {
+        const c=document.getElementById('graph'),ctx=c.getContext('2d'),w=document.getElementById('graph-wrapper').clientWidth,h=c.height/(window.devicePixelRatio||1);
+        ctx.clearRect(0,0,w,h); const vM=20,uH=h-vM*2,sX=w/MAX_CRASH,sY=uH/MAX_CRASH;
+        ctx.strokeStyle='#333'; ctx.lineWidth=1;
+        for(let m=0;m<=MAX_CRASH;m++){ctx.beginPath();ctx.moveTo(m*sX,0);ctx.lineTo(m*sX,h);ctx.stroke();ctx.beginPath();ctx.moveTo(0,h-m*sY-vM);ctx.lineTo(w,h-m*sY-vM);ctx.stroke();}
+        ctx.fillStyle='#444';ctx.font='11px system-ui';ctx.textAlign='right';
+        for(let m=1;m<=MAX_CRASH;m++)ctx.fillText(m.toFixed(1),16,h-m*sY-vM+4);
+        ctx.strokeStyle='#2ed573';ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(0,h-vM);
+        function animate(){if(!isPlaying)return;currentMultiplier+=SPEED_MULTIPLIER;if(currentMultiplier>=crashMultiplier){endRound(false);return;}ctx.lineTo(currentMultiplier*sX,h-currentMultiplier*sY-vM);ctx.stroke();animationFrameId=requestAnimationFrame(animate);}
+        animationFrameId=requestAnimationFrame(animate);
+      }
+      function endRound(won){ isPlaying=false; cancelAnimationFrame(animationFrameId); document.getElementById('btn-start').style.display='block'; document.getElementById('btn-cashout').style.display='none'; document.getElementById('bet-input').disabled=false;
+        if(won){ const w=Math.floor(bet*currentMultiplier); balance+=w; document.getElementById('status-text').textContent=`Выведено: ${currentMultiplier.toFixed(2)}x`; document.getElementById('status-text').style.color='#2ed573'; }
+        else { document.getElementById('status-text').textContent=`Обвал на ${crashMultiplier.toFixed(2)}x`; document.getElementById('status-text').style.color='#ff4757'; }
+        updateBal(); }
+    }, 100);
   </script>
 </body>
 </html>
