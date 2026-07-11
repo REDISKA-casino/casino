@@ -43,7 +43,7 @@
   </div>
   <script>
     const BIN_ID = '6a516a15f5f4af5e297ecf15', MASTER_KEY = '$2a$10$ESWoAwK.zv8By8WZCjzhu.zw1AIOFcUeILyVjiDrHmv62jIxygKoO', API_URL = `https://api.jsonbin.io/v3/b/${BIN_ID}`;
-    const currentUser = sessionStorage.getItem('currentUser');
+    const currentUser = localStorage.getItem('currentUser');
     if (!currentUser) window.location.href = 'index.html';
     
     let balance = 1000, accountsCache = {}, gameActive = false, gameStarted = false, currentBet = 0, currentWinAmount = 0, minesCount = 15, rewardPerCell = 2;
