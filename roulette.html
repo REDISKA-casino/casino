@@ -102,14 +102,14 @@
       ctx.textAlign='center'; 
       ctx.textBaseline='middle';
       for(let i=0;i<SECTORS;i++){ 
-        const midAngle = i*sa + sa/2 - Math.PI/1; // центр сектора
+        const midAngle = i*sa + sa/2 - Math.PI/2; // центр сектора
         const textAngle = midAngle + Math.PI;
         const x = CX + Math.cos(midAngle) * TR;
         const y = CY + Math.sin(midAngle) * TR;
         ctx.save();
         ctx.translate(x, y);
         ctx.rotate(textAngle); // текст низом к центру
-        ctx.fillText(i.toString(), 0, 0);
+        ctx.fillText(i.toString(), 100, 0);
         ctx.restore();
       }
       
