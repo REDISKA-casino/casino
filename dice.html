@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Кости</title>
+  <style>
+    :root { --bg: #121212; --panel: #1e1e1e; --text: #e0e0e0; --accent: #ff4757; --success: #2ed573; --gold: #ffd700; }
+    body { background: var(--bg); color: var(--text); font-family: system-ui, sans-serif; margin: 0; display: flex; flex-direction: column; align-items: center; min-height: 100vh; }
+    .header { width: 100%; max-width: 500px; display: flex; align-items: center; padding: 16px 16px 0 16px; gap: 12px; }
+    .back-btn { background: var(--panel); color: var(--text); border: 1px solid #333; padding: 8px 16px; border-radius: 8px; font-size: 14px; cursor: pointer; text-decoration: none; display: inline-block; }
+    h1 { margin: 16px 0; font-weight: 400; }
+    .game-container { width: 100%; max-width: 500px; padding: 16px; }
+    .dice-area { display: flex; justify-content: center; gap: 20px; margin: 24px 0; }
+    .dice { width: 100px; height: 100px; background: #fff; border-radius: 16px; display: flex; justify-content: center; align-items: center; font-size: 60px; box-shadow: 0 8px 20px rgba(0,0,0,0.5); }
+    .dice.rolling { animation: shake 0.5s infinite; }
+    @keyframes shake { 0%,100%{transform:rotate(0);} 25%{transform:rotate(15deg);} 75%{transform:rotate(-15deg);} }
+    .controls-box { background: var(--panel); padding: 16px; border-radius: 12px; text-align: center; }
+    .balance-box { display: flex; justify-content: space-between; padding: 8px 0; margin-bottom: 12px; font-size: 18px; }
+    input[type="number"] { width: 100%; padding: 12px; border: 1px solid #333; border-radius: 6px; background: #000; color: #fff; text-align: center; font-size: 18px; box-sizing: border-box; margin-bottom: 12px; }
+    .bet-buttons { display: flex; flex-direction: column; gap: 8px; margin-bottom: 12px; }
+    .bet-row { display: grid; gap: 8px; } .bet-row.top { grid-template-columns: 1fr 1fr 1fr; } .bet-row.bottom { grid-template-columns: 1fr 1fr; }
+    .bet-btn { padding: 12px; border: none; border-radius: 8px; font-size: 14px; font-weight: bold; cursor: pointer; color: white; }
+    .bet-btn.selected { border: 2px solid #fff; }
+    .btn-roll { width: 100%; padding: 14px; border: none; border-radius: 8px; font-size: 16px; cursor: pointer; font-weight: bold; color: white; background: var(--accent); }
+    .btn-roll:disabled { opacity: 0.5; }
+    .status-text { text-align: center; font-size: 20px; font-weight: bold; margin-bottom: 12px; min-height: 28px; }
+    .payout-info { font-size: 13px; color: #aaa; margin-top: 8px; }
+    .history-box { background: var(--panel); padding: 12px; border-radius: 8px; font-size: 13px; max-height: 120px; overflow-y: auto; color: #aaa; margin-top: 12px; }
+  </style>
+</head>
+<body>
+  <div class="header"><a href="index.html" class="back-btn">← Назад</a></div>
+  <div class="game-container">
+    <h1>🎲 Кости</h1>
+    <div class="status-text" id="status-text">Загрузка...</div>
+    <div class="dice-area"><div class="dice" id="dice1">⚀</div><div class="dice" id="dice2">⚀</div></div>
+    <div class="controls-box">
+      <div class="balance-box"><span>Баланс</span><span id="balance-display">0 ₽</span></div>
+      <input type="number" id="bet-input" min="1" value="100" placeholder="Ставка" />
+      <div class="bet-buttons">
+        <div class="bet-row top">
+          <button class="bet-btn" data-bet="7" style="background:#ffd700;color:#000;">Сумма 7<br>x4</button>
+          <button class="bet-btn" data-bet="11" style="background:#ff4757;">Сумма 11<br>x5</button>
+          <button class="bet-btn" data-bet="2-12" style="background:#2ed573;">2 или 12<br>x10</button>
+        </div>
+        <div class="bet-row bottom">
+          <button class="bet-btn" data-bet="even" style="background:#333;">Чёт<br>x1.5</button>
+          <button class="bet-btn" data-bet="odd" style="background:#333;">Нечет<br>x1.5</button>
+        </div>
+      </div>
+      <button class="btn-roll" id="btn-roll">🎲 Бросить кости</button>
+      <div class="payout-info">Выплаты: Сумма 7=x4 | 11=x5 | 2/12=x10 | Чёт/Нечет=x1.5</div>
+    </div>
+    <div class="history-box" id="history-box">История бросков</div>
+  </div>
+  <script>
+    const BIN_ID = '6a516a15f5f4af5e297ecf15', MASTER_KEY = '$2a$10$ESWoAwK.zv8By8WZCjzhu.zw1AIOFcUeILyVjiDrHmv62jIxygKoO', API_URL = `https://api.jsonbin.io/v3/b/${BIN_ID}`;
+    const currentUser = sessionStorage.getItem('currentUser');
+    if (!currentUser) window.location.href = 'index.html';
+    
+    let balance = 1000, accountsCache = {}, selectedBet = null, isRolling = false;
+    const diceFaces = ['⚀','⚁','⚂','⚃','⚄','⚅'];
+    
+    async function loadAcc() { try { const r = await fetch(API_URL+'/latest',{headers:{'X-Master-Key':MASTER_KEY}}); const d = await r.json(); accountsCache = d.record||{}; } catch(e) {} }
+    async function saveAcc() { try { await fetch(API_URL,{method:'PUT',headers:{'Content-Type':'application/json','X-Master-Key':MASTER_KEY},body:JSON.stringify(accountsCache)}); } catch(e) {} }
+    async function updateBal() { if(accountsCache[currentUser]){ accountsCache[currentUser].balance = balance; await saveAcc(); } document.getElementById('balance-display').textContent = `${balance.toLocaleString()} ₽`; }
+    
+    document.querySelectorAll('.bet-btn').forEach(b=>b.addEventListener('click',()=>{document.querySelectorAll('.bet-btn').forEach(x=>x.classList.remove('selected'));b.classList.add('selected');selectedBet=b.dataset.bet;}));
+    
+    document.getElementById('btn-roll').onclick=()=>{
+      if(isRolling||!selectedBet)return;
+      const bet=+document.getElementById('bet-input').value;
+      if(!bet||bet<=0||bet>balance){alert('Некорректная ставка');return;}
+      isRolling=true; document.getElementById('btn-roll').disabled=true; balance-=bet; updateBal();
+      const d1=document.getElementById('dice1'),d2=document.getElementById('dice2');
+      d1.classList.add('rolling'); d2.classList.add('rolling');
+      let c=0; const iv=setInterval(()=>{d1.textContent=diceFaces[Math.floor(Math.random()*6)];d2.textContent=diceFaces[Math.floor(Math.random()*6)];c++;if(c>=15){clearInterval(iv);d1.classList.remove('rolling');d2.classList.remove('rolling');
+        const v1=Math.floor(Math.random()*6)+1,v2=Math.floor(Math.random()*6)+1,sum=v1+v2; d1.textContent=diceFaces[v1-1];d2.textContent=diceFaces[v2-1];
+        let w=0,won=false;
+        switch(selectedBet){case'7':if(sum===7){w=bet*4;won=true;}break;case'11':if(sum===11){w=bet*5;won=true;}break;case'2-12':if(sum===2||sum===12){w=bet*10;won=true;}break;case'even':if(sum%2===0){w=Math.floor(bet*1.5);won=true;}break;case'odd':if(sum%2===1){w=Math.floor(bet*1.5);won=true;}break;}
+        balance+=w; updateBal(); document.getElementById('status-text').textContent=won?`${v1}+${v2}=${sum}! +${w}₽`:`${v1}+${v2}=${sum}. -${bet}₽`; document.getElementById('status-text').style.color=won?'#2ed573':'#ff4757';
+        isRolling=false; document.getElementById('btn-roll').disabled=false;
+      }},80);
+    };
+    
+    (async()=>{await loadAcc();balance=accountsCache[currentUser]?(accountsCache[currentUser].balance||1000):1000;updateBal();document.getElementById('status-text').textContent='Выберите ставку';})();
+  </script>
+</body>
+</html>
