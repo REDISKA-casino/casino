@@ -11,8 +11,9 @@
     .back-btn { background: var(--panel); color: var(--text); border: 1px solid #333; padding: 8px 16px; border-radius: 8px; font-size: 14px; cursor: pointer; text-decoration: none; display: inline-block; }
     h1 { margin: 16px 0; font-weight: 400; }
     .game-container { width: 100%; max-width: 500px; padding: 16px; }
-    .wheel-section { display: flex; justify-content: center; margin-bottom: 16px; }
-    canvas { display: block; border-radius: 50%; }
+    .wheel-section { position: relative; display: flex; justify-content: center; margin-bottom: 16px; }
+    canvas { display: block; border-radius: 50%; border: 3px solid #444; }
+    .indicator { position: absolute; top: 2px; left: 50%; transform: translateX(-50%); z-index: 10; width: 0; height: 0; border-left: 14px solid transparent; border-right: 14px solid transparent; border-top: 24px solid #fff; filter: drop-shadow(0 0 3px rgba(0,0,0,0.8)); }
     .status-text { text-align: center; font-size: 20px; font-weight: bold; margin-bottom: 12px; min-height: 28px; }
     .bet-controls { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-bottom: 12px; }
     .color-btn { padding: 14px; border: none; border-radius: 8px; font-size: 18px; font-weight: bold; cursor: pointer; color: white; text-align: center; }
@@ -32,6 +33,7 @@
     <h1>🎡Рулетка</h1>
     <div class="status-text" id="status-text">Выберите цвет и сделайте ставку</div>
     <div class="wheel-section">
+      <div class="indicator"></div>
       <canvas id="roulette" width="300" height="300"></canvas>
     </div>
     <div class="controls-box">
@@ -69,14 +71,13 @@
     
     const canvas = document.getElementById('roulette');
     const ctx = canvas.getContext('2d');
-    const SIZE = 300, CX = 150, CY = 150, R = 145, TR = 108, CR = 14;
+    const SIZE = 300, CX = 150, CY = 150, R = 143, TR = 108, CR = 14;
     
     function drawWheel(){
       const sa = 2*Math.PI/SECTORS;
-      // Фон делаем прозрачным
       ctx.clearRect(0,0,SIZE,SIZE);
       
-      // Круг
+      // Чёрный фон круга
       ctx.beginPath();
       ctx.arc(CX, CY, R, 0, Math.PI*2);
       ctx.fillStyle = '#000';
@@ -95,30 +96,30 @@
         ctx.stroke();
       }
       
-      // Цифры
+      // Цифры (низом к центру — читаются снаружи)
       ctx.fillStyle='#fff'; 
       ctx.font='bold 10px system-ui'; 
       ctx.textAlign='center'; 
       ctx.textBaseline='middle';
       for(let i=0;i<SECTORS;i++){ 
-        const a=i*sa+sa/2-Math.PI/2; 
-        ctx.fillText(i, CX+Math.cos(a)*TR, CY+Math.sin(a)*TR); 
+        const midAngle = i*sa + sa/2 - Math.PI/2; // центр сектора
+        const textAngle = midAngle + Math.PI; // разворачиваем на 180°
+        const x = CX + Math.cos(midAngle) * TR;
+        const y = CY + Math.sin(midAngle) * TR;
+        ctx.save();
+        ctx.translate(x, y);
+        ctx.rotate(textAngle); // текст низом к центру
+        ctx.fillText(i.toString(), 0, 0);
+        ctx.restore();
       }
       
-      // Центр
+      // Центральный круг
       ctx.beginPath(); 
       ctx.arc(CX,CY,CR,0,Math.PI*2); 
       ctx.fillStyle='#fff'; 
       ctx.fill(); 
       ctx.strokeStyle='#333'; 
       ctx.lineWidth=2; 
-      ctx.stroke();
-      
-      // Обводка
-      ctx.beginPath();
-      ctx.arc(CX, CY, R, 0, Math.PI*2);
-      ctx.strokeStyle = '#444';
-      ctx.lineWidth = 3;
       ctx.stroke();
     }
     
