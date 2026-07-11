@@ -11,8 +11,10 @@
     .back-btn { background: var(--panel); color: var(--text); border: 1px solid #333; padding: 8px 16px; border-radius: 8px; font-size: 14px; cursor: pointer; text-decoration: none; display: inline-block; }
     h1 { margin: 16px 0; font-weight: 400; }
     .game-container { width: 100%; max-width: 500px; padding: 16px; }
-    canvas { display: block; margin: 0 auto; border: 1px solid #333; border-radius: 12px; background: #000; }
-    .status-text { text-align: center; font-size: 20px; font-weight: bold; margin: 12px 0; }
+    .roulette-wrapper { position: relative; width: 300px; height: 300px; margin: 0 auto 16px auto; }
+    canvas { display: block; width: 300px; height: 300px; border: 1px solid #333; border-radius: 50%; background: #000; }
+    .indicator { position: absolute; top: 5px; left: 50%; transform: translateX(-50%); width: 0; height: 0; border-left: 10px solid transparent; border-right: 10px solid transparent; border-top: 20px solid white; z-index: 10; }
+    .status-text { text-align: center; font-size: 20px; font-weight: bold; margin-bottom: 12px; min-height: 28px; }
     .bet-controls { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-bottom: 12px; }
     .color-btn { padding: 14px; border: none; border-radius: 8px; font-size: 18px; font-weight: bold; cursor: pointer; color: white; text-align: center; }
     .btn-red { background: #ff4757; } .btn-black { background: #000; border: 1px solid #333; } .btn-green { background: #00b894; }
@@ -21,65 +23,97 @@
     input[type="number"] { width: 100%; padding: 12px; border: 1px solid #333; border-radius: 6px; background: #000; color: #fff; text-align: right; font-size: 18px; box-sizing: border-box; margin-top: 8px; }
     .btn-spin { width: 100%; padding: 14px; border: none; border-radius: 8px; font-size: 16px; cursor: pointer; font-weight: bold; color: white; background: var(--accent); margin-top: 12px; }
     .btn-spin:disabled { opacity: 0.5; }
+    .history-box { background: var(--panel); padding: 12px; border-radius: 8px; font-size: 13px; max-height: 150px; overflow-y: auto; color: #aaa; margin-top: 12px; }
   </style>
 </head>
 <body>
   <div class="header"><a href="index.html" class="back-btn">← Назад</a></div>
   <div class="game-container">
     <h1>🎡Рулетка</h1>
-    <div class="status-text" id="status-text">Выберите цвет</div>
-    <canvas id="roulette" width="300" height="300"></canvas>
-    <div class="controls-box" style="margin-top:16px;">
+    <div class="status-text" id="status-text">Выберите цвет и сделайте ставку</div>
+    <div class="roulette-wrapper">
+      <div class="indicator"></div>
+      <canvas id="roulette"></canvas>
+    </div>
+    <div class="controls-box">
       <div class="balance-box"><span>Баланс</span><span id="balance-display">1000 ₽</span></div>
+      <label>Ставка</label>
       <input type="number" id="bet-input" min="1" value="100" />
       <div class="bet-controls">
-        <button class="color-btn btn-red" id="btn-red">Красное</button>
-        <button class="color-btn btn-black" id="btn-black">Чёрное</button>
-        <button class="color-btn btn-green" id="btn-green">Зелёное</button>
+        <button class="color-btn btn-red" id="btn-red">2x<br>Красное</button>
+        <button class="color-btn btn-black" id="btn-black">2x<br>Чёрное</button>
+        <button class="color-btn btn-green" id="btn-green">10x<br>Зелёное</button>
       </div>
       <button class="btn-spin" id="btn-spin">Крутить</button>
     </div>
+    <div class="history-box" id="history-box">История раундов</div>
   </div>
   <script>
-    const canvas = document.getElementById('roulette');
-    const ctx = canvas.getContext('2d');
-    const SECTORS = 37;
-    const colors = [];
+    const BIN_ID = '6a516a15f5f4af5e297ecf15';
+    const MASTER_KEY = '$2a$10$ESWoAwK.zv8By8WZCjzhu.zw1AIOFcUeILyVjiDrHmv62jIxygKoO';
+    const API_URL = `https://api.jsonbin.io/v3/b/${BIN_ID}`;
+    
+    let currentUser = localStorage.getItem('currentUser');
+    if (!currentUser) { window.location.href = 'index.html'; }
+    
+    let balance = parseInt(localStorage.getItem('bal_' + currentUser)) || 1000;
+    let bet = 0, isSpinning = false, selectedColor = null;
+    const SECTORS = 37, colors = [];
     for(let i=0;i<SECTORS;i++){ colors[i]=i===0?'green':i%2===0?'black':'red'; }
     
-    function draw(){
+    function saveBal() { localStorage.setItem('bal_' + currentUser, balance); document.getElementById('balance-display').textContent = `${balance.toLocaleString()} ₽`; syncWithCloud(); }
+    async function syncWithCloud() {
+      try { const r=await fetch(API_URL+'/latest',{headers:{'X-Master-Key':MASTER_KEY}}); const d=await r.json(); const a=d.record||{}; if(a[currentUser]){a[currentUser].balance=balance;}else{a[currentUser]={password:'',balance:balance,created:new Date().toISOString(),banned:false};} await fetch(API_URL,{method:'PUT',headers:{'Content-Type':'application/json','X-Master-Key':MASTER_KEY},body:JSON.stringify(a)}); } catch(e) {}
+    }
+    
+    document.getElementById('balance-display').textContent = `${balance.toLocaleString()} ₽`;
+    
+    const canvas = document.getElementById('roulette');
+    const ctx = canvas.getContext('2d');
+    
+    function drawWheel(){
       const cx=150,cy=150,r=140,sa=2*Math.PI/SECTORS;
       ctx.clearRect(0,0,300,300);
       for(let i=0;i<SECTORS;i++){
         ctx.beginPath(); ctx.moveTo(cx,cy); ctx.arc(cx,cy,r,i*sa-Math.PI/2,(i+1)*sa-Math.PI/2); ctx.closePath();
-        ctx.fillStyle=colors[i]==='green'?'#00b894':colors[i]==='red'?'#ff4757':'#000'; ctx.fill(); ctx.stroke();
+        ctx.fillStyle=colors[i]==='green'?'#00b894':colors[i]==='red'?'#ff4757':'#000'; ctx.fill(); ctx.strokeStyle='#111'; ctx.stroke();
       }
-      ctx.fillStyle='#fff'; ctx.font='bold 12px system-ui'; ctx.textAlign='center';
+      ctx.fillStyle='#fff'; ctx.font='bold 12px system-ui'; ctx.textAlign='center'; ctx.textBaseline='middle';
       for(let i=0;i<SECTORS;i++){ const a=i*sa+sa/2-Math.PI/2; ctx.fillText(i,cx+Math.cos(a)*110,cy+Math.sin(a)*110); }
+      ctx.beginPath(); ctx.arc(cx,cy,15,0,Math.PI*2); ctx.fillStyle='#fff'; ctx.fill(); ctx.stroke();
     }
-    draw();
+    drawWheel();
     
-    let balance = parseInt(localStorage.getItem('bal_test')) || 1000;
-    document.getElementById('balance-display').textContent = balance + ' ₽';
-    
-    let selected = null;
-    document.getElementById('btn-red').onclick=()=>selected='red';
-    document.getElementById('btn-black').onclick=()=>selected='black';
-    document.getElementById('btn-green').onclick=()=>selected='green';
+    function setSelected(s,...o){ s.style.border='2px solid #fff'; o.forEach(b=>{b.style.border=b.classList.contains('btn-black')?'1px solid #333':'none';}); }
+    document.getElementById('btn-red').onclick=()=>{selectedColor='red';setSelected(document.getElementById('btn-red'),document.getElementById('btn-black'),document.getElementById('btn-green'));};
+    document.getElementById('btn-black').onclick=()=>{selectedColor='black';setSelected(document.getElementById('btn-black'),document.getElementById('btn-red'),document.getElementById('btn-green'));};
+    document.getElementById('btn-green').onclick=()=>{selectedColor='green';setSelected(document.getElementById('btn-green'),document.getElementById('btn-red'),document.getElementById('btn-black'));};
     
     document.getElementById('btn-spin').onclick=()=>{
-      if(!selected) return;
-      const bet = +document.getElementById('bet-input').value;
-      if(bet>balance) return alert('Мало средств');
-      balance -= bet;
-      const idx = Math.floor(Math.random()*SECTORS);
-      const won = colors[idx] === selected;
-      if(won) balance += (colors[idx]==='green'?bet*10:bet*2);
-      localStorage.setItem('bal_test', balance);
-      document.getElementById('balance-display').textContent = balance + ' ₽';
-      document.getElementById('status-text').textContent = `Выпало: ${idx} (${colors[idx]}) ${won?'+':'—'}`;
-      document.getElementById('status-text').style.color = won?'#2ed573':'#ff4757';
-      selected = null;
+      if(isSpinning||!selectedColor)return;
+      bet=+document.getElementById('bet-input').value;
+      if(!bet||bet<=0||bet>balance){alert('Некорректная ставка');return;}
+      isSpinning=true; document.getElementById('btn-spin').disabled=true; balance-=bet; saveBal();
+      
+      const target=Math.floor(Math.random()*SECTORS);
+      const targetAngle = 360 - ((target/SECTORS)*360 + (360/SECTORS/2));
+      const rotations = 5 + Math.floor(Math.random()*4);
+      const totalAngle = rotations*360 + targetAngle;
+      
+      canvas.style.transition = 'transform 5s cubic-bezier(0.2,0.8,0.2,1)';
+      canvas.style.transform = `rotate(${totalAngle}deg)`;
+      
+      setTimeout(() => {
+        canvas.style.transition = 'none';
+        canvas.style.transform = `rotate(${targetAngle}deg)`;
+        isSpinning=false; document.getElementById('btn-spin').disabled=false;
+        const c=colors[target]; let w=0;
+        if(c===selectedColor)w=c==='green'?bet*10:bet*2;
+        balance+=w; saveBal();
+        document.getElementById('status-text').textContent=`Выпало: ${target} (${c==='green'?'Зелёное':c==='red'?'Красное':'Чёрное'}) ${w>0?'+'+w+'₽':'-'+bet+'₽'}`;
+        document.getElementById('status-text').style.color=w>0?'#2ed573':'#ff4757';
+        selectedColor=null; document.querySelectorAll('.color-btn').forEach(b=>{b.style.border=b.classList.contains('btn-black')?'1px solid #333':'none';});
+      }, 5100);
     };
   </script>
 </body>
