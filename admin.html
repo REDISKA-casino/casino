@@ -24,9 +24,9 @@
     .account-balance { color: var(--gold); font-weight: bold; font-size: 16px; text-align: right; min-width: 80px; }
     .admin-badge-small { display: inline-block; background: #ff6b6b; color: white; padding: 2px 8px; border-radius: 8px; font-size: 10px; margin-left: 8px; }
     .banned-badge-small { display: inline-block; background: #ff0000; color: white; padding: 2px 8px; border-radius: 8px; font-size: 10px; margin-left: 8px; }
-    .btn-group { display: flex; gap: 6px; }
+    .btn-group { display: flex; gap: 6px; flex-wrap: wrap; }
     .action-btn { border: none; padding: 8px 14px; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: bold; color: white; }
-    .btn-refill { background: #ffa502; color: #000; } .btn-ban { background: #ff4757; } .btn-unban { background: #2ed573; } .btn-delete { background: #ff6348; }
+    .btn-refill { background: #ffa502; color: #000; } .btn-reduce { background: #e67e22; color: #000; } .btn-ban { background: #ff4757; } .btn-unban { background: #2ed573; } .btn-delete { background: #ff6348; }
     .refresh-btn { width: 100%; padding: 12px; border: none; border-radius: 8px; font-size: 14px; cursor: pointer; background: #ffa502; color: #000; font-weight: bold; margin-top: 16px; }
     .loading { text-align: center; padding: 32px; color: #666; }
   </style>
@@ -44,39 +44,23 @@
     <div class="accounts-list"><div class="accounts-header">📋 Список аккаунтов</div><div id="accounts-container"><div class="loading">Загрузка...</div></div></div>
     <button class="refresh-btn" id="refresh-btn">🔄 Обновить</button>
   </div>
-
   <script>
-    const BIN_ID = '6a516a15f5f4af5e297ecf15';
-    const MASTER_KEY = '$2a$10$ESWoAwK.zv8By8WZCjzhu.zw1AIOFcUeILyVjiDrHmv62jIxygKoO';
-    const API_URL = `https://api.jsonbin.io/v3/b/${BIN_ID}`;
+    const BIN_ID = '6a516a15f5f4af5e297ecf15', MASTER_KEY = '$2a$10$ESWoAwK.zv8By8WZCjzhu.zw1AIOFcUeILyVjiDrHmv62jIxygKoO', API_URL = `https://api.jsonbin.io/v3/b/${BIN_ID}`;
     const ADMIN_NICKNAME = 'I-am-admin';
-    
     let accountsCache = {};
 
-    async function loadAccounts() {
-      try {
-        const r = await fetch(API_URL, { headers: { 'X-Master-Key': MASTER_KEY } });
-        const d = await r.json();
-        accountsCache = d.record || {};
-        return accountsCache;
-      } catch(e) { return {}; }
-    }
+    async function loadAcc() { try { const r = await fetch(API_URL+'/latest',{headers:{'X-Master-Key':MASTER_KEY}}); const d = await r.json(); accountsCache = d.record||{}; } catch(e) {} }
+    async function saveAcc() { await fetch(API_URL,{method:'PUT',headers:{'Content-Type':'application/json','X-Master-Key':MASTER_KEY},body:JSON.stringify(accountsCache)}); }
 
-    async function saveAccounts() {
-      await fetch(API_URL, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json', 'X-Master-Key': MASTER_KEY },
-        body: JSON.stringify(accountsCache)
-      });
-    }
+    document.getElementById('logout-btn').onclick = () => {
+      localStorage.removeItem('currentUser');
+      window.location.href = 'index.html';
+    };
 
-    function renderAccounts() {
-      const container = document.getElementById('accounts-container');
+    function render() {
       const users = Object.entries(accountsCache).filter(([n]) => n !== ADMIN_NICKNAME);
       let total = 0, banned = 0, html = '';
-      
       html += `<div class="account-item"><div class="account-top"><div><div class="account-nickname">${ADMIN_NICKNAME} <span class="admin-badge-small">👑</span></div><div class="account-date">Системный</div></div><div class="account-balance">-</div></div></div>`;
-      
       users.forEach(([n, d]) => {
         total += d.balance || 0;
         if (d.banned) banned++;
@@ -84,31 +68,35 @@
           <div class="account-top"><div><div class="account-nickname">${n}${d.banned?' <span class="banned-badge-small">🚫</span>':''}</div><div class="account-date">${new Date(d.created).toLocaleDateString()}</div><div class="account-password">🔑 ${d.password}</div></div><div class="account-balance">${(d.balance||0).toLocaleString()} ₽</div></div>
           <div class="btn-group">
             <button class="action-btn btn-refill" onclick="refill('${n}')">💰 Пополнить</button>
+            <button class="action-btn btn-reduce" onclick="reduce('${n}')">📉 Уменьшить</button>
             ${d.banned ? '<button class="action-btn btn-unban" onclick="unban(\''+n+'\')">✓ Разбанить</button>' : '<button class="action-btn btn-ban" onclick="ban(\''+n+'\')">🚫 Забанить</button>'}
             <button class="action-btn btn-delete" onclick="del('${n}')">🗑</button>
           </div></div>`;
       });
-      
-      container.innerHTML = html || '<div class="loading">Нет аккаунтов</div>';
+      document.getElementById('accounts-container').innerHTML = html || '<div class="loading">Нет аккаунтов</div>';
       document.getElementById('total-accounts').textContent = users.length;
       document.getElementById('total-balance').textContent = total.toLocaleString() + ' ₽';
       document.getElementById('banned-count').textContent = banned;
     }
 
     window.refill = async function(n) {
-      const a = prompt('Сумма:', '100'); if(!a) return;
+      const a = prompt('Сумма пополнения:', '100'); if(!a) return;
       const am = parseInt(a); if(isNaN(am)||am<=0) return;
       accountsCache[n].balance = (accountsCache[n].balance||0) + am;
-      await saveAccounts(); renderAccounts();
+      await saveAcc(); render();
     };
-    window.ban = async function(n) { if(confirm('Забанить '+n+'?')) { accountsCache[n].banned=true; await saveAccounts(); renderAccounts(); } };
-    window.unban = async function(n) { if(confirm('Разбанить '+n+'?')) { accountsCache[n].banned=false; await saveAccounts(); renderAccounts(); } };
-    window.del = async function(n) { if(confirm('Удалить '+n+'?')) { delete accountsCache[n]; await saveAccounts(); renderAccounts(); } };
+    window.reduce = async function(n) {
+      const a = prompt('Сумма уменьшения:', '100'); if(!a) return;
+      const am = parseInt(a); if(isNaN(am)||am<=0) return;
+      accountsCache[n].balance = Math.max(0, (accountsCache[n].balance||0) - am);
+      await saveAcc(); render();
+    };
+    window.ban = async function(n) { if(confirm('Забанить '+n+'?')) { accountsCache[n].banned=true; await saveAcc(); render(); } };
+    window.unban = async function(n) { if(confirm('Разбанить '+n+'?')) { accountsCache[n].banned=false; await saveAcc(); render(); } };
+    window.del = async function(n) { if(confirm('Удалить '+n+'?')) { delete accountsCache[n]; await saveAcc(); render(); } };
 
-    document.getElementById('logout-btn').onclick = () => { window.location.href = 'index.html'; };
-    document.getElementById('refresh-btn').onclick = async () => { await loadAccounts(); renderAccounts(); };
-
-    (async () => { await loadAccounts(); renderAccounts(); })();
+    document.getElementById('refresh-btn').onclick = async () => { await loadAcc(); render(); };
+    (async () => { await loadAcc(); render(); })();
   </script>
 </body>
 </html>
