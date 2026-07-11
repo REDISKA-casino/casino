@@ -46,7 +46,7 @@
     
     let balance = 1000, bet = 0, isPlaying = false, crashMultiplier = 0, currentMultiplier = 1, animationFrameId;
     let accountsCache = {};
-    const currentUser = sessionStorage.getItem('currentUser');
+    const currentUser = localStorage.getItem('currentUser');
     if (!currentUser) window.location.href = 'index.html';
     
     const MAX_CRASH = 10, SPEED_MULTIPLIER = 0.010;
