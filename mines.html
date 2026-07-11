@@ -32,9 +32,9 @@
   </style>
 </head>
 <body>
-  <div class="header"><a href="index.html" class="back-btn">← Назад</a><span class="balance-header" id="header-balance">0 ₽</span></div>
+  <div class="header"><a href="index.html" class="back-btn">← Назад</a><span class="balance-header" id="header-balance">1000 ₽</span></div>
   <div class="game-container"><h1>💣 Минное поле</h1>
-    <div class="controls-box"><div class="stat-item">Мины<span class="stat-value" id="mines-count">15</span></div><div class="stat-item">Выигрыш<span class="stat-value" id="win-display">0 ₽</span></div><div class="stat-item">Баланс<span class="stat-value" id="balance-display">0 ₽</span></div></div>
+    <div class="controls-box"><div class="stat-item">Мины<span class="stat-value" id="mines-count">15</span></div><div class="stat-item">Выигрыш<span class="stat-value" id="win-display">0 ₽</span></div><div class="stat-item">Баланс<span class="stat-value" id="balance-display">1000 ₽</span></div></div>
     <div class="settings-box"><div class="setting-item"><div class="setting-label">Количество мин (1-80)</div><input type="number" class="setting-input" id="mines-input" min="1" max="80" value="15" /></div><div class="reward-info" id="reward-info">💰 Награда за клетку: 2 ₽</div></div>
     <div class="board-wrapper"><div class="board" id="board"></div></div>
     <input type="number" class="bet-input" id="bet-input" min="1" value="50" placeholder="Ставка" />
@@ -46,23 +46,23 @@
     const currentUser = localStorage.getItem('currentUser');
     if (!currentUser) window.location.href = 'index.html';
     
-    let balance = 1000, accountsCache = {}, gameActive = false, gameStarted = false, currentBet = 0, currentWinAmount = 0, minesCount = 15, rewardPerCell = 2;
+    let balance = parseInt(localStorage.getItem('bal_' + currentUser)) || 1000;
+    let gameActive = false, gameStarted = false, currentBet = 0, currentWinAmount = 0, minesCount = 15, rewardPerCell = 2;
     let minePositions = new Set(), revealedCells = new Set();
     const TOTAL_CELLS = 100, boardEl = document.getElementById('board');
     
-    async function loadAcc() { try { const r = await fetch(API_URL+'/latest',{headers:{'X-Master-Key':MASTER_KEY}}); const d = await r.json(); accountsCache = d.record||{}; } catch(e) {} }
-    async function saveAcc() { try { await fetch(API_URL,{method:'PUT',headers:{'Content-Type':'application/json','X-Master-Key':MASTER_KEY},body:JSON.stringify(accountsCache)}); } catch(e) {} }
-    async function updateBal() { if(accountsCache[currentUser]){ accountsCache[currentUser].balance = balance; await saveAcc(); } updateDisplay(); }
+    function saveBal() { localStorage.setItem('bal_' + currentUser, balance); updateDisplay(); syncWithCloud(); }
+    async function syncWithCloud() {
+      try { const r=await fetch(API_URL+'/latest',{headers:{'X-Master-Key':MASTER_KEY}}); const d=await r.json(); const a=d.record||{}; if(a[currentUser]){a[currentUser].balance=balance;}else{a[currentUser]={password:'',balance:balance,created:new Date().toISOString(),banned:false};} await fetch(API_URL,{method:'PUT',headers:{'Content-Type':'application/json','X-Master-Key':MASTER_KEY},body:JSON.stringify(a)}); } catch(e) {}
+    }
     function updateDisplay() { document.getElementById('balance-display').textContent = `${balance.toLocaleString()} ₽`; document.getElementById('header-balance').textContent = `${balance.toLocaleString()} ₽`; document.getElementById('win-display').textContent = `${currentWinAmount} ₽`; }
-    
     function calculateReward(m) { return Math.floor(2 + (m / 10)); }
     function updateRewardDisplay() { document.getElementById('reward-info').textContent = `💰 Награда за клетку: ${calculateReward(+document.getElementById('mines-input').value||15)} ₽`; }
     document.getElementById('mines-input').addEventListener('input', updateRewardDisplay);
-    
     function createBoard() { boardEl.innerHTML = ''; for(let i=0;i<TOTAL_CELLS;i++){ const c=document.createElement('div'); c.className='cell'; c.dataset.index=i; c.textContent='?'; c.addEventListener('click',()=>handleClick(i)); boardEl.appendChild(c); } }
     function generateMines() { minePositions.clear(); const max=Math.min(minesCount,99); while(minePositions.size<max) minePositions.add(Math.floor(Math.random()*TOTAL_CELLS)); }
     
-    document.getElementById('btn-start').onclick = async () => {
+    document.getElementById('btn-start').onclick = () => {
       if(gameStarted) return;
       currentBet = +document.getElementById('bet-input').value;
       if(!currentBet||currentBet<=0||currentBet>balance){alert('Некорректная ставка');return;}
@@ -70,7 +70,7 @@
       rewardPerCell = calculateReward(minesCount);
       document.getElementById('mines-input').disabled = true;
       document.getElementById('mines-count').textContent = minesCount;
-      balance -= currentBet; await updateBal();
+      balance -= currentBet; saveBal();
       createBoard(); minePositions.clear(); revealedCells.clear(); generateMines();
       gameStarted = true; gameActive = true; currentWinAmount = 0; updateDisplay();
       document.getElementById('btn-start').style.display='none'; document.getElementById('btn-cashout').style.display='block';
@@ -81,13 +81,13 @@
       const cell = boardEl.querySelector(`[data-index="${i}"]`);
       if(minePositions.has(i)) { cell.classList.add('revealed-mine'); cell.textContent='💣'; revealAll(); gameActive=false; gameStarted=false; currentWinAmount=0; updateDisplay(); document.getElementById('btn-start').style.display='block'; document.getElementById('btn-cashout').style.display='none'; document.getElementById('mines-input').disabled=false; return; }
       cell.classList.add('revealed-safe'); cell.textContent='✓'; revealedCells.add(i); currentWinAmount+=rewardPerCell; updateDisplay();
-      if(revealedCells.size===TOTAL_CELLS-minePositions.size){ gameActive=false; gameStarted=false; balance+=currentWinAmount; updateBal(); document.getElementById('btn-start').style.display='block'; document.getElementById('btn-cashout').style.display='none'; document.getElementById('mines-input').disabled=false; revealAll(); }
+      if(revealedCells.size===TOTAL_CELLS-minePositions.size){ gameActive=false; gameStarted=false; balance+=currentWinAmount; saveBal(); document.getElementById('btn-start').style.display='block'; document.getElementById('btn-cashout').style.display='none'; document.getElementById('mines-input').disabled=false; revealAll(); }
     }
     
-    document.getElementById('btn-cashout').onclick = async () => { if(!gameActive)return; gameActive=false; gameStarted=false; balance+=currentWinAmount; await updateBal(); document.getElementById('btn-start').style.display='block'; document.getElementById('btn-cashout').style.display='none'; document.getElementById('mines-input').disabled=false; revealAll(); updateDisplay(); };
+    document.getElementById('btn-cashout').onclick = () => { if(!gameActive)return; gameActive=false; gameStarted=false; balance+=currentWinAmount; saveBal(); document.getElementById('btn-start').style.display='block'; document.getElementById('btn-cashout').style.display='none'; document.getElementById('mines-input').disabled=false; revealAll(); updateDisplay(); };
     function revealAll() { for(let p of minePositions){ const c=boardEl.querySelector(`[data-index="${p}"]`); if(c&&!c.classList.contains('revealed-mine')){c.classList.add('revealed-mine');c.textContent='💣';} } }
     
-    (async()=>{ await loadAcc(); balance=accountsCache[currentUser]?(accountsCache[currentUser].balance||1000):1000; updateDisplay(); createBoard(); updateRewardDisplay(); })();
+    updateDisplay(); createBoard(); updateRewardDisplay();
   </script>
 </body>
 </html>
