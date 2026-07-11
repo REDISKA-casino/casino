@@ -13,28 +13,24 @@
     .game-container { width: 100%; max-width: 500px; padding: 16px; }
     .track { background: #2d5a1e; border-radius: 12px; padding: 8px; margin-bottom: 16px; border: 2px solid #444; }
     .lane { display: flex; align-items: center; height: 40px; margin: 4px 0; background: rgba(0,0,0,0.3); border-radius: 6px; position: relative; overflow: hidden; }
-    .horse { font-size: 28px; position: absolute; transition: left 0.1s linear; left: 0; }
-    .finish { position: absolute; right: 10px; color: #fff; font-weight: bold; }
+    .horse { font-size: 28px; position: absolute; transition: left 0.1s linear; left: 0; } .finish { position: absolute; right: 10px; color: #fff; font-weight: bold; }
     .controls-box { background: var(--panel); padding: 16px; border-radius: 12px; text-align: center; }
     .balance-box { display: flex; justify-content: space-between; padding: 8px 0; margin-bottom: 12px; font-size: 18px; }
     input[type="number"] { width: 100%; padding: 12px; border: 1px solid #333; border-radius: 6px; background: #000; color: #fff; text-align: center; font-size: 18px; box-sizing: border-box; margin-bottom: 12px; }
     .horse-buttons { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 12px; }
-    .horse-btn { padding: 12px; border: none; border-radius: 8px; font-size: 14px; font-weight: bold; cursor: pointer; color: white; display: flex; align-items: center; gap: 8px; justify-content: center; }
-    .horse-btn.selected { border: 2px solid #fff; }
-    .btn-race { width: 100%; padding: 14px; border: none; border-radius: 8px; font-size: 16px; cursor: pointer; font-weight: bold; color: white; background: var(--accent); }
-    .btn-race:disabled { opacity: 0.5; }
+    .horse-btn { padding: 12px; border: none; border-radius: 8px; font-size: 14px; font-weight: bold; cursor: pointer; color: white; display: flex; align-items: center; gap: 8px; justify-content: center; } .horse-btn.selected { border: 2px solid #fff; }
+    .btn-race { width: 100%; padding: 14px; border: none; border-radius: 8px; font-size: 16px; cursor: pointer; font-weight: bold; color: white; background: var(--accent); } .btn-race:disabled { opacity: 0.5; }
     .status-text { text-align: center; font-size: 20px; font-weight: bold; margin-bottom: 12px; min-height: 28px; }
     .history-box { background: var(--panel); padding: 12px; border-radius: 8px; font-size: 13px; max-height: 120px; overflow-y: auto; color: #aaa; margin-top: 12px; }
   </style>
 </head>
 <body>
   <div class="header"><a href="index.html" class="back-btn">← Назад</a></div>
-  <div class="game-container">
-    <h1>🐴 Скачки</h1>
-    <div class="status-text" id="status-text">Загрузка...</div>
+  <div class="game-container"><h1>🐴 Скачки</h1>
+    <div class="status-text" id="status-text">Выберите лошадь</div>
     <div class="track"><div class="lane"><span class="horse" id="horse1">🐴</span><span class="finish">🏁</span></div><div class="lane"><span class="horse" id="horse2">🐎</span><span class="finish">🏁</span></div><div class="lane"><span class="horse" id="horse3">🦄</span><span class="finish">🏁</span></div><div class="lane"><span class="horse" id="horse4">🐴</span><span class="finish">🏁</span></div></div>
     <div class="controls-box">
-      <div class="balance-box"><span>Баланс</span><span id="balance-display">0 ₽</span></div>
+      <div class="balance-box"><span>Баланс</span><span id="balance-display">1000 ₽</span></div>
       <input type="number" id="bet-input" min="1" value="100" placeholder="Ставка" />
       <div class="horse-buttons">
         <button class="horse-btn" data-horse="1" style="background:#8B4513;">🐴 Лошадь 1<br>x3</button>
@@ -51,28 +47,27 @@
     const currentUser = localStorage.getItem('currentUser');
     if (!currentUser) window.location.href = 'index.html';
     
-    let balance = 1000, accountsCache = {}, selectedHorse = null, isRacing = false;
+    let balance = parseInt(localStorage.getItem('bal_' + currentUser)) || 1000;
+    let selectedHorse = null, isRacing = false;
     const multipliers = {1:3,2:2.5,3:5,4:2};
     
-    async function loadAcc() { try { const r = await fetch(API_URL+'/latest',{headers:{'X-Master-Key':MASTER_KEY}}); const d = await r.json(); accountsCache = d.record||{}; } catch(e) {} }
-    async function saveAcc() { try { await fetch(API_URL,{method:'PUT',headers:{'Content-Type':'application/json','X-Master-Key':MASTER_KEY},body:JSON.stringify(accountsCache)}); } catch(e) {} }
-    async function updateBal() { if(accountsCache[currentUser]){ accountsCache[currentUser].balance = balance; await saveAcc(); } document.getElementById('balance-display').textContent = `${balance.toLocaleString()} ₽`; }
+    function saveBal() { localStorage.setItem('bal_' + currentUser, balance); document.getElementById('balance-display').textContent = `${balance.toLocaleString()} ₽`; syncWithCloud(); }
+    async function syncWithCloud() { try { const r=await fetch(API_URL+'/latest',{headers:{'X-Master-Key':MASTER_KEY}}); const d=await r.json(); const a=d.record||{}; if(a[currentUser]){a[currentUser].balance=balance;}else{a[currentUser]={password:'',balance:balance,created:new Date().toISOString(),banned:false};} await fetch(API_URL,{method:'PUT',headers:{'Content-Type':'application/json','X-Master-Key':MASTER_KEY},body:JSON.stringify(a)}); } catch(e) {} }
     
+    document.getElementById('balance-display').textContent = `${balance.toLocaleString()} ₽`;
     document.querySelectorAll('.horse-btn').forEach(b=>b.addEventListener('click',()=>{document.querySelectorAll('.horse-btn').forEach(x=>x.classList.remove('selected'));b.classList.add('selected');selectedHorse=+b.dataset.horse;}));
     
     document.getElementById('btn-race').onclick=()=>{
       if(isRacing||!selectedHorse)return;
       const bet=+document.getElementById('bet-input').value;
       if(!bet||bet<=0||bet>balance){alert('Некорректная ставка');return;}
-      isRacing=true; document.getElementById('btn-race').disabled=true; balance-=bet; updateBal();
+      isRacing=true; document.getElementById('btn-race').disabled=true; balance-=bet; saveBal();
       for(let i=1;i<=4;i++) document.getElementById('horse'+i).style.left='0px';
       const speeds=[Math.random()*3+1,Math.random()*3+1,Math.random()*3+1,Math.random()*3+1],pos=[0,0,0,0],tw=document.querySelector('.lane').clientWidth-50;
       const race=setInterval(()=>{let fin=false;for(let i=0;i<4;i++){pos[i]+=speeds[i]*(Math.random()*2+1);if(pos[i]>=tw){pos[i]=tw;fin=true;}document.getElementById('horse'+(i+1)).style.left=pos[i]+'px';}
-        if(fin){clearInterval(race);const w=pos.indexOf(Math.max(...pos))+1,won=w===selectedHorse,win=won?Math.floor(bet*multipliers[selectedHorse]):0;balance+=win;updateBal();document.getElementById('status-text').textContent=won?`Лошадь ${w} победила! +${win}₽`:`Лошадь ${w} победила. -${bet}₽`;document.getElementById('status-text').style.color=won?'#2ed573':'#ff4757';isRacing=false;document.getElementById('btn-race').disabled=false;}
+        if(fin){clearInterval(race);const w=pos.indexOf(Math.max(...pos))+1,won=w===selectedHorse,win=won?Math.floor(bet*multipliers[selectedHorse]):0;balance+=win;saveBal();document.getElementById('status-text').textContent=won?`Лошадь ${w} победила! +${win}₽`:`Лошадь ${w} победила. -${bet}₽`;document.getElementById('status-text').style.color=won?'#2ed573':'#ff4757';isRacing=false;document.getElementById('btn-race').disabled=false;}
       },50);
     };
-    
-    (async()=>{await loadAcc();balance=accountsCache[currentUser]?(accountsCache[currentUser].balance||1000):1000;updateBal();document.getElementById('status-text').textContent='Выберите лошадь';})();
   </script>
 </body>
 </html>
