@@ -11,9 +11,9 @@
     .back-btn { background: var(--panel); color: var(--text); border: 1px solid #333; padding: 8px 16px; border-radius: 8px; font-size: 14px; cursor: pointer; text-decoration: none; display: inline-block; }
     h1 { margin: 16px 0; font-weight: 400; }
     .game-container { width: 100%; max-width: 500px; padding: 16px; }
-    .roulette-wrapper { position: relative; width: 300px; height: 300px; margin: 0 auto 16px auto; }
-    canvas { display: block; width: 300px; height: 300px; border: 1px solid #333; border-radius: 50%; background: #000; }
-    .indicator { position: absolute; top: 5px; left: 50%; transform: translateX(-50%); width: 0; height: 0; border-left: 10px solid transparent; border-right: 10px solid transparent; border-top: 20px solid white; z-index: 10; }
+    .roulette-wrapper { width: 300px; height: 300px; margin: 0 auto 16px auto; position: relative; }
+    canvas { display: block; width: 300px; height: 300px; border: 2px solid #444; border-radius: 50%; background: #000; }
+    .indicator { position: absolute; top: 2px; left: 50%; transform: translateX(-50%); width: 0; height: 0; border-left: 10px solid transparent; border-right: 10px solid transparent; border-top: 18px solid #fff; z-index: 10; filter: drop-shadow(0 2px 2px rgba(0,0,0,0.8)); }
     .status-text { text-align: center; font-size: 20px; font-weight: bold; margin-bottom: 12px; min-height: 28px; }
     .bet-controls { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-bottom: 12px; }
     .color-btn { padding: 14px; border: none; border-radius: 8px; font-size: 18px; font-weight: bold; cursor: pointer; color: white; text-align: center; }
@@ -70,17 +70,19 @@
     
     const canvas = document.getElementById('roulette');
     const ctx = canvas.getContext('2d');
+    const SIZE = 300, CX = 150, CY = 150, R = 140, TR = 110, CR = 14;
     
     function drawWheel(){
-      const cx=150,cy=150,r=140,sa=2*Math.PI/SECTORS;
-      ctx.clearRect(0,0,300,300);
+      const sa = 2*Math.PI/SECTORS;
+      ctx.clearRect(0,0,SIZE,SIZE);
       for(let i=0;i<SECTORS;i++){
-        ctx.beginPath(); ctx.moveTo(cx,cy); ctx.arc(cx,cy,r,i*sa-Math.PI/2,(i+1)*sa-Math.PI/2); ctx.closePath();
-        ctx.fillStyle=colors[i]==='green'?'#00b894':colors[i]==='red'?'#ff4757':'#000'; ctx.fill(); ctx.strokeStyle='#111'; ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(CX,CY); ctx.arc(CX,CY,R,i*sa-Math.PI/2,(i+1)*sa-Math.PI/2); ctx.closePath();
+        ctx.fillStyle=colors[i]==='green'?'#00b894':colors[i]==='red'?'#ff4757':'#000'; ctx.fill();
+        ctx.strokeStyle='#222'; ctx.lineWidth=0.5; ctx.stroke();
       }
-      ctx.fillStyle='#fff'; ctx.font='bold 12px system-ui'; ctx.textAlign='center'; ctx.textBaseline='middle';
-      for(let i=0;i<SECTORS;i++){ const a=i*sa+sa/2-Math.PI/2; ctx.fillText(i,cx+Math.cos(a)*110,cy+Math.sin(a)*110); }
-      ctx.beginPath(); ctx.arc(cx,cy,15,0,Math.PI*2); ctx.fillStyle='#fff'; ctx.fill(); ctx.stroke();
+      ctx.fillStyle='#fff'; ctx.font='bold 11px system-ui'; ctx.textAlign='center'; ctx.textBaseline='middle';
+      for(let i=0;i<SECTORS;i++){ const a=i*sa+sa/2-Math.PI/2; ctx.fillText(i,CX+Math.cos(a)*TR,CY+Math.sin(a)*TR); }
+      ctx.beginPath(); ctx.arc(CX,CY,CR,0,Math.PI*2); ctx.fillStyle='#fff'; ctx.fill(); ctx.strokeStyle='#333'; ctx.lineWidth=2; ctx.stroke();
     }
     drawWheel();
     
