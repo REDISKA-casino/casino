@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>🎰 Lucky Finger<sup>©</sup></title>
+  <title>🎰 Lucky Finger ©</title>
   <style>
     :root { --bg: #121212; --panel: #1e1e1e; --text: #e0e0e0; --accent: #ff4757; --gold: #ffd700; --success: #2ed573; }
     body { background: var(--bg); color: var(--text); font-family: system-ui, sans-serif; margin: 0; display: flex; flex-direction: column; align-items: center; min-height: 100vh; }
@@ -85,8 +85,16 @@
     async function loadAcc() { try { const r = await fetch(API_URL+'/latest',{headers:{'X-Master-Key':MASTER_KEY}}); const d = await r.json(); accountsCache = d.record||{}; } catch(e) {} }
     async function saveAcc() { try { await fetch(API_URL,{method:'PUT',headers:{'Content-Type':'application/json','X-Master-Key':MASTER_KEY},body:JSON.stringify(accountsCache)}); } catch(e) {} }
     function isBanned(n) { return accountsCache[n] && accountsCache[n].banned === true; }
-    function getBal() { if(!currentUser||currentUser===ADMIN_NICKNAME) return 0; return accountsCache[currentUser]?(accountsCache[currentUser].balance||0):1000; }
-    function upBal() { document.getElementById('main-balance').textContent = `${getBal().toLocaleString()} ₽`; }
+    
+    async function getCloudBalance(n) {
+      await loadAcc();
+      return accountsCache[n] ? (accountsCache[n].balance || 1000) : 1000;
+    }
+    
+    function upBal() {
+      const bal = localStorage.getItem('bal_' + currentUser);
+      document.getElementById('main-balance').textContent = `${(parseInt(bal) || 0).toLocaleString()} ₽`;
+    }
 
     const acb = document.getElementById('agree-checkbox');
     const br = document.getElementById('btn-register');
@@ -98,9 +106,14 @@
       acb.checked=false; br.disabled=true;
     }
 
-    function showUser(n) {
+    async function showUser(n) {
       currentUser = n;
       if(n===ADMIN_NICKNAME){window.location.href='admin.html';return;}
+      
+      // ВСЕГДА загружаем баланс из облака при входе
+      const cloudBal = await getCloudBalance(n);
+      localStorage.setItem('bal_' + n, cloudBal);
+      
       document.getElementById('login-form').style.display='none'; document.getElementById('user-panel').style.display='block';
       document.getElementById('current-user').textContent=n;
       const bc=document.getElementById('badge-container'),bm=document.getElementById('banned-message'),bal=document.getElementById('balance-card'),gg=document.getElementById('games-grid');
@@ -119,7 +132,9 @@
       if(n===ADMIN_NICKNAME){el.textContent='Зарезервировано';return;}
       await loadAcc(); if(accountsCache[n]){el.textContent='Существует';return;}
       accountsCache[n]={password:p,balance:1000,created:new Date().toISOString(),banned:false};
-      await saveAcc(); localStorage.setItem('currentUser',n);
+      await saveAcc(); 
+      localStorage.setItem('currentUser',n);
+      localStorage.setItem('bal_' + n, 1000);
       el.style.color='#2ed573';el.textContent='Успешно!';setTimeout(()=>showUser(n),500);
     };
 
@@ -130,12 +145,28 @@
       if(n===ADMIN_NICKNAME&&p===ADMIN_PASSWORD){localStorage.setItem('currentUser',ADMIN_NICKNAME);window.location.href='admin.html';return;}
       if(!accountsCache[n]){el.textContent='Не найден';return;}
       if(accountsCache[n].password!==p){el.textContent='Неверный пароль';return;}
-      localStorage.setItem('currentUser',n);el.textContent='';showUser(n);
+      localStorage.setItem('currentUser',n);
+      
+      // Загружаем баланс из облака
+      const cloudBal = accountsCache[n].balance || 1000;
+      localStorage.setItem('bal_' + n, cloudBal);
+      
+      el.textContent='';showUser(n);
     };
 
     document.getElementById('btn-logout').onclick=()=>{localStorage.removeItem('currentUser');currentUser=null;showLogin();};
 
-    (async()=>{await loadAcc();const u=localStorage.getItem('currentUser');if(u){if(u===ADMIN_NICKNAME){window.location.href='admin.html';return;}if(accountsCache[u])showUser(u);else showLogin();}else showLogin();})();
+    (async()=>{
+      await loadAcc();
+      const u=localStorage.getItem('currentUser');
+      if(u){
+        if(u===ADMIN_NICKNAME){window.location.href='admin.html';return;}
+        // При возвращении тоже загружаем из облака
+        const cloudBal = accountsCache[u] ? (accountsCache[u].balance || 1000) : 1000;
+        localStorage.setItem('bal_' + u, cloudBal);
+        if(accountsCache[u])showUser(u);else showLogin();
+      }else showLogin();
+    })();
   </script>
 </body>
 </html>
