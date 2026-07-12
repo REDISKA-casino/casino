@@ -43,12 +43,12 @@
     const currentUser = localStorage.getItem('currentUser');
     if (!currentUser) window.location.href = 'index.html';
     let balance = parseInt(localStorage.getItem('bal_' + currentUser)) || 1000;
-    let isPlaying = false, prizeCup = 0, currentBet = 0, accountsCache = {}, syncTimer = null;
+    let isPlaying = false, prizeCup = 0, currentBet = 0, accountsCache = {};
 
     async function loadAcc() { try { const r = await fetch(API_URL + '/latest', { headers: { 'X-Master-Key': MASTER_KEY } }); const d = await r.json(); accountsCache = d.record || {}; } catch(e) {} }
     async function saveAcc() { try { await fetch(API_URL, { method: 'PUT', headers: { 'Content-Type': 'application/json', 'X-Master-Key': MASTER_KEY }, body: JSON.stringify(accountsCache) }); } catch(e) {} }
-    function saveBal() { localStorage.setItem('bal_' + currentUser, balance); document.getElementById('balance-display').textContent = `${balance.toLocaleString()} ₽`; scheduleSync(); }
-    function scheduleSync() { if (syncTimer) clearTimeout(syncTimer); syncTimer = setTimeout(async () => { if (accountsCache[currentUser]) { accountsCache[currentUser].balance = balance; await saveAcc(); } }, 5000); }
+    function saveBal() { localStorage.setItem('bal_' + currentUser, balance); document.getElementById('balance-display').textContent = `${balance.toLocaleString()} ₽`; syncNow(); }
+    async function syncNow() { if (accountsCache[currentUser]) { accountsCache[currentUser].balance = balance; await saveAcc(); } }
     document.getElementById('balance-display').textContent = `${balance.toLocaleString()} ₽`;
 
     function reset(){ document.querySelectorAll('.cup').forEach(c=>{c.classList.remove('revealed','winner');c.textContent='🏺';c.style.pointerEvents='auto';}); document.getElementById('shuffling-text').textContent=''; }
