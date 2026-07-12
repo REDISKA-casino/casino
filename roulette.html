@@ -59,12 +59,12 @@
     let bet = 0, isSpinning = false, selectedColor = null;
     const SECTORS = 37, colors = [];
     for(let i=0;i<SECTORS;i++){ colors[i]=i===0?'green':i%2===0?'black':'red'; }
-    let accountsCache = {}, syncTimer = null;
+    let accountsCache = {};
 
     async function loadAcc() { try { const r = await fetch(API_URL + '/latest', { headers: { 'X-Master-Key': MASTER_KEY } }); const d = await r.json(); accountsCache = d.record || {}; } catch(e) {} }
     async function saveAcc() { try { await fetch(API_URL, { method: 'PUT', headers: { 'Content-Type': 'application/json', 'X-Master-Key': MASTER_KEY }, body: JSON.stringify(accountsCache) }); } catch(e) {} }
-    function saveBal() { localStorage.setItem('bal_' + currentUser, balance); document.getElementById('balance-display').textContent = `${balance.toLocaleString()} ₽`; scheduleSync(); }
-    function scheduleSync() { if (syncTimer) clearTimeout(syncTimer); syncTimer = setTimeout(async () => { if (accountsCache[currentUser]) { accountsCache[currentUser].balance = balance; await saveAcc(); } }, 5000); }
+    function saveBal() { localStorage.setItem('bal_' + currentUser, balance); document.getElementById('balance-display').textContent = `${balance.toLocaleString()} ₽`; syncNow(); }
+    async function syncNow() { if (accountsCache[currentUser]) { accountsCache[currentUser].balance = balance; await saveAcc(); } }
     document.getElementById('balance-display').textContent = `${balance.toLocaleString()} ₽`;
 
     const canvas = document.getElementById('roulette');
