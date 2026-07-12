@@ -37,19 +37,20 @@
     <div class="history-box" id="history-box">История игр</div>
   </div>
   <script>
-    const BIN_ID = '6a516a15f5f4af5e297ecf15', MASTER_KEY = '$2a$10$ESWoAwK.zv8By8WZCjzhu.zw1AIOFcUeILyVjiDrHmv62jIxygKoO', API_URL = `https://api.jsonbin.io/v3/b/${BIN_ID}`;
+    const API_URL = 'https://lucky-finger.onrender.com';
     const currentUser = localStorage.getItem('currentUser');
     if (!currentUser) window.location.href = 'index.html';
-    
     let balance = parseInt(localStorage.getItem('bal_' + currentUser)) || 1000;
-    let isPlaying = false, prizeCup = 0, currentBet = 0;
-    
+    let isPlaying = false, prizeCup = 0, currentBet = 0, accountsCache = {};
+
+    async function loadAcc() { try { const r = await fetch(API_URL); accountsCache = await r.json(); } catch(e) {} }
+    async function saveAcc() { try { await fetch(API_URL, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(accountsCache) }); } catch(e) {} }
     function saveBal() { localStorage.setItem('bal_' + currentUser, balance); document.getElementById('balance-display').textContent = `${balance.toLocaleString()} ₽`; syncWithCloud(); }
-    async function syncWithCloud() { try { const r=await fetch(API_URL+'/latest',{headers:{'X-Master-Key':MASTER_KEY}}); const d=await r.json(); const a=d.record||{}; if(a[currentUser]){a[currentUser].balance=balance;}else{a[currentUser]={password:'',balance:balance,created:new Date().toISOString(),banned:false};} await fetch(API_URL,{method:'PUT',headers:{'Content-Type':'application/json','X-Master-Key':MASTER_KEY},body:JSON.stringify(a)}); } catch(e) {} }
-    
+    async function syncWithCloud() { if (accountsCache[currentUser]) { accountsCache[currentUser].balance = balance; await saveAcc(); } }
     document.getElementById('balance-display').textContent = `${balance.toLocaleString()} ₽`;
+
     function reset(){ document.querySelectorAll('.cup').forEach(c=>{c.classList.remove('revealed','winner');c.textContent='🏺';c.style.pointerEvents='auto';}); document.getElementById('shuffling-text').textContent=''; }
-    
+
     document.getElementById('btn-play').onclick=()=>{
       if(isPlaying)return;
       currentBet=+document.getElementById('bet-input').value;
@@ -58,7 +59,7 @@
       prizeCup=Math.floor(Math.random()*3); document.getElementById('shuffling-text').textContent='🔄 Перемешивание...';
       let s=0; const iv=setInterval(()=>{document.querySelectorAll('.cup').forEach(c=>{c.style.transform=`translateY(${Math.random()*20-10}px) rotate(${Math.random()*20-10}deg)`;});s++;if(s>=10){clearInterval(iv);document.querySelectorAll('.cup').forEach(c=>{c.style.transform='';c.onclick=function(){if(!isPlaying)return;reveal(+this.dataset.cup);};});document.getElementById('shuffling-text').textContent='👆 Выберите чашу!';}},200);
     };
-    
+
     function reveal(chosen){
       isPlaying=false; document.getElementById('btn-play').disabled=false;
       document.querySelectorAll('.cup').forEach((c,i)=>{c.classList.add('revealed');c.style.pointerEvents='none';c.textContent=i===prizeCup?'💎':'🪨';if(i===prizeCup)c.classList.add('winner');});
@@ -66,6 +67,8 @@
       document.getElementById('status-text').textContent=won?`Алмаз! +${win}₽`:`Камень... -${currentBet}₽`; document.getElementById('status-text').style.color=won?'#2ed573':'#ff4757';
       document.getElementById('shuffling-text').textContent=won?'🎉 Поздравляем!':'😢 Не повезло'; setTimeout(reset,2000);
     }
+
+    (async () => { await loadAcc(); })();
   </script>
 </body>
 </html>
