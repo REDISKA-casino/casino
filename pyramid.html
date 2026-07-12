@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>Пирамиды</title>
+  <title>Пирамида</title>
   <style>
     :root { --bg: #121212; --panel: #1e1e1e; --text: #e0e0e0; --accent: #ff4757; --success: #2ed573; --gold: #ffd700; }
     body { background: var(--bg); color: var(--text); font-family: system-ui, sans-serif; margin: 0; display: flex; flex-direction: column; align-items: center; min-height: 100vh; }
@@ -43,12 +43,12 @@
     const currentUser = localStorage.getItem('currentUser');
     if (!currentUser) window.location.href = 'index.html';
     let balance = parseInt(localStorage.getItem('bal_' + currentUser)) || 1000;
-    let isPlaying = false, prizeCup = 0, currentBet = 0, accountsCache = {};
+    let isPlaying = false, prizeCup = 0, currentBet = 0, accountsCache = {}, syncTimer = null;
 
     async function loadAcc() { try { const r = await fetch(API_URL + '/latest', { headers: { 'X-Master-Key': MASTER_KEY } }); const d = await r.json(); accountsCache = d.record || {}; } catch(e) {} }
     async function saveAcc() { try { await fetch(API_URL, { method: 'PUT', headers: { 'Content-Type': 'application/json', 'X-Master-Key': MASTER_KEY }, body: JSON.stringify(accountsCache) }); } catch(e) {} }
-    function saveBal() { localStorage.setItem('bal_' + currentUser, balance); document.getElementById('balance-display').textContent = `${balance.toLocaleString()} ₽`; syncWithCloud(); }
-    async function syncWithCloud() { if (accountsCache[currentUser]) { accountsCache[currentUser].balance = balance; await saveAcc(); } }
+    function saveBal() { localStorage.setItem('bal_' + currentUser, balance); document.getElementById('balance-display').textContent = `${balance.toLocaleString()} ₽`; scheduleSync(); }
+    function scheduleSync() { if (syncTimer) clearTimeout(syncTimer); syncTimer = setTimeout(async () => { if (accountsCache[currentUser]) { accountsCache[currentUser].balance = balance; await saveAcc(); } }, 5000); }
     document.getElementById('balance-display').textContent = `${balance.toLocaleString()} ₽`;
 
     function reset(){ document.querySelectorAll('.cup').forEach(c=>{c.classList.remove('revealed','winner');c.textContent='🏺';c.style.pointerEvents='auto';}); document.getElementById('shuffling-text').textContent=''; }
@@ -70,6 +70,7 @@
       document.getElementById('shuffling-text').textContent=won?'🎉 Поздравляем!':'😢 Не повезло'; setTimeout(reset,2000);
     }
 
+    window.addEventListener('beforeunload', async () => { if (accountsCache[currentUser]) { accountsCache[currentUser].balance = balance; await saveAcc(); } });
     (async () => { await loadAcc(); })();
   </script>
 </body>
