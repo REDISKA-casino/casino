@@ -50,117 +50,65 @@
     <div class="history-box" id="history-box">История раундов</div>
   </div>
   <script>
-    const BIN_ID = '6a516a15f5f4af5e297ecf15';
-    const MASTER_KEY = '$2a$10$ESWoAwK.zv8By8WZCjzhu.zw1AIOFcUeILyVjiDrHmv62jIxygKoO';
-    const API_URL = `https://api.jsonbin.io/v3/b/${BIN_ID}`;
-    
+    const API_URL = 'https://lucky-finger.onrender.com';
     let currentUser = localStorage.getItem('currentUser');
     if (!currentUser) { window.location.href = 'index.html'; }
-    
     let balance = parseInt(localStorage.getItem('bal_' + currentUser)) || 1000;
     let bet = 0, isSpinning = false, selectedColor = null;
     const SECTORS = 37, colors = [];
     for(let i=0;i<SECTORS;i++){ colors[i]=i===0?'green':i%2===0?'black':'red'; }
-    
+    let accountsCache = {};
+
+    async function loadAcc() { try { const r = await fetch(API_URL); accountsCache = await r.json(); } catch(e) {} }
+    async function saveAcc() { try { await fetch(API_URL, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(accountsCache) }); } catch(e) {} }
     function saveBal() { localStorage.setItem('bal_' + currentUser, balance); document.getElementById('balance-display').textContent = `${balance.toLocaleString()} ₽`; syncWithCloud(); }
-    async function syncWithCloud() {
-      try { const r=await fetch(API_URL+'/latest',{headers:{'X-Master-Key':MASTER_KEY}}); const d=await r.json(); const a=d.record||{}; if(a[currentUser]){a[currentUser].balance=balance;}else{a[currentUser]={password:'',balance:balance,created:new Date().toISOString(),banned:false};} await fetch(API_URL,{method:'PUT',headers:{'Content-Type':'application/json','X-Master-Key':MASTER_KEY},body:JSON.stringify(a)}); } catch(e) {}
-    }
-    
+    async function syncWithCloud() { if (accountsCache[currentUser]) { accountsCache[currentUser].balance = balance; await saveAcc(); } }
     document.getElementById('balance-display').textContent = `${balance.toLocaleString()} ₽`;
-    
+
     const canvas = document.getElementById('roulette');
     const ctx = canvas.getContext('2d');
     const SIZE = 300, CX = 150, CY = 150, R = 143, TR = 118, CR = 14;
-    
+
     function drawWheel(){
       const sa = 2*Math.PI/SECTORS;
       ctx.clearRect(0,0,SIZE,SIZE);
-      
-      ctx.beginPath();
-      ctx.arc(CX, CY, R, 0, Math.PI*2);
-      ctx.fillStyle = '#000';
-      ctx.fill();
-      
-      for(let i=0;i<SECTORS;i++){
-        ctx.beginPath(); 
-        ctx.moveTo(CX,CY); 
-        ctx.arc(CX,CY,R,i*sa-Math.PI/2,(i+1)*sa-Math.PI/2); 
-        ctx.closePath();
-        ctx.fillStyle=colors[i]==='green'?'#00b894':colors[i]==='red'?'#ff4757':'#000'; 
-        ctx.fill();
-        ctx.strokeStyle='#222'; 
-        ctx.lineWidth=0.5; 
-        ctx.stroke();
-      }
-      
-      ctx.fillStyle='#fff'; 
-      ctx.font='bold 10px system-ui'; 
-      ctx.textAlign='center'; 
-      ctx.textBaseline='middle';
-      for(let i=0;i<SECTORS;i++){ 
-        const midAngle = i*sa + sa/2 - Math.PI/2;
-        const textAngle = midAngle + Math.PI - Math.PI/2;
-        const x = CX + Math.cos(midAngle) * TR;
-        const y = CY + Math.sin(midAngle) * TR;
-        ctx.save();
-        ctx.translate(x, y);
-        ctx.rotate(textAngle);
-        ctx.fillText(i.toString(), 0, 0);
-        ctx.restore();
-      }
-      
-      ctx.beginPath(); 
-      ctx.arc(CX,CY,CR,0,Math.PI*2); 
-      ctx.fillStyle='#fff'; 
-      ctx.fill(); 
-      ctx.strokeStyle='#333'; 
-      ctx.lineWidth=2; 
-      ctx.stroke();
+      ctx.beginPath(); ctx.arc(CX, CY, R, 0, Math.PI*2); ctx.fillStyle = '#000'; ctx.fill();
+      for(let i=0;i<SECTORS;i++){ ctx.beginPath(); ctx.moveTo(CX,CY); ctx.arc(CX,CY,R,i*sa-Math.PI/2,(i+1)*sa-Math.PI/2); ctx.closePath(); ctx.fillStyle=colors[i]==='green'?'#00b894':colors[i]==='red'?'#ff4757':'#000'; ctx.fill(); ctx.strokeStyle='#222'; ctx.lineWidth=0.5; ctx.stroke(); }
+      ctx.fillStyle='#fff'; ctx.font='bold 10px system-ui'; ctx.textAlign='center'; ctx.textBaseline='middle';
+      for(let i=0;i<SECTORS;i++){ const midAngle = i*sa + sa/2 - Math.PI/2; const textAngle = midAngle + Math.PI - Math.PI/2; const x = CX + Math.cos(midAngle) * TR; const y = CY + Math.sin(midAngle) * TR; ctx.save(); ctx.translate(x, y); ctx.rotate(textAngle); ctx.fillText(i.toString(), 0, 0); ctx.restore(); }
+      ctx.beginPath(); ctx.arc(CX,CY,CR,0,Math.PI*2); ctx.fillStyle='#fff'; ctx.fill(); ctx.strokeStyle='#333'; ctx.lineWidth=2; ctx.stroke();
     }
-    
     drawWheel();
-    
+
     function setSelected(s,...o){ s.style.border='2px solid #fff'; o.forEach(b=>{b.style.border=b.classList.contains('btn-black')?'1px solid #333':'none';}); }
     document.getElementById('btn-red').onclick=()=>{if(isSpinning)return;selectedColor='red';setSelected(document.getElementById('btn-red'),document.getElementById('btn-black'),document.getElementById('btn-green'));};
     document.getElementById('btn-black').onclick=()=>{if(isSpinning)return;selectedColor='black';setSelected(document.getElementById('btn-black'),document.getElementById('btn-red'),document.getElementById('btn-green'));};
     document.getElementById('btn-green').onclick=()=>{if(isSpinning)return;selectedColor='green';setSelected(document.getElementById('btn-green'),document.getElementById('btn-red'),document.getElementById('btn-black'));};
-    
+
     document.getElementById('btn-spin').onclick=()=>{
       if(isSpinning||!selectedColor)return;
       bet=+document.getElementById('bet-input').value;
       if(!bet||bet<=0||bet>balance){alert('Некорректная ставка');return;}
-      isSpinning=true; 
-      document.getElementById('btn-spin').disabled=true;
-      document.getElementById('btn-red').disabled=true;
-      document.getElementById('btn-black').disabled=true;
-      document.getElementById('btn-green').disabled=true;
+      isSpinning=true; document.getElementById('btn-spin').disabled=true; document.getElementById('btn-red').disabled=true; document.getElementById('btn-black').disabled=true; document.getElementById('btn-green').disabled=true;
       balance-=bet; saveBal();
-      
       const target=Math.floor(Math.random()*SECTORS);
       const targetAngle = 360 - ((target/SECTORS)*360 + (360/SECTORS/2));
       const rotations = 5 + Math.floor(Math.random()*4);
       const totalAngle = rotations*360 + targetAngle;
-      
       canvas.style.transition = 'transform 5s cubic-bezier(0.2,0.8,0.2,1)';
       canvas.style.transform = `rotate(${totalAngle}deg)`;
-      
       setTimeout(() => {
-        canvas.style.transition = 'none';
-        canvas.style.transform = `rotate(${targetAngle}deg)`;
-        isSpinning=false; 
-        document.getElementById('btn-spin').disabled=false;
-        document.getElementById('btn-red').disabled=false;
-        document.getElementById('btn-black').disabled=false;
-        document.getElementById('btn-green').disabled=false;
-        const c=colors[target]; let w=0;
-        if(c===selectedColor)w=c==='green'?bet*10:bet*2;
+        canvas.style.transition = 'none'; canvas.style.transform = `rotate(${targetAngle}deg)`;
+        isSpinning=false; document.getElementById('btn-spin').disabled=false; document.getElementById('btn-red').disabled=false; document.getElementById('btn-black').disabled=false; document.getElementById('btn-green').disabled=false;
+        const c=colors[target]; let w=0; if(c===selectedColor)w=c==='green'?bet*10:bet*2;
         balance+=w; saveBal();
         document.getElementById('status-text').textContent=`Выпало: ${target} (${c==='green'?'Зелёное':c==='red'?'Красное':'Чёрное'}) ${w>0?'+'+w+'₽':'-'+bet+'₽'}`;
         document.getElementById('status-text').style.color=w>0?'#2ed573':'#ff4757';
         selectedColor=null; document.querySelectorAll('.color-btn').forEach(b=>{b.style.border=b.classList.contains('btn-black')?'1px solid #333':'none';});
       }, 5100);
     };
+
+    (async () => { await loadAcc(); })();
   </script>
 </body>
 </html>
