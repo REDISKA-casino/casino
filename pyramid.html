@@ -51,6 +51,8 @@
     async function syncNow() { if (accountsCache[currentUser]) { accountsCache[currentUser].balance = balance; await saveAcc(); } }
     document.getElementById('balance-display').textContent = `${balance.toLocaleString()} ₽`;
 
+    function addHistory(text) { const box = document.getElementById('history-box'); if(!box) return; const div = document.createElement('div'); div.textContent = text; div.style.padding = '4px 0'; div.style.borderBottom = '1px solid #2a2a2a'; box.insertBefore(div, box.firstChild); while(box.children.length > 20) { box.removeChild(box.lastChild); } }
+
     function reset(){ document.querySelectorAll('.cup').forEach(c=>{c.classList.remove('revealed','winner');c.textContent='🏺';c.style.pointerEvents='auto';}); document.getElementById('shuffling-text').textContent=''; }
 
     document.getElementById('btn-play').onclick=()=>{
@@ -67,7 +69,9 @@
       document.querySelectorAll('.cup').forEach((c,i)=>{c.classList.add('revealed');c.style.pointerEvents='none';c.textContent=i===prizeCup?'💎':'🪨';if(i===prizeCup)c.classList.add('winner');});
       const won=chosen===prizeCup,win=won?currentBet*3:0; balance+=win; saveBal();
       document.getElementById('status-text').textContent=won?`Алмаз! +${win}₽`:`Камень... -${currentBet}₽`; document.getElementById('status-text').style.color=won?'#2ed573':'#ff4757';
-      document.getElementById('shuffling-text').textContent=won?'🎉 Поздравляем!':'😢 Не повезло'; setTimeout(reset,2000);
+      document.getElementById('shuffling-text').textContent=won?'🎉 Поздравляем!':'😢 Не повезло';
+      addHistory(won?`💎 Алмаз! +${win}₽`:`🪨 Камень: -${currentBet}₽`);
+      setTimeout(reset,2000);
     }
 
     window.addEventListener('beforeunload', async () => { if (accountsCache[currentUser]) { accountsCache[currentUser].balance = balance; await saveAcc(); } });
