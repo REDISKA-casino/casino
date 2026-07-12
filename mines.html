@@ -49,13 +49,13 @@
     if (!currentUser) window.location.href = 'index.html';
     let balance = parseInt(localStorage.getItem('bal_' + currentUser)) || 1000;
     let gameActive = false, gameStarted = false, currentBet = 0, currentWinAmount = 0, minesCount = 15, rewardPerCell = 2;
-    let minePositions = new Set(), revealedCells = new Set(), accountsCache = {}, syncTimer = null;
+    let minePositions = new Set(), revealedCells = new Set(), accountsCache = {};
     const TOTAL_CELLS = 100, boardEl = document.getElementById('board');
 
     async function loadAcc() { try { const r = await fetch(API_URL + '/latest', { headers: { 'X-Master-Key': MASTER_KEY } }); const d = await r.json(); accountsCache = d.record || {}; } catch(e) {} }
     async function saveAcc() { try { await fetch(API_URL, { method: 'PUT', headers: { 'Content-Type': 'application/json', 'X-Master-Key': MASTER_KEY }, body: JSON.stringify(accountsCache) }); } catch(e) {} }
-    function saveBal() { localStorage.setItem('bal_' + currentUser, balance); updateDisplay(); scheduleSync(); }
-    function scheduleSync() { if (syncTimer) clearTimeout(syncTimer); syncTimer = setTimeout(async () => { if (accountsCache[currentUser]) { accountsCache[currentUser].balance = balance; await saveAcc(); } }, 5000); }
+    function saveBal() { localStorage.setItem('bal_' + currentUser, balance); updateDisplay(); syncNow(); }
+    async function syncNow() { if (accountsCache[currentUser]) { accountsCache[currentUser].balance = balance; await saveAcc(); } }
     function updateDisplay() { document.getElementById('balance-display').textContent = `${balance.toLocaleString()} ₽`; document.getElementById('header-balance').textContent = `${balance.toLocaleString()} ₽`; document.getElementById('win-display').textContent = `${currentWinAmount} ₽`; }
     function calculateReward(m) { return Math.floor(2 + (m / 10)); }
     function updateRewardDisplay() { document.getElementById('reward-info').textContent = `💰 Награда за клетку: ${calculateReward(+document.getElementById('mines-input').value||15)} ₽`; }
