@@ -60,7 +60,7 @@
           <input type="text" class="auth-input" id="register-nickname" placeholder="Придумайте никнейм" autocomplete="username" />
           <div class="password-wrapper">
             <input type="password" class="auth-input" id="register-password" placeholder="Придумайте пароль" autocomplete="new-password" />
-            <button type="button" class="toggle-password" data-target="register-password">👁️</button>
+            <button type="button" class="toggle-password" data-target="register-password">🔒</button>
           </div>
           <div class="checkbox-container"><input type="checkbox" id="agree-checkbox" /><label class="checkbox-label" for="agree-checkbox">Я соглашаюсь с условиями <a href="pol.html" target="_blank">политики</a> и <a href="con.html" target="_blank">конфиденциальности</a></label></div>
           <button class="auth-btn btn-register" id="btn-register" disabled>Зарегистрироваться</button>
@@ -96,8 +96,8 @@
         e.preventDefault();
         const input = document.getElementById(this.dataset.target);
         if (input && (input.id === 'login-password' || input.id === 'register-password')) {
-          if (input.type === 'password') { input.type = 'text'; this.textContent = '🔒'; }
-          else { input.type = 'password'; this.textContent = '👁️'; }
+          if (input.type === 'password') { input.type = 'text'; this.textContent = '👁️'; }
+          else { input.type = 'password'; this.textContent = '🔒'; }
         }
       });
     });
