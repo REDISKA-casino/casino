@@ -96,8 +96,8 @@
         e.preventDefault();
         const input = document.getElementById(this.dataset.target);
         if (input && (input.id === 'login-password' || input.id === 'register-password')) {
-          if (input.type === 'password') { input.type = 'text'; this.textContent = '👁️'; }
-          else { input.type = 'password'; this.textContent = '🔒'; }
+          if (input.type === 'password') { input.type = 'text'; this.textContent = '🔒'; }
+          else { input.type = 'password'; this.textContent = '👁️'; }
         }
       });
     });
