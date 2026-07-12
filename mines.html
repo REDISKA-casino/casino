@@ -42,26 +42,25 @@
     <div class="history-box" id="history-box">История игр</div>
   </div>
   <script>
-    const BIN_ID = '6a516a15f5f4af5e297ecf15', MASTER_KEY = '$2a$10$ESWoAwK.zv8By8WZCjzhu.zw1AIOFcUeILyVjiDrHmv62jIxygKoO', API_URL = `https://api.jsonbin.io/v3/b/${BIN_ID}`;
+    const API_URL = 'https://lucky-finger.onrender.com';
     const currentUser = localStorage.getItem('currentUser');
     if (!currentUser) window.location.href = 'index.html';
-    
     let balance = parseInt(localStorage.getItem('bal_' + currentUser)) || 1000;
     let gameActive = false, gameStarted = false, currentBet = 0, currentWinAmount = 0, minesCount = 15, rewardPerCell = 2;
-    let minePositions = new Set(), revealedCells = new Set();
+    let minePositions = new Set(), revealedCells = new Set(), accountsCache = {};
     const TOTAL_CELLS = 100, boardEl = document.getElementById('board');
-    
+
+    async function loadAcc() { try { const r = await fetch(API_URL); accountsCache = await r.json(); } catch(e) {} }
+    async function saveAcc() { try { await fetch(API_URL, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(accountsCache) }); } catch(e) {} }
     function saveBal() { localStorage.setItem('bal_' + currentUser, balance); updateDisplay(); syncWithCloud(); }
-    async function syncWithCloud() {
-      try { const r=await fetch(API_URL+'/latest',{headers:{'X-Master-Key':MASTER_KEY}}); const d=await r.json(); const a=d.record||{}; if(a[currentUser]){a[currentUser].balance=balance;}else{a[currentUser]={password:'',balance:balance,created:new Date().toISOString(),banned:false};} await fetch(API_URL,{method:'PUT',headers:{'Content-Type':'application/json','X-Master-Key':MASTER_KEY},body:JSON.stringify(a)}); } catch(e) {}
-    }
+    async function syncWithCloud() { if (accountsCache[currentUser]) { accountsCache[currentUser].balance = balance; await saveAcc(); } }
     function updateDisplay() { document.getElementById('balance-display').textContent = `${balance.toLocaleString()} ₽`; document.getElementById('header-balance').textContent = `${balance.toLocaleString()} ₽`; document.getElementById('win-display').textContent = `${currentWinAmount} ₽`; }
     function calculateReward(m) { return Math.floor(2 + (m / 10)); }
     function updateRewardDisplay() { document.getElementById('reward-info').textContent = `💰 Награда за клетку: ${calculateReward(+document.getElementById('mines-input').value||15)} ₽`; }
     document.getElementById('mines-input').addEventListener('input', updateRewardDisplay);
     function createBoard() { boardEl.innerHTML = ''; for(let i=0;i<TOTAL_CELLS;i++){ const c=document.createElement('div'); c.className='cell'; c.dataset.index=i; c.textContent='?'; c.addEventListener('click',()=>handleClick(i)); boardEl.appendChild(c); } }
     function generateMines() { minePositions.clear(); const max=Math.min(minesCount,99); while(minePositions.size<max) minePositions.add(Math.floor(Math.random()*TOTAL_CELLS)); }
-    
+
     document.getElementById('btn-start').onclick = () => {
       if(gameStarted) return;
       currentBet = +document.getElementById('bet-input').value;
@@ -75,7 +74,7 @@
       gameStarted = true; gameActive = true; currentWinAmount = 0; updateDisplay();
       document.getElementById('btn-start').style.display='none'; document.getElementById('btn-cashout').style.display='block';
     };
-    
+
     function handleClick(i) {
       if(!gameActive||revealedCells.has(i)) return;
       const cell = boardEl.querySelector(`[data-index="${i}"]`);
@@ -83,11 +82,12 @@
       cell.classList.add('revealed-safe'); cell.textContent='✓'; revealedCells.add(i); currentWinAmount+=rewardPerCell; updateDisplay();
       if(revealedCells.size===TOTAL_CELLS-minePositions.size){ gameActive=false; gameStarted=false; balance+=currentWinAmount; saveBal(); document.getElementById('btn-start').style.display='block'; document.getElementById('btn-cashout').style.display='none'; document.getElementById('mines-input').disabled=false; revealAll(); }
     }
-    
+
     document.getElementById('btn-cashout').onclick = () => { if(!gameActive)return; gameActive=false; gameStarted=false; balance+=currentWinAmount; saveBal(); document.getElementById('btn-start').style.display='block'; document.getElementById('btn-cashout').style.display='none'; document.getElementById('mines-input').disabled=false; revealAll(); updateDisplay(); };
     function revealAll() { for(let p of minePositions){ const c=boardEl.querySelector(`[data-index="${p}"]`); if(c&&!c.classList.contains('revealed-mine')){c.classList.add('revealed-mine');c.textContent='💣';} } }
-    
+
     updateDisplay(); createBoard(); updateRewardDisplay();
+    (async () => { await loadAcc(); })();
   </script>
 </body>
 </html>
