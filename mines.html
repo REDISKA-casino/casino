@@ -32,7 +32,7 @@
   </style>
 </head>
 <body>
-  <div class="header"><a href="index.html" class="back-btn">← Назад</a><span class="balance-header" id="header-balance">1000 ₽</span></div>
+  <div class="header"><a href="index.html" class="back-btn" onclick="localStorage.setItem('coming_back','true')">← Назад</a><span class="balance-header" id="header-balance">1000 ₽</span></div>
   <div class="game-container"><h1>💣 Минное поле</h1>
     <div class="controls-box"><div class="stat-item">Мины<span class="stat-value" id="mines-count">15</span></div><div class="stat-item">Выигрыш<span class="stat-value" id="win-display">0 ₽</span></div><div class="stat-item">Баланс<span class="stat-value" id="balance-display">1000 ₽</span></div></div>
     <div class="settings-box"><div class="setting-item"><div class="setting-label">Количество мин (1-80)</div><input type="number" class="setting-input" id="mines-input" min="1" max="80" value="15" /></div><div class="reward-info" id="reward-info">💰 Награда за клетку: 2 ₽</div></div>
