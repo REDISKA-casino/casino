@@ -52,6 +52,8 @@
     async function syncNow() { if (accountsCache[currentUser]) { accountsCache[currentUser].balance = balance; await saveAcc(); } }
     document.getElementById('balance-display').textContent = `${balance.toLocaleString()} ₽`;
 
+    function addHistory(text) { const box = document.getElementById('history-box'); if(!box) return; const div = document.createElement('div'); div.textContent = text; div.style.padding = '4px 0'; div.style.borderBottom = '1px solid #2a2a2a'; box.insertBefore(div, box.firstChild); while(box.children.length > 20) { box.removeChild(box.lastChild); } }
+
     function getFish(){ const t=fishList.reduce((s,f)=>s+f.c,0); let r=Math.random()*t; for(const f of fishList){r-=f.c;if(r<=0)return f;} return fishList[0]; }
     function reset(){ isFishing=false; document.getElementById('btn-cast').disabled=false; document.getElementById('btn-reel').style.display='none'; document.getElementById('bobber').classList.remove('biting'); clearTimeout(ct); clearTimeout(bt); }
 
@@ -70,6 +72,7 @@
       const f=getFish(); document.getElementById('catch-display').textContent=f.i; document.getElementById('catch-display').classList.add('bite'); document.getElementById('bobber').classList.remove('biting');
       const w=Math.floor(currentBet*f.m); balance+=w; saveBal();
       document.getElementById('status-text').textContent=f.m>0?`${f.n}! +${w}₽`:`${f.n}! -${currentBet}₽`; document.getElementById('status-text').style.color=f.m>0?'#2ed573':'#ff4757';
+      addHistory(`${f.i} ${f.n}: ${f.m>0?'+'+w+'₽':'-'+currentBet+'₽'}`);
       document.getElementById('btn-reel').style.display='none'; setTimeout(reset,2000);
     };
 
