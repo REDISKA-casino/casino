@@ -50,7 +50,9 @@
     <div class="history-box" id="history-box">История раундов</div>
   </div>
   <script>
-    const API_URL = 'https://lucky-finger.onrender.com';
+    const BIN_ID = '6a516a15f5f4af5e297ecf15';
+    const MASTER_KEY = '$2a$10$ESWoAwK.zv8By8WZCjzhu.zw1AIOFcUeILyVjiDrHmv62jIxygKoO';
+    const API_URL = `https://api.jsonbin.io/v3/b/${BIN_ID}`;
     let currentUser = localStorage.getItem('currentUser');
     if (!currentUser) { window.location.href = 'index.html'; }
     let balance = parseInt(localStorage.getItem('bal_' + currentUser)) || 1000;
@@ -59,8 +61,8 @@
     for(let i=0;i<SECTORS;i++){ colors[i]=i===0?'green':i%2===0?'black':'red'; }
     let accountsCache = {};
 
-    async function loadAcc() { try { const r = await fetch(API_URL); accountsCache = await r.json(); } catch(e) {} }
-    async function saveAcc() { try { await fetch(API_URL, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(accountsCache) }); } catch(e) {} }
+    async function loadAcc() { try { const r = await fetch(API_URL + '/latest', { headers: { 'X-Master-Key': MASTER_KEY } }); const d = await r.json(); accountsCache = d.record || {}; } catch(e) {} }
+    async function saveAcc() { try { await fetch(API_URL, { method: 'PUT', headers: { 'Content-Type': 'application/json', 'X-Master-Key': MASTER_KEY }, body: JSON.stringify(accountsCache) }); } catch(e) {} }
     function saveBal() { localStorage.setItem('bal_' + currentUser, balance); document.getElementById('balance-display').textContent = `${balance.toLocaleString()} ₽`; syncWithCloud(); }
     async function syncWithCloud() { if (accountsCache[currentUser]) { accountsCache[currentUser].balance = balance; await saveAcc(); } }
     document.getElementById('balance-display').textContent = `${balance.toLocaleString()} ₽`;
