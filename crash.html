@@ -48,12 +48,12 @@
     let balance = parseInt(localStorage.getItem('bal_' + currentUser)) || 1000;
     let bet = 0, isPlaying = false, crashMultiplier = 0, currentMultiplier = 1, animationFrameId;
     const MAX_CRASH = 10, SPEED_MULTIPLIER = 0.010;
-    let accountsCache = {};
+    let accountsCache = {}, syncTimer = null;
 
     async function loadAcc() { try { const r = await fetch(API_URL + '/latest', { headers: { 'X-Master-Key': MASTER_KEY } }); const d = await r.json(); accountsCache = d.record || {}; } catch(e) {} }
     async function saveAcc() { try { await fetch(API_URL, { method: 'PUT', headers: { 'Content-Type': 'application/json', 'X-Master-Key': MASTER_KEY }, body: JSON.stringify(accountsCache) }); } catch(e) {} }
-    function saveBal() { localStorage.setItem('bal_' + currentUser, balance); document.getElementById('balance-display').textContent = `${balance.toLocaleString()} ₽`; syncWithCloud(); }
-    async function syncWithCloud() { if (accountsCache[currentUser]) { accountsCache[currentUser].balance = balance; await saveAcc(); } }
+    function saveBal() { localStorage.setItem('bal_' + currentUser, balance); document.getElementById('balance-display').textContent = `${balance.toLocaleString()} ₽`; scheduleSync(); }
+    function scheduleSync() { if (syncTimer) clearTimeout(syncTimer); syncTimer = setTimeout(async () => { if (accountsCache[currentUser]) { accountsCache[currentUser].balance = balance; await saveAcc(); } }, 5000); }
     document.getElementById('balance-display').textContent = `${balance.toLocaleString()} ₽`;
 
     function resize() { const c=document.getElementById('graph'),w=document.getElementById('graph-wrapper').clientWidth,h=document.getElementById('graph-wrapper').clientHeight,dpr=window.devicePixelRatio||1; c.width=w*dpr; c.height=h*dpr; c.style.width=w+'px'; c.style.height=h+'px'; c.getContext('2d').setTransform(dpr,0,0,dpr,0,0); }
@@ -81,6 +81,7 @@
       else { document.getElementById('status-text').textContent=`Обвал на ${crashMultiplier.toFixed(2)}x`; document.getElementById('status-text').style.color='#ff4757'; }
       saveBal(); }
 
+    window.addEventListener('beforeunload', async () => { if (accountsCache[currentUser]) { accountsCache[currentUser].balance = balance; await saveAcc(); } });
     (async () => { await loadAcc(); })();
   </script>
 </body>
