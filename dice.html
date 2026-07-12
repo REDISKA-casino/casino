@@ -65,6 +65,8 @@
     async function syncNow() { if (accountsCache[currentUser]) { accountsCache[currentUser].balance = balance; await saveAcc(); } }
     document.getElementById('balance-display').textContent = `${balance.toLocaleString()} ₽`;
 
+    function addHistory(text) { const box = document.getElementById('history-box'); if(!box) return; const div = document.createElement('div'); div.textContent = text; div.style.padding = '4px 0'; div.style.borderBottom = '1px solid #2a2a2a'; box.insertBefore(div, box.firstChild); while(box.children.length > 20) { box.removeChild(box.lastChild); } }
+
     document.querySelectorAll('.bet-btn').forEach(b=>b.addEventListener('click',()=>{document.querySelectorAll('.bet-btn').forEach(x=>x.classList.remove('selected'));b.classList.add('selected');selectedBet=b.dataset.bet;}));
 
     document.getElementById('btn-roll').onclick=()=>{
@@ -78,6 +80,7 @@
         let w=0,won=false;
         switch(selectedBet){case'7':if(sum===7){w=bet*4;won=true;}break;case'11':if(sum===11){w=bet*5;won=true;}break;case'2-12':if(sum===2||sum===12){w=bet*10;won=true;}break;case'even':if(sum%2===0){w=Math.floor(bet*1.5);won=true;}break;case'odd':if(sum%2===1){w=Math.floor(bet*1.5);won=true;}break;}
         balance+=w; saveBal(); document.getElementById('status-text').textContent=won?`${v1}+${v2}=${sum}! +${w}₽`:`${v1}+${v2}=${sum}. -${bet}₽`; document.getElementById('status-text').style.color=won?'#2ed573':'#ff4757';
+        addHistory(`🎲 ${v1}+${v2}=${sum}: ${won?'+'+w+'₽':'-'+bet+'₽'}`);
         isRolling=false; document.getElementById('btn-roll').disabled=false;
       }},80);
     };
