@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Покер</title>
+  <style>
+    :root { --bg: #121212; --panel: #1e1e1e; --text: #e0e0e0; --accent: #ff4757; --success: #2ed573; --gold: #ffd700; }
+    body { background: var(--bg); color: var(--text); font-family: system-ui, sans-serif; margin: 0; display: flex; flex-direction: column; align-items: center; min-height: 100vh; }
+    .header { width: 100%; max-width: 500px; display: flex; align-items: center; padding: 16px 16px 0 16px; gap: 12px; }
+    .back-btn { background: var(--panel); color: var(--text); border: 1px solid #333; padding: 8px 16px; border-radius: 8px; font-size: 14px; cursor: pointer; text-decoration: none; display: inline-block; }
+    h1 { margin: 16px 0; font-weight: 400; }
+    .game-container { width: 100%; max-width: 500px; padding: 16px; }
+    .cards-area { display: flex; justify-content: center; gap: 8px; margin: 20px 0; flex-wrap: wrap; }
+    .card { width: 60px; height: 90px; background: #fff; border-radius: 8px; display: flex; flex-direction: column; justify-content: center; align-items: center; font-size: 24px; font-weight: bold; cursor: pointer; border: 2px solid #333; transition: transform 0.2s; position: relative; color: #000; }
+    .card.red { color: #ff0000; }
+    .card.held { transform: translateY(-15px); border-color: #ffd700; box-shadow: 0 0 10px rgba(255,215,0,0.5); }
+    .card-suit { font-size: 14px; }
+    .controls-box { background: var(--panel); padding: 16px; border-radius: 12px; text-align: center; }
+    .balance-box { display: flex; justify-content: space-between; padding: 8px 0; margin-bottom: 12px; font-size: 18px; }
+    input[type="number"] { width: 100%; padding: 12px; border: 1px solid #333; border-radius: 6px; background: #000; color: #fff; text-align: center; font-size: 18px; box-sizing: border-box; margin-bottom: 12px; }
+    .btn { width: 100%; padding: 14px; border: none; border-radius: 8px; font-size: 16px; cursor: pointer; font-weight: bold; color: white; }
+    .btn:active { transform: scale(0.98); } .btn:disabled { opacity: 0.5; }
+    .btn-deal { background: var(--accent); } .btn-draw { background: var(--success); margin-top: 8px; display: none; }
+    .status-text { text-align: center; font-size: 20px; font-weight: bold; margin-bottom: 12px; min-height: 28px; }
+    .combo-text { text-align: center; font-size: 14px; color: #ffa502; min-height: 20px; margin: 8px 0; }
+    .payout-info { color: #aaa; font-size: 11px; margin-top: 8px; text-align: left; line-height: 1.4; }
+    .history-box { background: var(--panel); padding: 12px; border-radius: 8px; font-size: 13px; max-height: 120px; overflow-y: auto; color: #aaa; margin-top: 12px; }
+  </style>
+</head>
+<body>
+  <div class="header"><a href="index.html" class="back-btn" onclick="localStorage.setItem('coming_back','true')">← Назад</a></div>
+  <div class="game-container">
+    <h1>🃏 Покер</h1>
+    <div class="status-text" id="status-text">Сделайте ставку и нажмите Раздать</div>
+    <div class="cards-area" id="cards-area"></div>
+    <div class="combo-text" id="combo-text"></div>
+    <div class="controls-box">
+      <div class="balance-box"><span>Баланс</span><span id="balance-display">1000 ₽</span></div>
+      <input type="number" id="bet-input" min="1" value="100" placeholder="Ставка" />
+      <button class="btn btn-deal" id="btn-deal">🃏 Раздать</button>
+      <button class="btn btn-draw" id="btn-draw">🔄 Заменить</button>
+      <div class="payout-info">Выплаты: Пара(JJ+)=x1 | Две пары=x2 | Тройка=x3 | Стрит=x4 | Флеш=x6 | Фулл Хаус=x9 | Каре=x25 | Стрит Флеш=x50 | Роял Флеш=x250</div>
+    </div>
+    <div class="history-box" id="history-box">История игр</div>
+  </div>
+  <script>
+    const BIN_ID = '6a516a15f5f4af5e297ecf15';
+    const MASTER_KEY = '$2a$10$ESWoAwK.zv8By8WZCjzhu.zw1AIOFcUeILyVjiDrHmv62jIxygKoO';
+    const API_URL = `https://api.jsonbin.io/v3/b/${BIN_ID}`;
+    const currentUser = localStorage.getItem('currentUser');
+    if (!currentUser) window.location.href = 'index.html';
+    let balance = parseInt(localStorage.getItem('bal_' + currentUser)) || 1000;
+    let deck = [], hand = [], held = [false,false,false,false,false], gamePhase = 'bet', bet = 0, accountsCache = {};
+    const suits = ['♠','♥','♦','♣'];
+    const values = ['2','3','4','5','6','7','8','9','10','J','Q','K','A'];
+
+    async function loadAcc() { try { const r = await fetch(API_URL + '/latest', { headers: { 'X-Master-Key': MASTER_KEY } }); const d = await r.json(); accountsCache = d.record || {}; } catch(e) {} }
+    async function saveAcc() { try { await fetch(API_URL, { method: 'PUT', headers: { 'Content-Type': 'application/json', 'X-Master-Key': MASTER_KEY }, body: JSON.stringify(accountsCache) }); } catch(e) {} }
+    function saveBal() { localStorage.setItem('bal_' + currentUser, balance); document.getElementById('balance-display').textContent = `${balance.toLocaleString()} ₽`; syncNow(); }
+    async function syncNow() { if (accountsCache[currentUser]) { accountsCache[currentUser].balance = balance; await saveAcc(); } }
+    function addHistory(text) { const box = document.getElementById('history-box'); if(!box) return; const div = document.createElement('div'); div.textContent = text; div.style.padding = '4px 0'; div.style.borderBottom = '1px solid #2a2a2a'; box.insertBefore(div, box.firstChild); while(box.children.length > 20) { box.removeChild(box.lastChild); } }
+    document.getElementById('balance-display').textContent = `${balance.toLocaleString()} ₽`;
+
+    function shuffle() { deck = []; for(let s of suits) for(let v of values) deck.push({v,s}); for(let i=deck.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [deck[i],deck[j]]=[deck[j],deck[i]]; } }
+    function deal() { shuffle(); hand = deck.slice(0,5); held = [false,false,false,false,false]; renderCards(); }
+    function renderCards() {
+      const area = document.getElementById('cards-area');
+      area.innerHTML = '';
+      hand.forEach((c,i) => {
+        const div = document.createElement('div');
+        div.className = 'card ' + (c.s === '♥' || c.s === '♦' ? 'red' : '') + (held[i] ? ' held' : '');
+        div.innerHTML = c.v + '<span class="card-suit">' + c.s + '</span>';
+        div.onclick = () => { if(gamePhase==='hold'){ held[i]=!held[i]; renderCards(); } };
+        area.appendChild(div);
+      });
+    }
+
+    function getCombo() {
+      const vals = hand.map(c => values.indexOf(c.v));
+      const suitsArr = hand.map(c => c.s);
+      vals.sort((a,b) => a-b);
+      const isFlush = suitsArr.every(s => s === suitsArr[0]);
+      const isStraight = vals[4]-vals[0]===4 && new Set(vals).size===5;
+      const isRoyal = isStraight && isFlush && vals[0]===8;
+      const counts = {}; vals.forEach(v => counts[v]=(counts[v]||0)+1);
+      const countVals = Object.values(counts).sort((a,b)=>b-a);
+      
+      if(isRoyal) return {name:'Роял Флеш',mult:250};
+      if(isStraight&&isFlush) return {name:'Стрит Флеш',mult:50};
+      if(countVals[0]===4) return {name:'Каре',mult:25};
+      if(countVals[0]===3&&countVals[1]===2) return {name:'Фулл Хаус',mult:9};
+      if(isFlush) return {name:'Флеш',mult:6};
+      if(isStraight) return {name:'Стрит',mult:4};
+      if(countVals[0]===3) return {name:'Тройка',mult:3};
+      if(countVals[0]===2&&countVals[1]===2) return {name:'Две пары',mult:2};
+      if(countVals[0]===2){ const pairVal=parseInt(Object.keys(counts).find(k=>counts[k]===2)); if(pairVal>=8) return {name:'Пара (JJ+)',mult:1}; }
+      return {name:'Нет комбинации',mult:0};
+    }
+
+    document.getElementById('btn-deal').onclick = () => {
+      if(gamePhase!=='bet') return;
+      bet = +document.getElementById('bet-input').value;
+      if(!bet||bet<=0||bet>balance){alert('Некорректная ставка');return;}
+      balance -= bet; saveBal();
+      deal(); gamePhase = 'hold';
+      document.getElementById('btn-deal').style.display = 'none';
+      document.getElementById('btn-draw').style.display = 'block';
+      document.getElementById('status-text').textContent = 'Выберите карты для замены';
+      document.getElementById('combo-text').textContent = '';
+    };
+
+    document.getElementById('btn-draw').onclick = () => {
+      if(gamePhase!=='hold') return;
+      for(let i=0;i<5;i++){ if(!held[i]){ hand[i]=deck[5+i]; } }
+      gamePhase = 'bet';
+      document.getElementById('btn-deal').style.display = 'block';
+      document.getElementById('btn-draw').style.display = 'none';
+      held = [false,false,false,false,false];
+      renderCards();
+      const combo = getCombo();
+      const win = Math.floor(bet * combo.mult);
+      balance += win; saveBal();
+      document.getElementById('combo-text').textContent = combo.name;
+      document.getElementById('status-text').textContent = combo.mult>0 ? `Выигрыш: +${win}₽ (${combo.name})` : `Проигрыш: -${bet}₽`;
+      document.getElementById('status-text').style.color = combo.mult>0?'#2ed573':'#ff4757';
+      addHistory(combo.mult>0?`${combo.name}: +${win}₽`:`Нет комбинации: -${bet}₽`);
+    };
+
+    (async () => { await loadAcc(); })();
+  </script>
+</body>
+</html>
