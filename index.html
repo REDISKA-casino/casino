@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>🎰 Lucky Finger ©</title>
+  <title>🎰 Lucky Finger<sup>©</sup></title>
   <style>
     :root { --bg: #121212; --panel: #1e1e1e; --text: #e0e0e0; --accent: #ff4757; --gold: #ffd700; --success: #2ed573; }
     body { background: var(--bg); color: var(--text); font-family: system-ui, sans-serif; margin: 0; display: flex; flex-direction: column; align-items: center; min-height: 100vh; }
@@ -15,9 +15,10 @@
     .auth-tab.active { background: var(--accent); color: white; }
     .auth-form { display: flex; flex-direction: column; gap: 12px; }
     .auth-input { width: 100%; padding: 12px; border: 1px solid #333; border-radius: 8px; background: #000; color: #fff; font-size: 16px; box-sizing: border-box; }
+    .auth-input::placeholder { color: #666; }
     .password-wrapper { position: relative; }
     .password-wrapper .auth-input { padding-right: 50px; }
-    .toggle-password { position: absolute; right: 8px; top: 50%; transform: translateY(-50%); background: none; border: none; color: #aaa; font-size: 20px; cursor: pointer; padding: 4px 8px; }
+    .toggle-password { position: absolute; right: 8px; top: 50%; transform: translateY(-50%); background: none; border: none; color: #aaa; font-size: 20px; cursor: pointer; padding: 4px 8px; z-index: 2; }
     .auth-btn { width: 100%; padding: 14px; border: none; border-radius: 8px; font-size: 16px; font-weight: 600; cursor: pointer; transition: transform 0.1s; }
     .auth-btn:active { transform: scale(0.98); } .auth-btn:disabled { opacity: 0.4; }
     .btn-login { background: var(--success); color: white; } .btn-register { background: var(--accent); color: white; }
@@ -47,18 +48,18 @@
       <div id="login-form">
         <div class="auth-tabs"><button class="auth-tab active" id="tab-login">Вход</button><button class="auth-tab" id="tab-register">Регистрация</button></div>
         <div id="form-login" class="auth-form">
-          <input type="text" class="auth-input" id="login-nickname" placeholder="Никнейм" />
+          <input type="text" class="auth-input" id="login-nickname" placeholder="Никнейм" autocomplete="username" />
           <div class="password-wrapper">
-            <input type="password" class="auth-input" id="login-password" placeholder="Пароль" />
+            <input type="password" class="auth-input" id="login-password" placeholder="Пароль" autocomplete="current-password" />
             <button type="button" class="toggle-password" data-target="login-password">👁️</button>
           </div>
           <button class="auth-btn btn-login" id="btn-login">Войти</button>
           <div class="auth-error" id="login-error"></div>
         </div>
         <div id="form-register" class="auth-form" style="display:none;">
-          <input type="text" class="auth-input" id="register-nickname" placeholder="Придумайте никнейм" />
+          <input type="text" class="auth-input" id="register-nickname" placeholder="Придумайте никнейм" autocomplete="username" />
           <div class="password-wrapper">
-            <input type="password" class="auth-input" id="register-password" placeholder="Придумайте пароль" />
+            <input type="password" class="auth-input" id="register-password" placeholder="Придумайте пароль" autocomplete="new-password" />
             <button type="button" class="toggle-password" data-target="register-password">👁️</button>
           </div>
           <div class="checkbox-container"><input type="checkbox" id="agree-checkbox" /><label class="checkbox-label" for="agree-checkbox">Я соглашаюсь с условиями <a href="pol.html" target="_blank">политики</a> и <a href="con.html" target="_blank">конфиденциальности</a></label></div>
@@ -92,11 +93,16 @@
     let accountsCache = {}, currentUser = null;
 
     document.querySelectorAll('.toggle-password').forEach(btn => {
-      btn.addEventListener('click', function() {
+      btn.addEventListener('click', function(e) {
+        e.preventDefault();
         const input = document.getElementById(this.dataset.target);
-        const isPassword = input.type === 'password';
-        input.type = isPassword ? 'text' : 'password';
-        this.textContent = isPassword ? '🙈' : '👁️';
+        if (input.type === 'password') {
+          input.type = 'text';
+          this.textContent = '🙈';
+        } else {
+          input.type = 'password';
+          this.textContent = '👁️';
+        }
       });
     });
 
@@ -111,7 +117,7 @@
 
     function showLogin() {
       document.getElementById('login-form').style.display = 'block'; document.getElementById('user-panel').style.display = 'none'; document.getElementById('game-section').style.display = 'none';
-      ['login-nickname','login-password','register-nickname','register-password'].forEach(id => { document.getElementById(id).value = ''; document.getElementById(id).type = 'password'; });
+      ['login-nickname','login-password','register-nickname','register-password'].forEach(id => { document.getElementById(id).value = ''; if (id.includes('password')) document.getElementById(id).type = 'password'; });
       document.querySelectorAll('.toggle-password').forEach(b => b.textContent = '👁️');
       acb.checked = false; br.disabled = true;
     }
