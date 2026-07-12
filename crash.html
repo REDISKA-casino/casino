@@ -56,6 +56,8 @@
     async function syncNow() { if (accountsCache[currentUser]) { accountsCache[currentUser].balance = balance; await saveAcc(); } }
     document.getElementById('balance-display').textContent = `${balance.toLocaleString()} ₽`;
 
+    function addHistory(text) { const box = document.getElementById('history-box'); if(!box) return; const div = document.createElement('div'); div.textContent = text; div.style.padding = '4px 0'; div.style.borderBottom = '1px solid #2a2a2a'; box.insertBefore(div, box.firstChild); while(box.children.length > 20) { box.removeChild(box.lastChild); } }
+
     function resize() { const c=document.getElementById('graph'),w=document.getElementById('graph-wrapper').clientWidth,h=document.getElementById('graph-wrapper').clientHeight,dpr=window.devicePixelRatio||1; c.width=w*dpr; c.height=h*dpr; c.style.width=w+'px'; c.style.height=h+'px'; c.getContext('2d').setTransform(dpr,0,0,dpr,0,0); }
     window.addEventListener('resize',resize); resize();
 
@@ -77,8 +79,8 @@
     }
 
     function endRound(won){ isPlaying=false; cancelAnimationFrame(animationFrameId); document.getElementById('btn-start').style.display='block'; document.getElementById('btn-cashout').style.display='none'; document.getElementById('bet-input').disabled=false;
-      if(won){ const w=Math.floor(bet*currentMultiplier); balance+=w; document.getElementById('status-text').textContent=`Выведено: ${currentMultiplier.toFixed(2)}x`; document.getElementById('status-text').style.color='#2ed573'; }
-      else { document.getElementById('status-text').textContent=`Обвал на ${crashMultiplier.toFixed(2)}x`; document.getElementById('status-text').style.color='#ff4757'; }
+      if(won){ const w=Math.floor(bet*currentMultiplier); balance+=w; document.getElementById('status-text').textContent=`Выведено: ${currentMultiplier.toFixed(2)}x`; document.getElementById('status-text').style.color='#2ed573'; addHistory(`Победа: +${w}₽ (x${currentMultiplier.toFixed(2)})`); }
+      else { document.getElementById('status-text').textContent=`Обвал на ${crashMultiplier.toFixed(2)}x`; document.getElementById('status-text').style.color='#ff4757'; addHistory(`Проигрыш: -${bet}₽`); }
       saveBal(); }
 
     window.addEventListener('beforeunload', async () => { if (accountsCache[currentUser]) { accountsCache[currentUser].balance = balance; await saveAcc(); } });
