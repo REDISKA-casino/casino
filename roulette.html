@@ -67,6 +67,8 @@
     async function syncNow() { if (accountsCache[currentUser]) { accountsCache[currentUser].balance = balance; await saveAcc(); } }
     document.getElementById('balance-display').textContent = `${balance.toLocaleString()} ₽`;
 
+    function addHistory(text) { const box = document.getElementById('history-box'); if(!box) return; const div = document.createElement('div'); div.textContent = text; div.style.padding = '4px 0'; div.style.borderBottom = '1px solid #2a2a2a'; box.insertBefore(div, box.firstChild); while(box.children.length > 20) { box.removeChild(box.lastChild); } }
+
     const canvas = document.getElementById('roulette');
     const ctx = canvas.getContext('2d');
     const SIZE = 300, CX = 150, CY = 150, R = 143, TR = 118, CR = 14;
@@ -106,6 +108,7 @@
         balance+=w; saveBal();
         document.getElementById('status-text').textContent=`Выпало: ${target} (${c==='green'?'Зелёное':c==='red'?'Красное':'Чёрное'}) ${w>0?'+'+w+'₽':'-'+bet+'₽'}`;
         document.getElementById('status-text').style.color=w>0?'#2ed573':'#ff4757';
+        addHistory(`${c==='green'?'🟢':c==='red'?'🔴':'⚫'} ${target}: ${w>0?'+'+w+'₽':'-'+bet+'₽'}`);
         selectedColor=null; document.querySelectorAll('.color-btn').forEach(b=>{b.style.border=b.classList.contains('btn-black')?'1px solid #333':'none';});
       }, 5100);
     };
