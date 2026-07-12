@@ -50,20 +50,21 @@
     <div class="history-box" id="history-box">История бросков</div>
   </div>
   <script>
-    const BIN_ID = '6a516a15f5f4af5e297ecf15', MASTER_KEY = '$2a$10$ESWoAwK.zv8By8WZCjzhu.zw1AIOFcUeILyVjiDrHmv62jIxygKoO', API_URL = `https://api.jsonbin.io/v3/b/${BIN_ID}`;
+    const API_URL = 'https://lucky-finger.onrender.com';
     const currentUser = localStorage.getItem('currentUser');
     if (!currentUser) window.location.href = 'index.html';
-    
     let balance = parseInt(localStorage.getItem('bal_' + currentUser)) || 1000;
-    let selectedBet = null, isRolling = false;
+    let selectedBet = null, isRolling = false, accountsCache = {};
     const diceFaces = ['⚀','⚁','⚂','⚃','⚄','⚅'];
-    
+
+    async function loadAcc() { try { const r = await fetch(API_URL); accountsCache = await r.json(); } catch(e) {} }
+    async function saveAcc() { try { await fetch(API_URL, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(accountsCache) }); } catch(e) {} }
     function saveBal() { localStorage.setItem('bal_' + currentUser, balance); document.getElementById('balance-display').textContent = `${balance.toLocaleString()} ₽`; syncWithCloud(); }
-    async function syncWithCloud() { try { const r=await fetch(API_URL+'/latest',{headers:{'X-Master-Key':MASTER_KEY}}); const d=await r.json(); const a=d.record||{}; if(a[currentUser]){a[currentUser].balance=balance;}else{a[currentUser]={password:'',balance:balance,created:new Date().toISOString(),banned:false};} await fetch(API_URL,{method:'PUT',headers:{'Content-Type':'application/json','X-Master-Key':MASTER_KEY},body:JSON.stringify(a)}); } catch(e) {} }
-    
+    async function syncWithCloud() { if (accountsCache[currentUser]) { accountsCache[currentUser].balance = balance; await saveAcc(); } }
     document.getElementById('balance-display').textContent = `${balance.toLocaleString()} ₽`;
+
     document.querySelectorAll('.bet-btn').forEach(b=>b.addEventListener('click',()=>{document.querySelectorAll('.bet-btn').forEach(x=>x.classList.remove('selected'));b.classList.add('selected');selectedBet=b.dataset.bet;}));
-    
+
     document.getElementById('btn-roll').onclick=()=>{
       if(isRolling||!selectedBet)return;
       const bet=+document.getElementById('bet-input').value;
@@ -78,6 +79,8 @@
         isRolling=false; document.getElementById('btn-roll').disabled=false;
       }},80);
     };
+
+    (async () => { await loadAcc(); })();
   </script>
 </body>
 </html>
