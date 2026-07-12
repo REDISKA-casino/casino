@@ -96,8 +96,13 @@
         e.preventDefault();
         const input = document.getElementById(this.dataset.target);
         if (input && (input.id === 'login-password' || input.id === 'register-password')) {
-          if (input.type === 'password') { input.type = 'text'; this.textContent = '👁️'; }
-          else { input.type = 'password'; this.textContent = '🔒'; }
+          if (input.type === 'password') {
+            input.type = 'text';
+            this.textContent = '👁️';
+          } else {
+            input.type = 'password';
+            this.textContent = '🔒';
+          }
         }
       });
     });
@@ -117,7 +122,7 @@
       document.getElementById('register-nickname').value = '';
       const lp = document.getElementById('login-password'); lp.value = ''; lp.type = 'password';
       const rp = document.getElementById('register-password'); rp.value = ''; rp.type = 'password';
-      document.querySelectorAll('.toggle-password').forEach(b => b.textContent = '👁️');
+      document.querySelectorAll('.toggle-password').forEach(b => b.textContent = '🔒');
       acb.checked = false; br.disabled = true;
     }
 
