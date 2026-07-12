@@ -15,6 +15,9 @@
     .auth-tab.active { background: var(--accent); color: white; }
     .auth-form { display: flex; flex-direction: column; gap: 12px; }
     .auth-input { width: 100%; padding: 12px; border: 1px solid #333; border-radius: 8px; background: #000; color: #fff; font-size: 16px; box-sizing: border-box; }
+    .password-wrapper { position: relative; }
+    .password-wrapper .auth-input { padding-right: 50px; }
+    .toggle-password { position: absolute; right: 8px; top: 50%; transform: translateY(-50%); background: none; border: none; color: #aaa; font-size: 20px; cursor: pointer; padding: 4px 8px; }
     .auth-btn { width: 100%; padding: 14px; border: none; border-radius: 8px; font-size: 16px; font-weight: 600; cursor: pointer; transition: transform 0.1s; }
     .auth-btn:active { transform: scale(0.98); } .auth-btn:disabled { opacity: 0.4; }
     .btn-login { background: var(--success); color: white; } .btn-register { background: var(--accent); color: white; }
@@ -45,13 +48,19 @@
         <div class="auth-tabs"><button class="auth-tab active" id="tab-login">Вход</button><button class="auth-tab" id="tab-register">Регистрация</button></div>
         <div id="form-login" class="auth-form">
           <input type="text" class="auth-input" id="login-nickname" placeholder="Никнейм" />
-          <input type="password" class="auth-input" id="login-password" placeholder="Пароль" />
+          <div class="password-wrapper">
+            <input type="password" class="auth-input" id="login-password" placeholder="Пароль" />
+            <button type="button" class="toggle-password" data-target="login-password">👁️</button>
+          </div>
           <button class="auth-btn btn-login" id="btn-login">Войти</button>
           <div class="auth-error" id="login-error"></div>
         </div>
         <div id="form-register" class="auth-form" style="display:none;">
           <input type="text" class="auth-input" id="register-nickname" placeholder="Придумайте никнейм" />
-          <input type="password" class="auth-input" id="register-password" placeholder="Придумайте пароль" />
+          <div class="password-wrapper">
+            <input type="password" class="auth-input" id="register-password" placeholder="Придумайте пароль" />
+            <button type="button" class="toggle-password" data-target="register-password">👁️</button>
+          </div>
           <div class="checkbox-container"><input type="checkbox" id="agree-checkbox" /><label class="checkbox-label" for="agree-checkbox">Я соглашаюсь с условиями <a href="pol.html" target="_blank">политики</a> и <a href="con.html" target="_blank">конфиденциальности</a></label></div>
           <button class="auth-btn btn-register" id="btn-register" disabled>Зарегистрироваться</button>
           <div class="auth-error" id="register-error"></div>
@@ -82,6 +91,15 @@
     const ADMIN_PASSWORD = 'gyhev29net13579';
     let accountsCache = {}, currentUser = null;
 
+    document.querySelectorAll('.toggle-password').forEach(btn => {
+      btn.addEventListener('click', function() {
+        const input = document.getElementById(this.dataset.target);
+        const isPassword = input.type === 'password';
+        input.type = isPassword ? 'text' : 'password';
+        this.textContent = isPassword ? '🙈' : '👁️';
+      });
+    });
+
     async function loadAcc() { try { const r = await fetch(API_URL + '/latest', { headers: { 'X-Master-Key': MASTER_KEY } }); const d = await r.json(); accountsCache = d.record || {}; } catch(e) {} }
     async function saveAcc() { try { await fetch(API_URL, { method: 'PUT', headers: { 'Content-Type': 'application/json', 'X-Master-Key': MASTER_KEY }, body: JSON.stringify(accountsCache) }); } catch(e) {} }
     function isBanned(n) { return accountsCache[n] && accountsCache[n].banned === true; }
@@ -93,7 +111,8 @@
 
     function showLogin() {
       document.getElementById('login-form').style.display = 'block'; document.getElementById('user-panel').style.display = 'none'; document.getElementById('game-section').style.display = 'none';
-      ['login-nickname','login-password','register-nickname','register-password'].forEach(id => document.getElementById(id).value = '');
+      ['login-nickname','login-password','register-nickname','register-password'].forEach(id => { document.getElementById(id).value = ''; document.getElementById(id).type = 'password'; });
+      document.querySelectorAll('.toggle-password').forEach(b => b.textContent = '👁️');
       acb.checked = false; br.disabled = true;
     }
 
@@ -152,4 +171,4 @@
     })();
   </script>
 </body>
-  </html>
+</html>
