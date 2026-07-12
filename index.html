@@ -33,10 +33,10 @@
     .balance-card { background: var(--panel); padding: 20px; border-radius: 16px; text-align: center; margin-bottom: 24px; border: 2px solid #333; }
     .balance-label { font-size: 16px; color: #aaa; margin-bottom: 8px; }
     .balance-amount { font-size: 36px; font-weight: bold; background: linear-gradient(135deg, #ffd700, #ffa502); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
-    .games-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
-    .game-card { background: var(--panel); padding: 20px; border-radius: 16px; text-align: center; cursor: pointer; transition: transform 0.2s; border: 2px solid #333; text-decoration: none; color: var(--text); display: block; }
+    .games-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .game-card { background: var(--panel); padding: 18px; border-radius: 16px; text-align: center; cursor: pointer; transition: transform 0.2s; border: 2px solid #333; text-decoration: none; color: var(--text); display: block; }
     .game-card:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,0,0,0.5); }
-    .game-icon { font-size: 40px; margin-bottom: 8px; } .game-title { font-size: 16px; font-weight: 600; margin-bottom: 4px; } .game-description { font-size: 11px; color: #aaa; }
+    .game-icon { font-size: 36px; margin-bottom: 6px; } .game-title { font-size: 15px; font-weight: 600; margin-bottom: 4px; } .game-description { font-size: 10px; color: #aaa; }
     .crash-card { border-left: 4px solid var(--success); } .roulette-card { border-left: 4px solid var(--accent); } .slots-card { border-left: 4px solid var(--gold); } .mines-card { border-left: 4px solid #ff6b6b; }
     .banned-message { background: rgba(255,0,0,0.1); border: 2px solid #ff0000; padding: 16px; border-radius: 12px; text-align: center; color: #ff4757; font-weight: bold; margin-bottom: 20px; }
   </style>
@@ -73,14 +73,16 @@
       <div id="banned-message" class="banned-message" style="display:none;">🚫 Ваш аккаунт заблокирован администратором. Игры недоступны.</div>
       <div class="balance-card" id="balance-card"><div class="balance-label">Ваш баланс</div><div class="balance-amount" id="main-balance">1 000 ₽</div></div>
       <div class="games-grid" id="games-grid">
-        <a href="crash.html" class="game-card crash-card"><div class="game-icon">📈</div><div class="game-title">Обвал</div><div class="game-description">Ставка и вывод до обвала!</div></a>
-        <a href="roulette.html" class="game-card roulette-card"><div class="game-icon">🎡</div><div class="game-title">Рулетка</div><div class="game-description">Красное, чёрное или зелёное!</div></a>
+        <a href="crash.html" class="game-card crash-card"><div class="game-icon">📈</div><div class="game-title">Обвал</div><div class="game-description">Выводи до обвала!</div></a>
+        <a href="roulette.html" class="game-card roulette-card"><div class="game-icon">🎡</div><div class="game-title">Рулетка</div><div class="game-description">Красное, чёрное, зелёное!</div></a>
         <a href="slots.html" class="game-card slots-card"><div class="game-icon">🎰</div><div class="game-title">Слоты 777</div><div class="game-description">Крути барабаны!</div></a>
         <a href="mines.html" class="game-card mines-card"><div class="game-icon">💣</div><div class="game-title">Минное поле</div><div class="game-description">Избегай мин!</div></a>
         <a href="dice.html" class="game-card slots-card"><div class="game-icon">🎲</div><div class="game-title">Кости</div><div class="game-description">Бросай кубики!</div></a>
         <a href="horses.html" class="game-card mines-card"><div class="game-icon">🐴</div><div class="game-title">Скачки</div><div class="game-description">Ставь на лошадь!</div></a>
         <a href="pyramid.html" class="game-card slots-card"><div class="game-icon">🔺</div><div class="game-title">Пирамида</div><div class="game-description">Найди алмаз! x3</div></a>
         <a href="fishing.html" class="game-card crash-card"><div class="game-icon">🎣</div><div class="game-title">Рыбалка</div><div class="game-description">Лови рыбу!</div></a>
+        <a href="coin.html" class="game-card roulette-card"><div class="game-icon">🪙</div><div class="game-title">Орёл и Решка</div><div class="game-description">Угадай сторону!</div></a>
+        <a href="poker.html" class="game-card mines-card"><div class="game-icon">🃏</div><div class="game-title">Покер</div><div class="game-description">Собери комбинацию!</div></a>
       </div>
     </div>
   </div>
@@ -96,13 +98,8 @@
         e.preventDefault();
         const input = document.getElementById(this.dataset.target);
         if (input && (input.id === 'login-password' || input.id === 'register-password')) {
-          if (input.type === 'password') {
-            input.type = 'text';
-            this.textContent = '👁️';
-          } else {
-            input.type = 'password';
-            this.textContent = '🔒';
-          }
+          if (input.type === 'password') { input.type = 'text'; this.textContent = '👁️'; }
+          else { input.type = 'password'; this.textContent = '🔒'; }
         }
       });
     });
@@ -118,8 +115,7 @@
 
     function showLogin() {
       document.getElementById('login-form').style.display = 'block'; document.getElementById('user-panel').style.display = 'none'; document.getElementById('game-section').style.display = 'none';
-      document.getElementById('login-nickname').value = '';
-      document.getElementById('register-nickname').value = '';
+      document.getElementById('login-nickname').value = ''; document.getElementById('register-nickname').value = '';
       const lp = document.getElementById('login-password'); lp.value = ''; lp.type = 'password';
       const rp = document.getElementById('register-password'); rp.value = ''; rp.type = 'password';
       document.querySelectorAll('.toggle-password').forEach(b => b.textContent = '🔒');
