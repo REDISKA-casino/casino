@@ -37,21 +37,22 @@
     <div class="history-box" id="history-box">История улова</div>
   </div>
   <script>
-    const BIN_ID = '6a516a15f5f4af5e297ecf15', MASTER_KEY = '$2a$10$ESWoAwK.zv8By8WZCjzhu.zw1AIOFcUeILyVjiDrHmv62jIxygKoO', API_URL = `https://api.jsonbin.io/v3/b/${BIN_ID}`;
+    const API_URL = 'https://lucky-finger.onrender.com';
     const currentUser = localStorage.getItem('currentUser');
     if (!currentUser) window.location.href = 'index.html';
-    
     let balance = parseInt(localStorage.getItem('bal_' + currentUser)) || 1000;
-    let isFishing = false, currentBet = 0, ct = null, bt = null;
+    let isFishing = false, currentBet = 0, ct = null, bt = null, accountsCache = {};
     const fishList = [{n:'Мал. рыбка',i:'🐟',m:0.5,c:30},{n:'Карась',i:'🐠',m:1,c:25},{n:'Щука',i:'🐊',m:2,c:15},{n:'Сом',i:'🐋',m:5,c:8},{n:'Золотая',i:'🌟',m:10,c:3},{n:'Сапог',i:'👢',m:0,c:10},{n:'Водоросли',i:'🌿',m:0,c:9}];
-    
+
+    async function loadAcc() { try { const r = await fetch(API_URL); accountsCache = await r.json(); } catch(e) {} }
+    async function saveAcc() { try { await fetch(API_URL, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(accountsCache) }); } catch(e) {} }
     function saveBal() { localStorage.setItem('bal_' + currentUser, balance); document.getElementById('balance-display').textContent = `${balance.toLocaleString()} ₽`; syncWithCloud(); }
-    async function syncWithCloud() { try { const r=await fetch(API_URL+'/latest',{headers:{'X-Master-Key':MASTER_KEY}}); const d=await r.json(); const a=d.record||{}; if(a[currentUser]){a[currentUser].balance=balance;}else{a[currentUser]={password:'',balance:balance,created:new Date().toISOString(),banned:false};} await fetch(API_URL,{method:'PUT',headers:{'Content-Type':'application/json','X-Master-Key':MASTER_KEY},body:JSON.stringify(a)}); } catch(e) {} }
-    
+    async function syncWithCloud() { if (accountsCache[currentUser]) { accountsCache[currentUser].balance = balance; await saveAcc(); } }
     document.getElementById('balance-display').textContent = `${balance.toLocaleString()} ₽`;
+
     function getFish(){ const t=fishList.reduce((s,f)=>s+f.c,0); let r=Math.random()*t; for(const f of fishList){r-=f.c;if(r<=0)return f;} return fishList[0]; }
     function reset(){ isFishing=false; document.getElementById('btn-cast').disabled=false; document.getElementById('btn-reel').style.display='none'; document.getElementById('bobber').classList.remove('biting'); clearTimeout(ct); clearTimeout(bt); }
-    
+
     document.getElementById('btn-cast').onclick=()=>{
       if(isFishing)return;
       currentBet=+document.getElementById('bet-input').value;
@@ -60,7 +61,7 @@
       document.getElementById('catch-display').classList.remove('bite'); document.getElementById('bobber').classList.remove('biting'); document.getElementById('status-text').textContent='Ждём поклёвку...';
       bt=setTimeout(()=>{document.getElementById('bobber').classList.add('biting');document.getElementById('status-text').textContent='Клюёт! Тяните!';document.getElementById('btn-reel').style.display='block';ct=setTimeout(()=>{if(isFishing){document.getElementById('bobber').classList.remove('biting');document.getElementById('status-text').textContent='Сорвалась!';reset();}},2000);},1000+Math.random()*3000);
     };
-    
+
     document.getElementById('btn-reel').onclick=()=>{
       if(!isFishing)return;
       clearTimeout(ct); clearTimeout(bt);
@@ -69,6 +70,8 @@
       document.getElementById('status-text').textContent=f.m>0?`${f.n}! +${w}₽`:`${f.n}! -${currentBet}₽`; document.getElementById('status-text').style.color=f.m>0?'#2ed573':'#ff4757';
       document.getElementById('btn-reel').style.display='none'; setTimeout(reset,2000);
     };
+
+    (async () => { await loadAcc(); })();
   </script>
 </body>
 </html>
