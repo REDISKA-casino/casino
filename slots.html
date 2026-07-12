@@ -58,14 +58,14 @@
     const currentUser = localStorage.getItem('currentUser');
     if (!currentUser) window.location.href = 'index.html';
     let balance = parseInt(localStorage.getItem('bal_' + currentUser)) || 1000;
-    let bet = 0, isSpinning = false, bonusSpins = 0, accountsCache = {}, syncTimer = null;
+    let bet = 0, isSpinning = false, bonusSpins = 0, accountsCache = {};
     const symbols = [{icon:'🍒',cls:'sym-cherry',w:25},{icon:'🍋',cls:'sym-lemon',w:25},{icon:'🔔',cls:'sym-bell',w:20},{icon:'✉️',cls:'sym-bar',w:15},{icon:'7',cls:'sym-7',w:10},{icon:'💎',cls:'sym-bonus',w:5}];
     const TOTAL = 30, VIS = 3, DUR = 2000, DELAY = 10;
 
     async function loadAcc() { try { const r = await fetch(API_URL + '/latest', { headers: { 'X-Master-Key': MASTER_KEY } }); const d = await r.json(); accountsCache = d.record || {}; } catch(e) {} }
     async function saveAcc() { try { await fetch(API_URL, { method: 'PUT', headers: { 'Content-Type': 'application/json', 'X-Master-Key': MASTER_KEY }, body: JSON.stringify(accountsCache) }); } catch(e) {} }
-    function saveBal() { localStorage.setItem('bal_' + currentUser, balance); document.getElementById('balance-display').textContent = `${balance.toLocaleString()} ₽`; scheduleSync(); }
-    function scheduleSync() { if (syncTimer) clearTimeout(syncTimer); syncTimer = setTimeout(async () => { if (accountsCache[currentUser]) { accountsCache[currentUser].balance = balance; await saveAcc(); } }, 5000); }
+    function saveBal() { localStorage.setItem('bal_' + currentUser, balance); document.getElementById('balance-display').textContent = `${balance.toLocaleString()} ₽`; syncNow(); }
+    async function syncNow() { if (accountsCache[currentUser]) { accountsCache[currentUser].balance = balance; await saveAcc(); } }
     document.getElementById('balance-display').textContent = `${balance.toLocaleString()} ₽`;
 
     function getSym(){ const t=symbols.reduce((s,x)=>s+x.w,0); let r=Math.random()*t; for(const x of symbols){r-=x.w;if(r<=0)return x;} return symbols[0]; }
