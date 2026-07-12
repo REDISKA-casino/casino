@@ -71,10 +71,9 @@
       for(let i=1;i<=4;i++) document.getElementById('horse'+i).style.left='0px';
       const winner = Math.floor(Math.random()*4)+1;
       const speeds = [];
-      const baseSpeed = 80 + Math.random()*40;
       for(let i=1;i<=4;i++){
-        if(i===winner){ speeds[i] = baseSpeed + Math.random()*30; }
-        else { speeds[i] = baseSpeed - 20 - Math.random()*40; }
+        if(i===winner){ speeds[i] = 85 + Math.random()*15; }
+        else { speeds[i] = 65 + Math.random()*25; }
       }
       const raceDuration = 4000 + Math.random()*2000;
       const startTime = Date.now();
@@ -83,11 +82,8 @@
         const elapsed = Date.now() - startTime;
         const progress = Math.min(elapsed / raceDuration, 1);
         for(let i=1;i<=4;i++){
-          const noise = Math.sin(elapsed * 0.01 * (i*0.7)) * 3;
-          let pos = (progress * speeds[i] / baseSpeed) * trackWidth + noise;
-          if(pos < 0) pos = 0;
-          if(pos > trackWidth) pos = trackWidth;
-          document.getElementById('horse'+i).style.left = pos + 'px';
+          const pos = (progress * speeds[i] / 85) * trackWidth;
+          document.getElementById('horse'+i).style.left = Math.min(pos, trackWidth) + 'px';
         }
         if(progress >= 1){
           const won = winner === selectedHorse;
@@ -106,4 +102,4 @@
     (async () => { await loadAcc(); })();
   </script>
 </body>
-  </html>
+</html>
