@@ -44,67 +44,41 @@
     <div class="history-box" id="history-box">История забегов</div>
   </div>
   <script>
-    const BIN_ID = '6a516a15f5f4af5e297ecf15', MASTER_KEY = '$2a$10$ESWoAwK.zv8By8WZCjzhu.zw1AIOFcUeILyVjiDrHmv62jIxygKoO', API_URL = `https://api.jsonbin.io/v3/b/${BIN_ID}`;
+    const API_URL = 'https://lucky-finger.onrender.com';
     const currentUser = localStorage.getItem('currentUser');
     if (!currentUser) window.location.href = 'index.html';
-    
     let balance = parseInt(localStorage.getItem('bal_' + currentUser)) || 1000;
-    let selectedHorse = null, isRacing = false;
+    let selectedHorse = null, isRacing = false, accountsCache = {};
     const multipliers = {1:3,2:2.5,3:5,4:2};
-    
+
+    async function loadAcc() { try { const r = await fetch(API_URL); accountsCache = await r.json(); } catch(e) {} }
+    async function saveAcc() { try { await fetch(API_URL, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(accountsCache) }); } catch(e) {} }
     function saveBal() { localStorage.setItem('bal_' + currentUser, balance); document.getElementById('balance-display').textContent = `${balance.toLocaleString()} ₽`; syncWithCloud(); }
-    async function syncWithCloud() { try { const r=await fetch(API_URL+'/latest',{headers:{'X-Master-Key':MASTER_KEY}}); const d=await r.json(); const a=d.record||{}; if(a[currentUser]){a[currentUser].balance=balance;}else{a[currentUser]={password:'',balance:balance,created:new Date().toISOString(),banned:false};} await fetch(API_URL,{method:'PUT',headers:{'Content-Type':'application/json','X-Master-Key':MASTER_KEY},body:JSON.stringify(a)}); } catch(e) {} }
-    
+    async function syncWithCloud() { if (accountsCache[currentUser]) { accountsCache[currentUser].balance = balance; await saveAcc(); } }
     document.getElementById('balance-display').textContent = `${balance.toLocaleString()} ₽`;
-    document.querySelectorAll('.horse-btn').forEach(b=>b.addEventListener('click',()=>{
-      if(isRacing) return;
-      document.querySelectorAll('.horse-btn').forEach(x=>x.classList.remove('selected'));
-      b.classList.add('selected');selectedHorse=+b.dataset.horse;
-    }));
-    
+
+    document.querySelectorAll('.horse-btn').forEach(b=>b.addEventListener('click',()=>{if(isRacing)return;document.querySelectorAll('.horse-btn').forEach(x=>x.classList.remove('selected'));b.classList.add('selected');selectedHorse=+b.dataset.horse;}));
+
     document.getElementById('btn-race').onclick=()=>{
       if(isRacing||!selectedHorse)return;
       const bet=+document.getElementById('bet-input').value;
       if(!bet||bet<=0||bet>balance){alert('Некорректная ставка');return;}
-      isRacing=true; 
-      document.getElementById('btn-race').disabled=true;
-      document.querySelectorAll('.horse-btn').forEach(b=>b.disabled=true);
+      isRacing=true; document.getElementById('btn-race').disabled=true; document.querySelectorAll('.horse-btn').forEach(b=>b.disabled=true);
       balance-=bet; saveBal();
       for(let i=1;i<=4;i++) document.getElementById('horse'+i).style.left='0px';
-      
       const winner = Math.floor(Math.random()*4)+1;
       const finishTime = 3000 + Math.random()*2000;
       const startTime = Date.now();
-      
       const race = setInterval(()=>{
         const elapsed = Date.now() - startTime;
         const progress = Math.min(elapsed/finishTime, 1);
         const trackWidth = document.querySelector('.lane').clientWidth - 50;
-        
-        for(let i=1;i<=4;i++){
-          let pos;
-          if(i===winner){
-            pos = progress * trackWidth;
-          } else {
-            pos = (progress - Math.random()*0.1) * trackWidth;
-            if(pos < 0) pos = 0;
-            if(pos > trackWidth) pos = trackWidth - 10;
-          }
-          document.getElementById('horse'+i).style.left = pos + 'px';
-        }
-        
-        if(progress >= 1){
-          clearInterval(race);
-          const won = winner === selectedHorse;
-          const win = won ? Math.floor(bet*multipliers[selectedHorse]) : 0;
-          balance+=win; saveBal();
-          document.getElementById('status-text').textContent=won?`Лошадь ${winner} победила! +${win}₽`:`Лошадь ${winner} победила. -${bet}₽`;
-          document.getElementById('status-text').style.color=won?'#2ed573':'#ff4757';
-          isRacing=false; document.getElementById('btn-race').disabled=false;
-          document.querySelectorAll('.horse-btn').forEach(b=>b.disabled=false);
-        }
+        for(let i=1;i<=4;i++){ let pos; if(i===winner){ pos = progress * trackWidth; } else { pos = (progress - Math.random()*0.1) * trackWidth; if(pos < 0) pos = 0; if(pos > trackWidth) pos = trackWidth - 10; } document.getElementById('horse'+i).style.left = pos + 'px'; }
+        if(progress >= 1){ clearInterval(race); const won = winner === selectedHorse; const win = won ? Math.floor(bet*multipliers[selectedHorse]) : 0; balance+=win; saveBal(); document.getElementById('status-text').textContent=won?`Лошадь ${winner} победила! +${win}₽`:`Лошадь ${winner} победила. -${bet}₽`; document.getElementById('status-text').style.color=won?'#2ed573':'#ff4757'; isRacing=false; document.getElementById('btn-race').disabled=false; document.querySelectorAll('.horse-btn').forEach(b=>b.disabled=false); }
       }, 50);
     };
+
+    (async () => { await loadAcc(); })();
   </script>
 </body>
 </html>
