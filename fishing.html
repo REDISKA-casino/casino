@@ -43,13 +43,13 @@
     const currentUser = localStorage.getItem('currentUser');
     if (!currentUser) window.location.href = 'index.html';
     let balance = parseInt(localStorage.getItem('bal_' + currentUser)) || 1000;
-    let isFishing = false, currentBet = 0, ct = null, bt = null, accountsCache = {}, syncTimer = null;
+    let isFishing = false, currentBet = 0, ct = null, bt = null, accountsCache = {};
     const fishList = [{n:'Мал. рыбка',i:'🐟',m:0.5,c:30},{n:'Карась',i:'🐠',m:1,c:25},{n:'Щука',i:'🐊',m:2,c:15},{n:'Сом',i:'🐋',m:5,c:8},{n:'Золотая',i:'🌟',m:10,c:3},{n:'Сапог',i:'👢',m:0,c:10},{n:'Водоросли',i:'🌿',m:0,c:9}];
 
     async function loadAcc() { try { const r = await fetch(API_URL + '/latest', { headers: { 'X-Master-Key': MASTER_KEY } }); const d = await r.json(); accountsCache = d.record || {}; } catch(e) {} }
     async function saveAcc() { try { await fetch(API_URL, { method: 'PUT', headers: { 'Content-Type': 'application/json', 'X-Master-Key': MASTER_KEY }, body: JSON.stringify(accountsCache) }); } catch(e) {} }
-    function saveBal() { localStorage.setItem('bal_' + currentUser, balance); document.getElementById('balance-display').textContent = `${balance.toLocaleString()} ₽`; scheduleSync(); }
-    function scheduleSync() { if (syncTimer) clearTimeout(syncTimer); syncTimer = setTimeout(async () => { if (accountsCache[currentUser]) { accountsCache[currentUser].balance = balance; await saveAcc(); } }, 5000); }
+    function saveBal() { localStorage.setItem('bal_' + currentUser, balance); document.getElementById('balance-display').textContent = `${balance.toLocaleString()} ₽`; syncNow(); }
+    async function syncNow() { if (accountsCache[currentUser]) { accountsCache[currentUser].balance = balance; await saveAcc(); } }
     document.getElementById('balance-display').textContent = `${balance.toLocaleString()} ₽`;
 
     function getFish(){ const t=fishList.reduce((s,f)=>s+f.c,0); let r=Math.random()*t; for(const f of fishList){r-=f.c;if(r<=0)return f;} return fishList[0]; }
