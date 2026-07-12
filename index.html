@@ -139,6 +139,11 @@
 
     (async () => {
       await loadAcc();
+      if (localStorage.getItem('coming_back') === 'true') {
+        localStorage.removeItem('coming_back');
+        const u = localStorage.getItem('currentUser');
+        if (u && u !== ADMIN_NICKNAME && accountsCache[u]) { showUser(u); return; }
+      }
       const u = localStorage.getItem('currentUser');
       if (u) { if (u === ADMIN_NICKNAME) { window.location.href = 'admin.html'; return; } const cloudBal = accountsCache[u] ? (accountsCache[u].balance || 1000) : 1000; localStorage.setItem('bal_' + u, cloudBal); if (accountsCache[u]) showUser(u); else showLogin(); }
       else showLogin();
