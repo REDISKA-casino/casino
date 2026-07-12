@@ -68,6 +68,8 @@
     async function syncNow() { if (accountsCache[currentUser]) { accountsCache[currentUser].balance = balance; await saveAcc(); } }
     document.getElementById('balance-display').textContent = `${balance.toLocaleString()} ₽`;
 
+    function addHistory(text) { const box = document.getElementById('history-box'); if(!box) return; const div = document.createElement('div'); div.textContent = text; div.style.padding = '4px 0'; div.style.borderBottom = '1px solid #2a2a2a'; box.insertBefore(div, box.firstChild); while(box.children.length > 20) { box.removeChild(box.lastChild); } }
+
     function getSym(){ const t=symbols.reduce((s,x)=>s+x.w,0); let r=Math.random()*t; for(const x of symbols){r-=x.w;if(r<=0)return x;} return symbols[0]; }
     function upBonus(){ if(bonusSpins>0){ document.getElementById('bonus-indicator').textContent=`🔥 Фриспинов: ${bonusSpins}`; document.getElementById('btn-spin').textContent='🎁 КРУТИТЬ БЕСПЛАТНО'; document.getElementById('btn-spin').className='btn-spin btn-bonus'; } else { document.getElementById('bonus-indicator').textContent=''; document.getElementById('btn-spin').textContent='🎰 КРУТИТЬ'; document.getElementById('btn-spin').className='btn-spin btn-normal'; } }
     function triggerBonus(){ document.getElementById('bonus-effect').classList.add('active'); const p=['💎','✨','🌟','💫','🎉']; for(let i=0;i<20;i++){ const el=document.createElement('div'); el.className='particle'; el.textContent=p[Math.floor(Math.random()*p.length)]; el.style.left=Math.random()*90+'%'; el.style.animationDuration=(1.5+Math.random()*2)+'s'; el.style.animationDelay=Math.random()*0.5+'s'; el.style.fontSize=(20+Math.random()*30)+'px'; document.getElementById('bonus-particles').appendChild(el); setTimeout(()=>el.remove(),3000); } setTimeout(()=>document.getElementById('bonus-effect').classList.remove('active'),800); }
@@ -89,10 +91,10 @@
       cont.forEach((c,i)=>{ c.style.transition='none'; c.style.transform='translateY(0)'; void c.offsetWidth; c.style.transition=`transform ${(DUR+i*DELAY)/1000}s cubic-bezier(0.2,0.8,0.2,1)`; c.style.transform=`translateY(${-si[i]*c.children[0].offsetHeight}px)`; c.dataset.stopIndex=si[i]; });
       setTimeout(()=>{ isSpinning=false; document.getElementById('bet-input').disabled=false; document.getElementById('btn-spin').disabled=false;
         const g=getGrid(),{wins}=checkWins(g); let bonusFrom=false; wins.forEach(w=>{if(w.cls==='sym-bonus')bonusFrom=true;});
-        if(bonusFrom){bonusSpins+=5;triggerBonus();} upBonus();
+        if(bonusFrom){bonusSpins+=5;triggerBonus(); addHistory('💎 Бонус! +5 фриспинов');} upBonus();
         let total=0,result='',color='#fff';
-        if(wins.length>0){ const d=[]; wins.forEach(w=>{ let desc=w.t==='h'?`Линия ${w.r+1}`:w.t==='v'?`Столбец ${w.c+1}`:w.t==='dd'?'Диаг ↘':'Диаг ↗'; total+=(free?bet:bet)*w.mult; d.push(`${desc} x${w.mult}`); }); result=`Выигрыш: ${d.join(' + ')}`; color='#2ed573'; }
-        else { result=free?'Бесплатное вращение':'Не повезло'; color=free?'#ffa502':'#ff4757'; }
+        if(wins.length>0){ const d=[]; wins.forEach(w=>{ let desc=w.t==='h'?`Линия ${w.r+1}`:w.t==='v'?`Столбец ${w.c+1}`:w.t==='dd'?'Диаг ↘':'Диаг ↗'; total+=(free?bet:bet)*w.mult; d.push(`${desc} x${w.mult}`); }); result=`Выигрыш: ${d.join(' + ')}`; color='#2ed573'; addHistory(`🎰 ${result} = +${total}₽`); }
+        else { result=free?'Бесплатное вращение':'Не повезло'; color=free?'#ffa502':'#ff4757'; if(!free) addHistory(`🎰 Проигрыш: -${bet}₽`); }
         balance+=total; saveBal(); document.getElementById('status-text').textContent=result+(bonusSpins>0?' | 🔥 Бонус!':''); document.getElementById('status-text').style.color=bonusSpins>0?'#ff6b6b':color;
       },DUR+2*DELAY+100);
     };
