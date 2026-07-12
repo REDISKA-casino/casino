@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>🎰 Lucky Finger<sup>©</sup></title>
+  <title>🎰 Lucky Finger ©</title>
   <style>
     :root { --bg: #121212; --panel: #1e1e1e; --text: #e0e0e0; --accent: #ff4757; --gold: #ffd700; --success: #2ed573; }
     body { background: var(--bg); color: var(--text); font-family: system-ui, sans-serif; margin: 0; display: flex; flex-direction: column; align-items: center; min-height: 100vh; }
@@ -89,7 +89,6 @@
     const MASTER_KEY = '$2a$10$ESWoAwK.zv8By8WZCjzhu.zw1AIOFcUeILyVjiDrHmv62jIxygKoO';
     const API_URL = `https://api.jsonbin.io/v3/b/${BIN_ID}`;
     const ADMIN_NICKNAME = 'I-am-admin';
-    const ADMIN_PASSWORD = 'gyhev29net13579';
     let accountsCache = {}, currentUser = null;
 
     document.querySelectorAll('.toggle-password').forEach(btn => {
@@ -97,13 +96,8 @@
         e.preventDefault();
         const input = document.getElementById(this.dataset.target);
         if (input && (input.id === 'login-password' || input.id === 'register-password')) {
-          if (input.type === 'password') {
-            input.type = 'text';
-            this.textContent = '🙈';
-          } else {
-            input.type = 'password';
-            this.textContent = '👁️';
-          }
+          if (input.type === 'password') { input.type = 'text'; this.textContent = '🚫'; }
+          else { input.type = 'password'; this.textContent = '👁️'; }
         }
       });
     });
@@ -121,10 +115,8 @@
       document.getElementById('login-form').style.display = 'block'; document.getElementById('user-panel').style.display = 'none'; document.getElementById('game-section').style.display = 'none';
       document.getElementById('login-nickname').value = '';
       document.getElementById('register-nickname').value = '';
-      const lp = document.getElementById('login-password');
-      lp.value = ''; lp.type = 'password';
-      const rp = document.getElementById('register-password');
-      rp.value = ''; rp.type = 'password';
+      const lp = document.getElementById('login-password'); lp.value = ''; lp.type = 'password';
+      const rp = document.getElementById('register-password'); rp.value = ''; rp.type = 'password';
       document.querySelectorAll('.toggle-password').forEach(b => b.textContent = '👁️');
       acb.checked = false; br.disabled = true;
     }
@@ -160,7 +152,7 @@
       const n = document.getElementById('login-nickname').value.trim(), p = document.getElementById('login-password').value.trim(), el = document.getElementById('login-error');
       if (!n || !p) { el.textContent = 'Заполните поля'; return; }
       await loadAcc();
-      if (n === ADMIN_NICKNAME && p === ADMIN_PASSWORD) { localStorage.setItem('currentUser', ADMIN_NICKNAME); window.location.href = 'admin.html'; return; }
+      if (n === ADMIN_NICKNAME && accountsCache[ADMIN_NICKNAME] && accountsCache[ADMIN_NICKNAME].password === p) { localStorage.setItem('currentUser', ADMIN_NICKNAME); window.location.href = 'admin.html'; return; }
       if (!accountsCache[n]) { el.textContent = 'Не найден'; return; }
       if (accountsCache[n].password !== p) { el.textContent = 'Неверный пароль'; return; }
       localStorage.setItem('currentUser', n);
