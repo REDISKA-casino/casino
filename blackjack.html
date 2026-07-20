@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Блэкджек</title>
+  <style>
+    :root { --bg: #121212; --panel: #1e1e1e; --text: #e0e0e0; --accent: #ff4757; --success: #2ed573; --gold: #ffd700; }
+    body { background: var(--bg); color: var(--text); font-family: system-ui, sans-serif; margin: 0; display: flex; flex-direction: column; align-items: center; min-height: 100vh; }
+    .header { width: 100%; max-width: 500px; display: flex; align-items: center; padding: 16px 16px 0 16px; gap: 12px; }
+    .back-btn { background: var(--panel); color: var(--text); border: 1px solid #333; padding: 8px 16px; border-radius: 8px; font-size: 14px; cursor: pointer; text-decoration: none; display: inline-block; }
+    h1 { margin: 16px 0; font-weight: 400; }
+    .game-container { width: 100%; max-width: 500px; padding: 16px; }
+    .table { background: #1a5c2a; border-radius: 16px; padding: 20px; margin-bottom: 16px; border: 3px solid #8B4513; }
+    .section-label { font-size: 12px; color: #aaa; margin-bottom: 4px; }
+    .cards { display: flex; gap: 6px; min-height: 80px; align-items: center; flex-wrap: wrap; }
+    .card { width: 50px; height: 75px; background: #fff; border-radius: 6px; display: flex; flex-direction: column; justify-content: center; align-items: center; font-size: 18px; font-weight: bold; color: #000; border: 1px solid #ccc; }
+    .card.red { color: #ff0000; }
+    .card.hidden { background: #2a2a2a; color: #2a2a2a; }
+    .score { font-size: 18px; font-weight: bold; color: #ffd700; margin-top: 4px; }
+    .controls-box { background: var(--panel); padding: 16px; border-radius: 12px; text-align: center; }
+    .balance-box { display: flex; justify-content: space-between; padding: 8px 0; margin-bottom: 12px; font-size: 18px; }
+    input[type="number"] { width: 100%; padding: 12px; border: 1px solid #333; border-radius: 6px; background: #000; color: #fff; text-align: center; font-size: 18px; box-sizing: border-box; margin-bottom: 12px; }
+    .btn-row { display: flex; gap: 8px; }
+    .btn { flex: 1; padding: 14px; border: none; border-radius: 8px; font-size: 16px; cursor: pointer; font-weight: bold; color: white; }
+    .btn:active { transform: scale(0.98); } .btn:disabled { opacity: 0.5; }
+    .btn-deal { background: var(--accent); } .btn-hit { background: var(--success); } .btn-stand { background: #e67e22; }
+    .status-text { text-align: center; font-size: 20px; font-weight: bold; margin-bottom: 12px; min-height: 28px; }
+    .history-box { background: var(--panel); padding: 12px; border-radius: 8px; font-size: 13px; max-height: 120px; overflow-y: auto; color: #aaa; margin-top: 12px; }
+  </style>
+</head>
+<body>
+  <div class="header"><a href="index.html" class="back-btn" onclick="localStorage.setItem('coming_back','true')">← Назад</a></div>
+  <div class="game-container">
+    <h1>🃏 Блэкджек 21</h1>
+    <div class="status-text" id="status-text">Сделайте ставку и нажмите Раздать</div>
+    <div class="table">
+      <div class="section-label">ДИЛЕР</div>
+      <div class="cards" id="dealer-cards"></div>
+      <div class="score" id="dealer-score"></div>
+      <div style="margin:16px 0;border-top:1px dashed #555;"></div>
+      <div class="section-label">ИГРОК</div>
+      <div class="cards" id="player-cards"></div>
+      <div class="score" id="player-score"></div>
+    </div>
+    <div class="controls-box">
+      <div class="balance-box"><span>Баланс</span><span id="balance-display">1000 ₽</span></div>
+      <input type="number" id="bet-input" min="1" value="100" placeholder="Ставка" />
+      <div class="btn-row">
+        <button class="btn btn-deal" id="btn-deal">🃏 Раздать</button>
+        <button class="btn btn-hit" id="btn-hit" disabled>➕ Взять</button>
+        <button class="btn btn-stand" id="btn-stand" disabled>✋ Хватит</button>
+      </div>
+    </div>
+    <div class="history-box" id="history-box">История игр</div>
+  </div>
+  <script>
+    const BIN_ID = '6a516a15f5f4af5e297ecf15';
+    const MASTER_KEY = '$2a$10$ESWoAwK.zv8By8WZCjzhu.zw1AIOFcUeILyVjiDrHmv62jIxygKoO';
+    const API_URL = `https://api.jsonbin.io/v3/b/${BIN_ID}`;
+    const currentUser = localStorage.getItem('currentUser');
+    if (!currentUser) window.location.href = 'index.html';
+    let balance = parseInt(localStorage.getItem('bal_' + currentUser)) || 1000;
+    let deck = [], playerHand = [], dealerHand = [], gameActive = false, bet = 0, accountsCache = {};
+    const suits = ['♠','♥','♦','♣'];
+
+    async function loadAcc() { try { const r = await fetch(API_URL + '/latest', { headers: { 'X-Master-Key': MASTER_KEY } }); const d = await r.json(); accountsCache = d.record || {}; } catch(e) {} }
+    async function saveAcc() { try { await fetch(API_URL, { method: 'PUT', headers: { 'Content-Type': 'application/json', 'X-Master-Key': MASTER_KEY }, body: JSON.stringify(accountsCache) }); } catch(e) {} }
+    function saveBal() { localStorage.setItem('bal_' + currentUser, balance); document.getElementById('balance-display').textContent = `${balance.toLocaleString()} ₽`; syncNow(); }
+    async function syncNow() { if (accountsCache[currentUser]) { accountsCache[currentUser].balance = balance; await saveAcc(); } }
+    function addHistory(text) { const box = document.getElementById('history-box'); if(!box) return; const div = document.createElement('div'); div.textContent = text; div.style.padding = '4px 0'; div.style.borderBottom = '1px solid #2a2a2a'; box.insertBefore(div, box.firstChild); while(box.children.length > 20) { box.removeChild(box.lastChild); } }
+    document.getElementById('balance-display').textContent = `${balance.toLocaleString()} ₽`;
+
+    function shuffle() { deck=[]; for(let s of suits) for(let v=2;v<=14;v++) deck.push({v,s}); for(let i=deck.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [deck[i],deck[j]]=[deck[j],deck[i]]; } }
+    function cardValue(v){ if(v===14)return 11; if(v>=10)return 10; return v; }
+    function handScore(hand){ let s=0,aces=0; for(let c of hand){ s+=cardValue(c.v); if(c.v===14)aces++; } while(s>21&&aces>0){ s-=10; aces--; } return s; }
+    function renderCard(c,hidden){ return `<div class="card ${hidden?'hidden':''} ${c.s==='♥'||c.s==='♦'?'red':''}">${hidden?'?':(c.v===14?'A':c.v===13?'K':c.v===12?'Q':c.v===11?'J':c.v)+c.s}</div>`; }
+    function render(){
+      document.getElementById('player-cards').innerHTML = playerHand.map(c=>renderCard(c,false)).join('');
+      document.getElementById('player-score').textContent = 'Счёт: '+handScore(playerHand);
+      document.getElementById('dealer-cards').innerHTML = dealerHand.map((c,i)=>renderCard(c,i===0&&gameActive)).join('');
+      document.getElementById('dealer-score').textContent = gameActive?'Счёт: ?':'Счёт: '+handScore(dealerHand);
+    }
+
+    document.getElementById('btn-deal').onclick=()=>{
+      if(gameActive)return;
+      bet=+document.getElementById('bet-input').value;
+      if(!bet||bet<=0||bet>balance){alert('Некорректная ставка');return;}
+      balance-=bet; saveBal();
+      shuffle(); playerHand=[deck.pop(),deck.pop()]; dealerHand=[deck.pop(),deck.pop()];
+      gameActive=true;
+      document.getElementById('btn-deal').disabled=true;
+      document.getElementById('btn-hit').disabled=false;
+      document.getElementById('btn-stand').disabled=false;
+      document.getElementById('status-text').textContent='Игра идёт...';
+      document.getElementById('status-text').style.color='#ffa502';
+      if(handScore(playerHand)===21){ stand(); return; }
+      render();
+    };
+
+    document.getElementById('btn-hit').onclick=()=>{
+      if(!gameActive)return;
+      playerHand.push(deck.pop()); render();
+      if(handScore(playerHand)>21){ endGame(false); }
+    };
+
+    document.getElementById('btn-stand').onclick=()=>{ if(gameActive) stand(); };
+
+    function stand(){
+      gameActive=false;
+      while(handScore(dealerHand)<17) dealerHand.push(deck.pop());
+      const ps=handScore(playerHand), ds=handScore(dealerHand);
+      let won=false, win=0;
+      if(ps>21){ won=false; }
+      else if(ds>21){ won=true; win=bet*2; }
+      else if(ps>ds){ won=true; win=bet*2; }
+      else if(ps===ds){ won=true; win=bet; }
+      else { won=false; }
+      if(ps===21&&playerHand.length===2){ won=true; win=Math.floor(bet*2.5); }
+      balance+=win; saveBal();
+      document.getElementById('status-text').textContent=won?`Победа! +${win}₽`:`Поражение. -${bet}₽`;
+      document.getElementById('status-text').style.color=won?'#2ed573':'#ff4757';
+      addHistory(won?`Блэкджек: +${win}₽`:`Блэкджек: -${bet}₽`);
+      document.getElementById('btn-deal').disabled=false;
+      document.getElementById('btn-hit').disabled=true;
+      document.getElementById('btn-stand').disabled=true;
+      render();
+    }
+
+    function endGame(bust){ gameActive=false; stand(); }
+
+    (async () => { await loadAcc(); })();
+  </script>
+</body>
+  </html>
