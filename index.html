@@ -33,11 +33,22 @@
     .balance-card { background: var(--panel); padding: 20px; border-radius: 16px; text-align: center; margin-bottom: 24px; border: 2px solid #333; }
     .balance-label { font-size: 16px; color: #aaa; margin-bottom: 8px; }
     .balance-amount { font-size: 36px; font-weight: bold; background: linear-gradient(135deg, #ffd700, #ffa502); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
-    .games-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-    .game-card { background: var(--panel); padding: 18px; border-radius: 16px; text-align: center; cursor: pointer; transition: transform 0.2s; border: 2px solid #333; text-decoration: none; color: var(--text); display: block; }
-    .game-card:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,0,0,0.5); }
-    .game-icon { font-size: 36px; margin-bottom: 6px; } .game-title { font-size: 15px; font-weight: 600; margin-bottom: 4px; } .game-description { font-size: 10px; color: #aaa; }
+    .games-list { display: flex; flex-direction: column; gap: 8px; }
+    .game-item { background: var(--panel); border-radius: 16px; border: 2px solid #333; overflow: hidden; }
+    .game-header { display: flex; align-items: center; padding: 16px; cursor: pointer; gap: 12px; }
+    .game-icon { font-size: 36px; flex-shrink: 0; }
+    .game-info { flex: 1; }
+    .game-title { font-size: 16px; font-weight: 600; }
+    .game-short { font-size: 11px; color: #aaa; }
+    .game-arrow { font-size: 14px; color: #666; transition: transform 0.3s; }
+    .game-item.open .game-arrow { transform: rotate(90deg); }
+    .game-details { max-height: 0; overflow: hidden; transition: max-height 0.3s ease-out; background: #1a1a1a; }
+    .game-item.open .game-details { max-height: 200px; }
+    .game-desc { padding: 0 16px 12px 16px; font-size: 13px; color: #aaa; line-height: 1.4; }
+    .game-play-btn { display: block; margin: 0 16px 16px 16px; padding: 12px; background: var(--accent); color: white; border: none; border-radius: 8px; font-size: 14px; font-weight: bold; cursor: pointer; text-align: center; text-decoration: none; }
+    .game-play-btn:active { transform: scale(0.98); }
     .crash-card { border-left: 4px solid var(--success); } .roulette-card { border-left: 4px solid var(--accent); } .slots-card { border-left: 4px solid var(--gold); } .mines-card { border-left: 4px solid #ff6b6b; }
+    .coin-card { border-left: 4px solid #ffa502; } .poker-card { border-left: 4px solid #7b68ee; } .plinko-card { border-left: 4px solid #e74c3c; } .blackjack-card { border-left: 4px solid #1abc9c; }
     .banned-message { background: rgba(255,0,0,0.1); border: 2px solid #ff0000; padding: 16px; border-radius: 12px; text-align: center; color: #ff4757; font-weight: bold; margin-bottom: 20px; }
   </style>
 </head>
@@ -72,18 +83,7 @@
     <div id="game-section" style="display:none;">
       <div id="banned-message" class="banned-message" style="display:none;">🚫 Ваш аккаунт заблокирован администратором. Игры недоступны.</div>
       <div class="balance-card" id="balance-card"><div class="balance-label">Ваш баланс</div><div class="balance-amount" id="main-balance">1 000 ₽</div></div>
-      <div class="games-grid" id="games-grid">
-        <a href="crash.html" class="game-card crash-card"><div class="game-icon">📈</div><div class="game-title">Обвал</div><div class="game-description">Выводи до обвала!</div></a>
-        <a href="roulette.html" class="game-card roulette-card"><div class="game-icon">🎡</div><div class="game-title">Рулетка</div><div class="game-description">Красное, чёрное, зелёное!</div></a>
-        <a href="slots.html" class="game-card slots-card"><div class="game-icon">🎰</div><div class="game-title">Слоты 777</div><div class="game-description">Крути барабаны!</div></a>
-        <a href="mines.html" class="game-card mines-card"><div class="game-icon">💣</div><div class="game-title">Минное поле</div><div class="game-description">Избегай мин!</div></a>
-        <a href="dice.html" class="game-card slots-card"><div class="game-icon">🎲</div><div class="game-title">Кости</div><div class="game-description">Бросай кубики!</div></a>
-        <a href="horses.html" class="game-card mines-card"><div class="game-icon">🐴</div><div class="game-title">Скачки</div><div class="game-description">Ставь на лошадь!</div></a>
-        <a href="pyramid.html" class="game-card slots-card"><div class="game-icon">🔺</div><div class="game-title">Пирамида</div><div class="game-description">Найди алмаз! x3</div></a>
-        <a href="fishing.html" class="game-card crash-card"><div class="game-icon">🎣</div><div class="game-title">Рыбалка</div><div class="game-description">Лови рыбу!</div></a>
-        <a href="coin.html" class="game-card roulette-card"><div class="game-icon">🪙</div><div class="game-title">Орёл и Решка</div><div class="game-description">Угадай сторону!</div></a>
-        <a href="poker.html" class="game-card mines-card"><div class="game-icon">🃏</div><div class="game-title">Покер</div><div class="game-description">Собери комбинацию!</div></a>
-      </div>
+      <div class="games-list" id="games-list"></div>
     </div>
   </div>
   <script>
@@ -92,6 +92,45 @@
     const API_URL = `https://api.jsonbin.io/v3/b/${BIN_ID}`;
     const ADMIN_NICKNAME = 'I-am-admin';
     let accountsCache = {}, currentUser = null;
+
+    const games = [
+      { icon: '📈', title: 'Обвал', short: 'Выводи до обвала!', desc: 'Делай ставку и смотри как растёт график. Выведи деньги до того как произойдёт обвал! Чем дольше ждёшь — тем больше выигрыш.', file: 'crash.html', color: 'crash-card' },
+      { icon: '🎡', title: 'Рулетка', short: 'Красное, чёрное, зелёное!', desc: 'Классическая рулетка с 37 секторами. Ставь на красное или чёрное (x2), или на зелёное (x10). Крути колесо и испытывай удачу!', file: 'roulette.html', color: 'roulette-card' },
+      { icon: '🎰', title: 'Слоты 777', short: 'Крути барабаны!', desc: 'Игровой автомат с барабанами. Собирай комбинации по горизонтали, вертикали и диагонали. Поймай три семёрки для джекпота x20!', file: 'slots.html', color: 'slots-card' },
+      { icon: '💣', title: 'Минное поле', short: 'Избегай мин!', desc: 'Открывай клетки на поле 10x10. Каждая безопасная клетка приносит прибыль. Но берегись мин — они заберут всю ставку!', file: 'mines.html', color: 'mines-card' },
+      { icon: '🎲', title: 'Кости', short: 'Бросай кубики!', desc: 'Бросай два кубика и угадывай сумму. Ставь на 7 (x4), 11 (x5), 2 или 12 (x10), или на чёт/нечет (x1.5).', file: 'dice.html', color: 'slots-card' },
+      { icon: '🐴', title: 'Скачки', short: 'Ставь на лошадь!', desc: 'Выбери лошадь и смотри захватывающий забег. У каждой лошади свой множитель: от x2 до x5. Победитель получает всё!', file: 'horses.html', color: 'mines-card' },
+      { icon: '🔺', title: 'Пирамида', short: 'Найди алмаз! x3', desc: 'Три чаши, под одной спрятан алмаз. Чаши перемешиваются, а ты должен угадать где приз. Угадал — получаешь x3!', file: 'pyramid.html', color: 'slots-card' },
+      { icon: '🎣', title: 'Рыбалка', short: 'Лови рыбу!', desc: 'Забрось удочку и жди поклёвки. Разная рыба приносит разную прибыль. Но можно поймать и сапог...', file: 'fishing.html', color: 'crash-card' },
+      { icon: '🪙', title: 'Орёл и Решка', short: 'Угадай сторону!', desc: 'Подбрось монетку и угадай орёл или решка. Выигрыш x2. Шанс 1% что монета встанет на ребро — тогда x50!', file: 'coin.html', color: 'coin-card' },
+      { icon: '🃏', title: 'Покер', short: 'Собери комбинацию!', desc: 'Видеопокер с обменом карт. Собирай комбинации от пары до Роял Флеша. Максимальный выигрыш x250!', file: 'poker.html', color: 'poker-card' },
+      { icon: '🎯', title: 'Плинко', short: 'Шарик и гвоздики!', desc: 'Бросай шарик в поле с гвоздиками. Шарик отскакивает от гвоздиков и падает в ячейку с множителем. Множители: x0.5, x1, x2, x5!', file: 'plinko.html', color: 'plinko-card' },
+      { icon: '🃏', title: 'Блэкджек 21', short: 'Набери 21 очко!', desc: 'Играй против дилера. Набирай карты чтобы получить 21 очко. Блэкджек (21 с двух карт) даёт x2.5! Победа x2, ничья возврат ставки.', file: 'blackjack.html', color: 'blackjack-card' }
+    ];
+
+    function renderGames() {
+      const container = document.getElementById('games-list');
+      container.innerHTML = games.map((g, i) => `
+        <div class="game-item ${g.color}" data-index="${i}">
+          <div class="game-header" onclick="toggleGame(${i})">
+            <div class="game-icon">${g.icon}</div>
+            <div class="game-info"><div class="game-title">${g.title}</div><div class="game-short">${g.short}</div></div>
+            <div class="game-arrow">▶</div>
+          </div>
+          <div class="game-details">
+            <div class="game-desc">${g.desc}</div>
+            <a href="${g.file}" class="game-play-btn" onclick="localStorage.setItem('coming_back','true')">🎮 Играть</a>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    window.toggleGame = function(index) {
+      const items = document.querySelectorAll('.game-item');
+      items.forEach((item, i) => { if(i===index) item.classList.toggle('open'); else item.classList.remove('open'); });
+    };
+
+    renderGames();
 
     document.querySelectorAll('.toggle-password').forEach(btn => {
       btn.addEventListener('click', function(e) {
@@ -129,9 +168,9 @@
       localStorage.setItem('bal_' + n, cloudBal);
       document.getElementById('login-form').style.display = 'none'; document.getElementById('user-panel').style.display = 'block';
       document.getElementById('current-user').textContent = n;
-      const bc = document.getElementById('badge-container'), bm = document.getElementById('banned-message'), bal = document.getElementById('balance-card'), gg = document.getElementById('games-grid');
+      const bc = document.getElementById('badge-container'), bm = document.getElementById('banned-message'), bal = document.getElementById('balance-card'), gg = document.getElementById('games-list');
       if (isBanned(n)) { bc.innerHTML = '<span class="banned-badge">🚫 Забанен</span>'; bm.style.display = 'block'; bal.style.display = 'none'; gg.style.display = 'none'; }
-      else { bc.innerHTML = ''; bm.style.display = 'none'; bal.style.display = 'block'; gg.style.display = 'grid'; upBal(); }
+      else { bc.innerHTML = ''; bm.style.display = 'none'; bal.style.display = 'block'; gg.style.display = 'flex'; upBal(); }
       document.getElementById('game-section').style.display = 'block';
     }
 
