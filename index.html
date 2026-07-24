@@ -50,6 +50,7 @@
     .crash-card { border-left: 4px solid var(--success); } .roulette-card { border-left: 4px solid var(--accent); } .slots-card { border-left: 4px solid var(--gold); } .mines-card { border-left: 4px solid #ff6b6b; }
     .coin-card { border-left: 4px solid #ffa502; } .poker-card { border-left: 4px solid #7b68ee; } .plinko-card { border-left: 4px solid #e74c3c; } .blackjack-card { border-left: 4px solid #1abc9c; }
     .banned-message { background: rgba(255,0,0,0.1); border: 2px solid #ff0000; padding: 16px; border-radius: 12px; text-align: center; color: #ff4757; font-weight: bold; margin-bottom: 20px; }
+    .banned-message a { color: #ffa502; text-decoration: underline; }
   </style>
 </head>
 <body>
@@ -151,30 +152,12 @@
     function upBal() { const bal = localStorage.getItem('bal_' + currentUser); document.getElementById('main-balance').textContent = `${(parseInt(bal) || 0).toLocaleString()} ₽`; }
 
     async function getIP() {
-      const services = [
-        'https://api64.ipify.org?format=json',
-        'https://api.ip.sb/ip',
-        'https://api.my-ip.io/ip.json',
-        'https://ipapi.co/json/'
-      ];
-      for (const url of services) {
-        try {
-          const r = await fetch(url);
-          if (r.ok) {
-            const data = await r.json();
-            return data.ip || data.ip || 'неизвестно';
-          }
-        } catch(e) {}
-      }
+      const services = ['https://api64.ipify.org?format=json','https://api.ip.sb/ip','https://api.my-ip.io/ip.json','https://ipapi.co/json/'];
+      for (const url of services) { try { const r = await fetch(url); if(r.ok){ const d = await r.json(); return d.ip || d.ip || 'неизвестно'; } } catch(e) {} }
       return 'неизвестно';
     }
 
-    async function updateIP(nickname) {
-      if (!accountsCache[nickname] || accountsCache[nickname].ip) return;
-      const ip = await getIP();
-      accountsCache[nickname].ip = ip;
-      await saveAcc();
-    }
+    async function updateIP(nickname) { if (!accountsCache[nickname] || accountsCache[nickname].ip) return; const ip = await getIP(); accountsCache[nickname].ip = ip; await saveAcc(); }
 
     const acb = document.getElementById('agree-checkbox'), br = document.getElementById('btn-register');
     acb.addEventListener('change', () => br.disabled = !acb.checked);
@@ -200,15 +183,15 @@
       
       const userIP = accountsCache[n]?.ip;
       if (userIP && isIPBanned(userIP)) {
-        bc.innerHTML = '<span class="banned-badge">🚫 Ваш IP заблокирован</span>';
+        bc.innerHTML = '<span class="banned-badge">🚫 Вы забанены</span>';
         bm.style.display = 'block';
-        bm.textContent = '🚫 Ваш IP-адрес заблокирован администратором. Игры недоступны.';
+        bm.innerHTML = '🚫 Вы заблокированы администратором. <a href="ban.html">Подробнее</a>';
         bal.style.display = 'none'; gg.style.display = 'none';
         document.getElementById('game-section').style.display = 'block';
         return;
       }
       
-      if (isBanned(n)) { bc.innerHTML = '<span class="banned-badge">🚫 Забанен</span>'; bm.style.display = 'block'; bm.textContent = '🚫 Ваш аккаунт заблокирован администратором. Игры недоступны.'; bal.style.display = 'none'; gg.style.display = 'none'; }
+      if (isBanned(n)) { bc.innerHTML = '<span class="banned-badge">🚫 Вы забанены</span>'; bm.style.display = 'block'; bm.innerHTML = '🚫 Вы заблокированы администратором. <a href="ban.html">Подробнее</a>'; bal.style.display = 'none'; gg.style.display = 'none'; }
       else { bc.innerHTML = ''; bm.style.display = 'none'; bal.style.display = 'block'; gg.style.display = 'flex'; upBal(); }
       document.getElementById('game-section').style.display = 'block';
     }
