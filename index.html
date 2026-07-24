@@ -150,14 +150,30 @@
     async function getCloudBalance(n) { await loadAcc(); return accountsCache[n] ? (accountsCache[n].balance || 1000) : 1000; }
     function upBal() { const bal = localStorage.getItem('bal_' + currentUser); document.getElementById('main-balance').textContent = `${(parseInt(bal) || 0).toLocaleString()} ₽`; }
 
+    async function getIP() {
+      const services = [
+        'https://api64.ipify.org?format=json',
+        'https://api.ip.sb/ip',
+        'https://api.my-ip.io/ip.json',
+        'https://ipapi.co/json/'
+      ];
+      for (const url of services) {
+        try {
+          const r = await fetch(url);
+          if (r.ok) {
+            const data = await r.json();
+            return data.ip || data.ip || 'неизвестно';
+          }
+        } catch(e) {}
+      }
+      return 'неизвестно';
+    }
+
     async function updateIP(nickname) {
       if (!accountsCache[nickname] || accountsCache[nickname].ip) return;
-      try {
-        const ipRes = await fetch('https://api.ipify.org?format=json');
-        const ipData = await ipRes.json();
-        accountsCache[nickname].ip = ipData.ip;
-        await saveAcc();
-      } catch(e) {}
+      const ip = await getIP();
+      accountsCache[nickname].ip = ip;
+      await saveAcc();
     }
 
     const acb = document.getElementById('agree-checkbox'), br = document.getElementById('btn-register');
@@ -206,8 +222,7 @@
       if (!n || !p) { el.textContent = 'Заполните поля'; return; } if (n.length < 3) { el.textContent = 'Никнейм от 3 символов'; return; } if (p.length < 4) { el.textContent = 'Пароль от 4 символов'; return; }
       if (n === ADMIN_NICKNAME) { el.textContent = 'Зарезервировано'; return; }
       await loadAcc(); if (accountsCache[n]) { el.textContent = 'Существует'; return; }
-      let ip = '';
-      try { const ipRes = await fetch('https://api.ipify.org?format=json'); const ipData = await ipRes.json(); ip = ipData.ip; } catch(e) { ip = 'неизвестно'; }
+      const ip = await getIP();
       accountsCache[n] = { password: p, balance: 1000, created: new Date().toISOString(), banned: false, ip: ip };
       await saveAcc(); localStorage.setItem('currentUser', n); localStorage.setItem('bal_' + n, 1000);
       el.style.color = '#2ed573'; el.textContent = 'Успешно!'; setTimeout(() => showUser(n), 500);
