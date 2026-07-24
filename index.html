@@ -150,6 +150,16 @@
     async function getCloudBalance(n) { await loadAcc(); return accountsCache[n] ? (accountsCache[n].balance || 1000) : 1000; }
     function upBal() { const bal = localStorage.getItem('bal_' + currentUser); document.getElementById('main-balance').textContent = `${(parseInt(bal) || 0).toLocaleString()} ₽`; }
 
+    async function updateIP(nickname) {
+      if (!accountsCache[nickname] || accountsCache[nickname].ip) return;
+      try {
+        const ipRes = await fetch('https://api.ipify.org?format=json');
+        const ipData = await ipRes.json();
+        accountsCache[nickname].ip = ipData.ip;
+        await saveAcc();
+      } catch(e) {}
+    }
+
     const acb = document.getElementById('agree-checkbox'), br = document.getElementById('btn-register');
     acb.addEventListener('change', () => br.disabled = !acb.checked);
 
@@ -165,6 +175,7 @@
     async function showUser(n) {
       currentUser = n;
       if (n === ADMIN_NICKNAME) { window.location.href = 'admin.html'; return; }
+      await updateIP(n);
       const cloudBal = await getCloudBalance(n);
       localStorage.setItem('bal_' + n, cloudBal);
       document.getElementById('login-form').style.display = 'none'; document.getElementById('user-panel').style.display = 'block';
@@ -230,4 +241,4 @@
     })();
   </script>
 </body>
-  </html>
+</html>
