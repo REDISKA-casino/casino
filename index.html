@@ -123,12 +123,14 @@
       localStorage.setItem('bal_' + n, await getCloudBalance(n));
       document.getElementById('login-form').style.display = 'none'; document.getElementById('user-panel').style.display = 'block';
       document.getElementById('current-user').textContent = n;
-      const bc = document.getElementById('badge-container'), bm = document.getElementById('banned-message'), bal = document.getElementById('balance-card'), gg = document.getElementById('games-list'), lb = document.getElementById('btn-lb');
       document.getElementById('game-section').style.display = 'block';
+      const bc = document.getElementById('badge-container'), bm = document.getElementById('banned-message'), bal = document.getElementById('balance-card'), gg = document.getElementById('games-list'), lb = document.getElementById('btn-lb');
       if((accountsCache[n]?.ip && isIPBanned(accountsCache[n].ip)) || isBanned(n)) {
         bc.innerHTML = '<span class="banned-badge">🚫 Вы забанены</span>'; bm.style.display = 'block';
         bm.innerHTML = '🚫 Вы заблокированы. <a href="ban.html">Подробнее</a>'; bal.style.display = 'none'; gg.style.display = 'none'; lb.style.display = 'none';
-      } else { bc.innerHTML = ''; bm.style.display = 'none'; bal.style.display = 'block'; gg.style.display = 'flex'; lb.style.display = 'block'; upBal(); }
+      } else {
+        bc.innerHTML = ''; bm.style.display = 'none'; bal.style.display = 'block'; gg.style.display = 'flex'; lb.style.display = 'block'; upBal();
+      }
     }
 
     document.getElementById('tab-login').onclick = () => { document.getElementById('tab-login').classList.add('active'); document.getElementById('tab-register').classList.remove('active'); document.getElementById('form-login').style.display = 'flex'; document.getElementById('form-register').style.display = 'none'; };
