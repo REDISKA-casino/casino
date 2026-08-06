@@ -21,15 +21,16 @@
     .auth-btn { width: 100%; padding: 14px; border: none; border-radius: 8px; font-size: 16px; font-weight: 600; cursor: pointer; }
     .auth-btn:active { transform: scale(0.98); } .auth-btn:disabled { opacity: 0.4; }
     .btn-login { background: var(--success); color: white; } .btn-register { background: var(--accent); color: white; }
-    .btn-logout { background: #555; color: white; } .btn-lb { display: block; text-align: center; background: #ffa502; color: #000; padding: 14px; border-radius: 8px; font-weight: 600; text-decoration: none; margin-bottom: 8px; }
+    .btn-logout { background: #555; color: white; }
     .user-info { text-align: center; margin-bottom: 16px; } .user-nickname { font-size: 20px; font-weight: 600; color: var(--gold); }
     .banned-badge { display: inline-block; background: #ff0000; color: white; padding: 4px 12px; border-radius: 12px; font-size: 12px; margin-top: 4px; }
     .auth-error { color: #ff4757; font-size: 14px; text-align: center; min-height: 20px; }
     .checkbox-container { display: flex; align-items: flex-start; gap: 8px; margin: 8px 0; }
     .checkbox-container input[type="checkbox"] { margin-top: 2px; width: 18px; height: 18px; accent-color: var(--accent); cursor: pointer; flex-shrink: 0; }
     .checkbox-label { font-size: 13px; color: #aaa; } .checkbox-label a { color: var(--gold); text-decoration: underline; }
-    .balance-card { background: var(--panel); padding: 20px; border-radius: 16px; text-align: center; margin-bottom: 24px; border: 2px solid #333; }
+    .balance-card { background: var(--panel); padding: 20px; border-radius: 16px; text-align: center; margin-bottom: 16px; border: 2px solid #333; }
     .balance-amount { font-size: 36px; font-weight: bold; background: linear-gradient(135deg, #ffd700, #ffa502); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+    .btn-lb { display: block; text-align: center; background: #ffa502; color: #000; padding: 12px; border-radius: 8px; font-weight: 600; text-decoration: none; margin-bottom: 16px; }
     .games-list { display: flex; flex-direction: column; gap: 8px; }
     .game-item { background: var(--panel); border-radius: 16px; border: 2px solid #333; overflow: hidden; }
     .game-header { display: flex; align-items: center; padding: 16px; cursor: pointer; gap: 12px; }
@@ -64,9 +65,14 @@
           <button class="auth-btn btn-register" id="btn-register" disabled>Зарегистрироваться</button><div class="auth-error" id="register-error"></div>
         </div>
       </div>
-      <div id="user-panel" style="display:none;"><div class="user-info"><div>Добро пожаловать,</div><div class="user-nickname" id="current-user"></div><div id="badge-container"></div></div><a href="leaderboard.html" class="btn-lb">🏆 Лидерборд</a><button class="auth-btn btn-logout" id="btn-logout">Выйти</button></div>
+      <div id="user-panel" style="display:none;"><div class="user-info"><div>Добро пожаловать,</div><div class="user-nickname" id="current-user"></div><div id="badge-container"></div></div><button class="auth-btn btn-logout" id="btn-logout">Выйти</button></div>
     </div>
-    <div id="game-section" style="display:none;"><div id="banned-message" class="banned-message" style="display:none;"></div><div class="balance-card"><div class="balance-amount" id="main-balance">1 000 ₽</div></div><div class="games-list" id="games-list"></div></div>
+    <div id="game-section" style="display:none;">
+      <div id="banned-message" class="banned-message" style="display:none;"></div>
+      <div class="balance-card" id="balance-card"><div class="balance-amount" id="main-balance">1 000 ₽</div></div>
+      <a href="leaderboard.html" class="btn-lb">🏆 Лидерборд</a>
+      <div class="games-list" id="games-list"></div>
+    </div>
   </div>
   <script>
     const BIN_ID = '6a516a15f5f4af5e297ecf15', MASTER_KEY = '$2a$10$ESWoAwK.zv8By8WZCjzhu.zw1AIOFcUeILyVjiDrHmv62jIxygKoO', API_URL = `https://api.jsonbin.io/v3/b/${BIN_ID}`, ADMIN_NICKNAME = 'I-am-admin';
@@ -117,11 +123,11 @@
       localStorage.setItem('bal_' + n, await getCloudBalance(n));
       document.getElementById('login-form').style.display = 'none'; document.getElementById('user-panel').style.display = 'block';
       document.getElementById('current-user').textContent = n;
-      const bc = document.getElementById('badge-container'), bm = document.getElementById('banned-message'), bal = document.querySelector('.balance-card'), gg = document.getElementById('games-list');
+      const bc = document.getElementById('badge-container'), bm = document.getElementById('banned-message'), bal = document.getElementById('balance-card'), gg = document.getElementById('games-list'), lb = document.querySelector('.btn-lb');
       if((accountsCache[n]?.ip && isIPBanned(accountsCache[n].ip)) || isBanned(n)) {
         bc.innerHTML = '<span class="banned-badge">🚫 Вы забанены</span>'; bm.style.display = 'block';
-        bm.innerHTML = '🚫 Вы заблокированы. <a href="ban.html">Подробнее</a>'; bal.style.display = 'none'; gg.style.display = 'none';
-      } else { bc.innerHTML = ''; bm.style.display = 'none'; bal.style.display = 'block'; gg.style.display = 'flex'; upBal(); }
+        bm.innerHTML = '🚫 Вы заблокированы. <a href="ban.html">Подробнее</a>'; bal.style.display = 'none'; gg.style.display = 'none'; lb.style.display = 'none';
+      } else { bc.innerHTML = ''; bm.style.display = 'none'; bal.style.display = 'block'; gg.style.display = 'flex'; lb.style.display = 'block'; upBal(); }
       document.getElementById('game-section').style.display = 'block';
     }
 
@@ -161,4 +167,4 @@
     })();
   </script>
 </body>
-</html>
+  </html>
