@@ -11,43 +11,35 @@
     h1 { margin: 16px 0; font-weight: 400; text-align: center; font-size: 28px; }
     .auth-panel { background: var(--panel); padding: 20px; border-radius: 16px; margin-bottom: 20px; border: 2px solid #333; }
     .auth-tabs { display: flex; gap: 8px; margin-bottom: 16px; }
-    .auth-tab { flex: 1; padding: 10px; border: none; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; background: #2a2a2a; color: #aaa; transition: all 0.2s; }
+    .auth-tab { flex: 1; padding: 10px; border: none; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; background: #2a2a2a; color: #aaa; }
     .auth-tab.active { background: var(--accent); color: white; }
     .auth-form { display: flex; flex-direction: column; gap: 12px; }
     .auth-input { width: 100%; padding: 12px; border: 1px solid #333; border-radius: 8px; background: #000; color: #fff; font-size: 16px; box-sizing: border-box; }
-    .auth-input::placeholder { color: #666; }
     .password-wrapper { position: relative; }
     .password-wrapper .auth-input { padding-right: 50px; }
     .toggle-password { position: absolute; right: 8px; top: 50%; transform: translateY(-50%); background: none; border: none; color: #aaa; font-size: 20px; cursor: pointer; padding: 4px 8px; z-index: 2; }
-    .auth-btn { width: 100%; padding: 14px; border: none; border-radius: 8px; font-size: 16px; font-weight: 600; cursor: pointer; transition: transform 0.1s; }
+    .auth-btn { width: 100%; padding: 14px; border: none; border-radius: 8px; font-size: 16px; font-weight: 600; cursor: pointer; }
     .auth-btn:active { transform: scale(0.98); } .auth-btn:disabled { opacity: 0.4; }
     .btn-login { background: var(--success); color: white; } .btn-register { background: var(--accent); color: white; }
-    .btn-logout { background: #555; color: white; margin-top: 12px; }
-    .btn-leaderboard { display: block; text-align: center; text-decoration: none; background: #ffa502; color: #000; padding: 14px; border-radius: 8px; font-weight: 600; margin-bottom: 8px; }
+    .btn-logout { background: #555; color: white; } .btn-lb { display: block; text-align: center; background: #ffa502; color: #000; padding: 14px; border-radius: 8px; font-weight: 600; text-decoration: none; margin-bottom: 8px; }
     .user-info { text-align: center; margin-bottom: 16px; } .user-nickname { font-size: 20px; font-weight: 600; color: var(--gold); }
     .banned-badge { display: inline-block; background: #ff0000; color: white; padding: 4px 12px; border-radius: 12px; font-size: 12px; margin-top: 4px; }
     .auth-error { color: #ff4757; font-size: 14px; text-align: center; min-height: 20px; }
     .checkbox-container { display: flex; align-items: flex-start; gap: 8px; margin: 8px 0; }
     .checkbox-container input[type="checkbox"] { margin-top: 2px; width: 18px; height: 18px; accent-color: var(--accent); cursor: pointer; flex-shrink: 0; }
-    .checkbox-label { font-size: 13px; color: #aaa; line-height: 1.4; cursor: pointer; user-select: none; }
-    .checkbox-label a { color: var(--gold); text-decoration: underline; cursor: pointer; }
+    .checkbox-label { font-size: 13px; color: #aaa; } .checkbox-label a { color: var(--gold); text-decoration: underline; }
     .balance-card { background: var(--panel); padding: 20px; border-radius: 16px; text-align: center; margin-bottom: 24px; border: 2px solid #333; }
-    .balance-label { font-size: 16px; color: #aaa; margin-bottom: 8px; }
     .balance-amount { font-size: 36px; font-weight: bold; background: linear-gradient(135deg, #ffd700, #ffa502); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
     .games-list { display: flex; flex-direction: column; gap: 8px; }
     .game-item { background: var(--panel); border-radius: 16px; border: 2px solid #333; overflow: hidden; }
     .game-header { display: flex; align-items: center; padding: 16px; cursor: pointer; gap: 12px; }
-    .game-icon { font-size: 36px; flex-shrink: 0; }
-    .game-info { flex: 1; }
-    .game-title { font-size: 16px; font-weight: 600; }
-    .game-short { font-size: 11px; color: #aaa; }
+    .game-icon { font-size: 36px; } .game-info { flex: 1; } .game-title { font-size: 16px; font-weight: 600; } .game-short { font-size: 11px; color: #aaa; }
     .game-arrow { font-size: 14px; color: #666; transition: transform 0.3s; }
     .game-item.open .game-arrow { transform: rotate(90deg); }
     .game-details { max-height: 0; overflow: hidden; transition: max-height 0.3s ease-out; background: #1a1a1a; }
     .game-item.open .game-details { max-height: 200px; }
     .game-desc { padding: 0 16px 12px 16px; font-size: 13px; color: #aaa; line-height: 1.4; }
     .game-play-btn { display: block; margin: 0 16px 16px 16px; padding: 12px; background: var(--accent); color: white; border: none; border-radius: 8px; font-size: 14px; font-weight: bold; cursor: pointer; text-align: center; text-decoration: none; }
-    .game-play-btn:active { transform: scale(0.98); }
     .crash-card { border-left: 4px solid var(--success); } .roulette-card { border-left: 4px solid var(--accent); } .slots-card { border-left: 4px solid var(--gold); } .mines-card { border-left: 4px solid #ff6b6b; }
     .coin-card { border-left: 4px solid #ffa502; } .poker-card { border-left: 4px solid #7b68ee; } .plinko-card { border-left: 4px solid #e74c3c; } .blackjack-card { border-left: 4px solid #1abc9c; }
     .banned-message { background: rgba(255,0,0,0.1); border: 2px solid #ff0000; padding: 16px; border-radius: 12px; text-align: center; color: #ff4757; font-weight: bold; margin-bottom: 20px; }
@@ -62,142 +54,74 @@
         <div class="auth-tabs"><button class="auth-tab active" id="tab-login">Вход</button><button class="auth-tab" id="tab-register">Регистрация</button></div>
         <div id="form-login" class="auth-form">
           <input type="text" class="auth-input" id="login-nickname" placeholder="Никнейм" autocomplete="username" />
-          <div class="password-wrapper">
-            <input type="password" class="auth-input" id="login-password" placeholder="Пароль" autocomplete="current-password" />
-            <button type="button" class="toggle-password" data-target="login-password">🔒</button>
-          </div>
-          <button class="auth-btn btn-login" id="btn-login">Войти</button>
-          <div class="auth-error" id="login-error"></div>
+          <div class="password-wrapper"><input type="password" class="auth-input" id="login-password" placeholder="Пароль" autocomplete="current-password" /><button type="button" class="toggle-password" data-target="login-password">🔒</button></div>
+          <button class="auth-btn btn-login" id="btn-login">Войти</button><div class="auth-error" id="login-error"></div>
         </div>
         <div id="form-register" class="auth-form" style="display:none;">
           <input type="text" class="auth-input" id="register-nickname" placeholder="Придумайте никнейм" autocomplete="username" />
-          <div class="password-wrapper">
-            <input type="password" class="auth-input" id="register-password" placeholder="Придумайте пароль" autocomplete="new-password" />
-            <button type="button" class="toggle-password" data-target="register-password">🔒</button>
-          </div>
+          <div class="password-wrapper"><input type="password" class="auth-input" id="register-password" placeholder="Придумайте пароль" autocomplete="new-password" /><button type="button" class="toggle-password" data-target="register-password">🔒</button></div>
           <div class="checkbox-container"><input type="checkbox" id="agree-checkbox" /><label class="checkbox-label" for="agree-checkbox">Я соглашаюсь с условиями <a href="pol.html" target="_blank">политики</a> и <a href="con.html" target="_blank">конфиденциальности</a></label></div>
-          <button class="auth-btn btn-register" id="btn-register" disabled>Зарегистрироваться</button>
-          <div class="auth-error" id="register-error"></div>
+          <button class="auth-btn btn-register" id="btn-register" disabled>Зарегистрироваться</button><div class="auth-error" id="register-error"></div>
         </div>
       </div>
-      <div id="user-panel" style="display:none;">
-        <div class="user-info"><div>Добро пожаловать,</div><div class="user-nickname" id="current-user"></div><div id="badge-container"></div></div>
-        <a href="leaderboard.html" class="btn-leaderboard">🏆 Лидерборд</a>
-        <button class="auth-btn btn-logout" id="btn-logout">Выйти</button>
-      </div>
+      <div id="user-panel" style="display:none;"><div class="user-info"><div>Добро пожаловать,</div><div class="user-nickname" id="current-user"></div><div id="badge-container"></div></div><a href="leaderboard.html" class="btn-lb">🏆 Лидерборд</a><button class="auth-btn btn-logout" id="btn-logout">Выйти</button></div>
     </div>
-    <div id="game-section" style="display:none;">
-      <div id="banned-message" class="banned-message" style="display:none;"></div>
-      <div class="balance-card" id="balance-card"><div class="balance-label">Ваш баланс</div><div class="balance-amount" id="main-balance">1 000 ₽</div></div>
-      <div class="games-list" id="games-list"></div>
-    </div>
+    <div id="game-section" style="display:none;"><div id="banned-message" class="banned-message" style="display:none;"></div><div class="balance-card"><div class="balance-amount" id="main-balance">1 000 ₽</div></div><div class="games-list" id="games-list"></div></div>
   </div>
   <script>
-    const BIN_ID = '6a516a15f5f4af5e297ecf15';
-    const MASTER_KEY = '$2a$10$ESWoAwK.zv8By8WZCjzhu.zw1AIOFcUeILyVjiDrHmv62jIxygKoO';
-    const API_URL = `https://api.jsonbin.io/v3/b/${BIN_ID}`;
-    const ADMIN_NICKNAME = 'I-am-admin';
+    const BIN_ID = '6a516a15f5f4af5e297ecf15', MASTER_KEY = '$2a$10$ESWoAwK.zv8By8WZCjzhu.zw1AIOFcUeILyVjiDrHmv62jIxygKoO', API_URL = `https://api.jsonbin.io/v3/b/${BIN_ID}`, ADMIN_NICKNAME = 'I-am-admin';
     let accountsCache = {}, currentUser = null;
-
     const games = [
-      { icon: '📈', title: 'Обвал', short: 'Выводи до обвала!', desc: 'Делай ставку и смотри как растёт график. Выведи деньги до того как произойдёт обвал! Чем дольше ждёшь — тем больше выигрыш.', file: 'crash.html', color: 'crash-card' },
-      { icon: '🎡', title: 'Рулетка', short: 'Красное, чёрное, зелёное!', desc: 'Классическая рулетка с 37 секторами. Ставь на красное или чёрное (x2), или на зелёное (x10). Крути колесо и испытывай удачу!', file: 'roulette.html', color: 'roulette-card' },
-      { icon: '🎰', title: 'Слоты 777', short: 'Крути барабаны!', desc: 'Игровой автомат с барабанами. Собирай комбинации по горизонтали, вертикали и диагонали. Поймай три семёрки для джекпота x20!', file: 'slots.html', color: 'slots-card' },
-      { icon: '💣', title: 'Минное поле', short: 'Избегай мин!', desc: 'Открывай клетки на поле 10x10. Каждая безопасная клетка приносит прибыль. Но берегись мин — они заберут всю ставку!', file: 'mines.html', color: 'mines-card' },
-      { icon: '🎲', title: 'Кости', short: 'Бросай кубики!', desc: 'Бросай два кубика и угадывай сумму. Ставь на 7 (x4), 11 (x5), 2 или 12 (x10), или на чёт/нечет (x1.5).', file: 'dice.html', color: 'slots-card' },
-      { icon: '🐴', title: 'Скачки', short: 'Ставь на лошадь!', desc: 'Выбери лошадь и смотри захватывающий забег. У каждой лошади свой множитель: от x2 до x5. Победитель получает всё!', file: 'horses.html', color: 'mines-card' },
-      { icon: '🔺', title: 'Пирамида', short: 'Найди алмаз! x3', desc: 'Три чаши, под одной спрятан алмаз. Чаши перемешиваются, а ты должен угадать где приз. Угадал — получаешь x3!', file: 'pyramid.html', color: 'slots-card' },
-      { icon: '🎣', title: 'Рыбалка', short: 'Лови рыбу!', desc: 'Забрось удочку и жди поклёвки. Разная рыба приносит разную прибыль. Но можно поймать и сапог...', file: 'fishing.html', color: 'crash-card' },
-      { icon: '🪙', title: 'Орёл и Решка', short: 'Угадай сторону!', desc: 'Подбрось монетку и угадай орёл или решка. Выигрыш x2. Шанс 1% что монета встанет на ребро — тогда x50!', file: 'coin.html', color: 'coin-card' },
-      { icon: '🃏', title: 'Покер', short: 'Собери комбинацию!', desc: 'Видеопокер с обменом карт. Собирай комбинации от пары до Роял Флеша. Максимальный выигрыш x250!', file: 'poker.html', color: 'poker-card' },
-      { icon: '🎯', title: 'Плинко', short: 'Шарик и гвоздики!', desc: 'Бросай шарик в поле с гвоздиками. Шарик отскакивает от гвоздиков и падает в ячейку с множителем. Множители: x0.5, x1, x2, x3!', file: 'plinko.html', color: 'plinko-card' },
-      { icon: '🃏', title: 'Блэкджек 21', short: 'Набери 21 очко!', desc: 'Играй против дилера. Набирай карты чтобы получить 21 очко. Блэкджек (21 с двух карт) даёт x2.5! Победа x2, ничья возврат ставки.', file: 'blackjack.html', color: 'blackjack-card' }
+      { icon: '📈', title: 'Обвал', short: 'Выводи до обвала!', desc: 'Делай ставку и смотри как растёт график. Выведи деньги до обвала!', file: 'crash.html', color: 'crash-card' },
+      { icon: '🎡', title: 'Рулетка', short: 'Красное, чёрное, зелёное!', desc: 'Классическая рулетка с 37 секторами. Ставь на цвет и крути!', file: 'roulette.html', color: 'roulette-card' },
+      { icon: '🎰', title: 'Слоты 777', short: 'Крути барабаны!', desc: 'Собирай комбинации по горизонтали, вертикали и диагонали. Джекпот x20!', file: 'slots.html', color: 'slots-card' },
+      { icon: '💣', title: 'Минное поле', short: 'Избегай мин!', desc: 'Открывай клетки 10x10. Безопасные приносят прибыль, мины забирают всё.', file: 'mines.html', color: 'mines-card' },
+      { icon: '🎲', title: 'Кости', short: 'Бросай кубики!', desc: 'Угадывай сумму двух кубиков. Множители до x10!', file: 'dice.html', color: 'slots-card' },
+      { icon: '🐴', title: 'Скачки', short: 'Ставь на лошадь!', desc: 'Выбери лошадь и смотри забег. Множители от x2 до x5.', file: 'horses.html', color: 'mines-card' },
+      { icon: '🔺', title: 'Пирамида', short: 'Найди алмаз! x3', desc: 'Три чаши, под одной алмаз. Угадай — получи x3!', file: 'pyramid.html', color: 'slots-card' },
+      { icon: '🎣', title: 'Рыбалка', short: 'Лови рыбу!', desc: 'Забрось удочку и жди поклёвки. Разная рыба — разная прибыль.', file: 'fishing.html', color: 'crash-card' },
+      { icon: '🪙', title: 'Орёл и Решка', short: 'Угадай сторону!', desc: 'Подбрось монетку. Угадал — x2. Шанс ребра 1% — x50!', file: 'coin.html', color: 'coin-card' },
+      { icon: '🃏', title: 'Покер', short: 'Собери комбинацию!', desc: 'Видеопокер с обменом карт. Комбинации до Роял Флеша x250!', file: 'poker.html', color: 'poker-card' },
+      { icon: '🎯', title: 'Плинко', short: 'Шарик и гвоздики!', desc: 'Бросай шарик в поле с гвоздиками. Множители: x0.5, x1, x2, x3!', file: 'plinko.html', color: 'plinko-card' },
+      { icon: '🃏', title: 'Блэкджек 21', short: 'Набери 21 очко!', desc: 'Игра против дилера. Блэкджек x2.5! Победа x2.', file: 'blackjack.html', color: 'blackjack-card' }
     ];
 
-    function renderGames() {
-      const container = document.getElementById('games-list');
-      container.innerHTML = games.map((g, i) => `
-        <div class="game-item ${g.color}" data-index="${i}">
-          <div class="game-header" onclick="toggleGame(${i})">
-            <div class="game-icon">${g.icon}</div>
-            <div class="game-info"><div class="game-title">${g.title}</div><div class="game-short">${g.short}</div></div>
-            <div class="game-arrow">▶</div>
-          </div>
-          <div class="game-details">
-            <div class="game-desc">${g.desc}</div>
-            <a href="${g.file}" class="game-play-btn" onclick="localStorage.setItem('coming_back','true')">🎮 Играть</a>
-          </div>
-        </div>
-      `).join('');
-    }
-
-    window.toggleGame = function(index) {
-      const items = document.querySelectorAll('.game-item');
-      items.forEach((item, i) => { if(i===index) item.classList.toggle('open'); else item.classList.remove('open'); });
-    };
-
+    function renderGames() { document.getElementById('games-list').innerHTML = games.map((g, i) => `<div class="game-item ${g.color}" data-index="${i}"><div class="game-header" onclick="toggleGame(${i})"><div class="game-icon">${g.icon}</div><div class="game-info"><div class="game-title">${g.title}</div><div class="game-short">${g.short}</div></div><div class="game-arrow">▶</div></div><div class="game-details"><div class="game-desc">${g.desc}</div><a href="${g.file}" class="game-play-btn" onclick="localStorage.setItem('coming_back','true')">🎮 Играть</a></div></div>`).join(''); }
+    window.toggleGame = function(i) { document.querySelectorAll('.game-item').forEach((item, j) => item.classList.toggle('open', j === i ? !item.classList.contains('open') : false)); };
     renderGames();
 
-    document.querySelectorAll('.toggle-password').forEach(btn => {
-      btn.addEventListener('click', function(e) {
-        e.preventDefault();
-        const input = document.getElementById(this.dataset.target);
-        if (input && (input.id === 'login-password' || input.id === 'register-password')) {
-          if (input.type === 'password') { input.type = 'text'; this.textContent = '👁️'; }
-          else { input.type = 'password'; this.textContent = '🔒'; }
-        }
-      });
-    });
+    document.querySelectorAll('.toggle-password').forEach(btn => btn.addEventListener('click', function(e) { e.preventDefault(); const input = document.getElementById(this.dataset.target); if(input){ input.type = input.type === 'password' ? 'text' : 'password'; this.textContent = input.type === 'password' ? '🔒' : '👁️'; } }));
 
     async function loadAcc() { try { const r = await fetch(API_URL + '/latest', { headers: { 'X-Master-Key': MASTER_KEY } }); const d = await r.json(); accountsCache = d.record || {}; } catch(e) {} }
     async function saveAcc() { try { await fetch(API_URL, { method: 'PUT', headers: { 'Content-Type': 'application/json', 'X-Master-Key': MASTER_KEY }, body: JSON.stringify(accountsCache) }); } catch(e) {} }
     function isBanned(n) { return accountsCache[n] && accountsCache[n].banned === true; }
-    function isIPBanned(ip) { if (!ip) return false; for (const [nickname, data] of Object.entries(accountsCache)) { if (data.banned && data.ip === ip) return true; } return false; }
+    function isIPBanned(ip) { if(!ip) return false; for(const [n, d] of Object.entries(accountsCache)) { if(d.banned && d.ip === ip) return true; } return false; }
     async function getCloudBalance(n) { await loadAcc(); return accountsCache[n] ? (accountsCache[n].balance || 1000) : 1000; }
-    function upBal() { const bal = localStorage.getItem('bal_' + currentUser); document.getElementById('main-balance').textContent = `${(parseInt(bal) || 0).toLocaleString()} ₽`; }
-
-    async function getIP() {
-      const services = ['https://api64.ipify.org?format=json','https://api.ip.sb/ip','https://api.my-ip.io/ip.json','https://ipapi.co/json/'];
-      for (const url of services) { try { const r = await fetch(url); if(r.ok){ const d = await r.json(); return d.ip || d.ip || 'неизвестно'; } } catch(e) {} }
-      return 'неизвестно';
-    }
-
-    async function updateIP(nickname) { if (!accountsCache[nickname] || accountsCache[nickname].ip) return; const ip = await getIP(); accountsCache[nickname].ip = ip; await saveAcc(); }
+    function upBal() { document.getElementById('main-balance').textContent = `${(parseInt(localStorage.getItem('bal_' + currentUser)) || 0).toLocaleString()} ₽`; }
+    async function getIP() { for(const url of ['https://api64.ipify.org?format=json','https://api.ip.sb/ip','https://api.my-ip.io/ip.json','https://ipapi.co/json/']){ try { const r = await fetch(url); if(r.ok){ const d = await r.json(); return d.ip || 'неизвестно'; } } catch(e) {} } return 'неизвестно'; }
+    async function updateIP(n) { if(!accountsCache[n] || accountsCache[n].ip) return; accountsCache[n].ip = await getIP(); await saveAcc(); }
 
     const acb = document.getElementById('agree-checkbox'), br = document.getElementById('btn-register');
     acb.addEventListener('change', () => br.disabled = !acb.checked);
 
     function showLogin() {
       document.getElementById('login-form').style.display = 'block'; document.getElementById('user-panel').style.display = 'none'; document.getElementById('game-section').style.display = 'none';
-      document.getElementById('login-nickname').value = ''; document.getElementById('register-nickname').value = '';
-      const lp = document.getElementById('login-password'); lp.value = ''; lp.type = 'password';
-      const rp = document.getElementById('register-password'); rp.value = ''; rp.type = 'password';
-      document.querySelectorAll('.toggle-password').forEach(b => b.textContent = '🔒');
-      acb.checked = false; br.disabled = true;
+      ['login-nickname','login-password','register-nickname','register-password'].forEach(id => { document.getElementById(id).value = ''; if(id.includes('password')) document.getElementById(id).type = 'password'; });
+      document.querySelectorAll('.toggle-password').forEach(b => b.textContent = '🔒'); acb.checked = false; br.disabled = true;
     }
 
     async function showUser(n) {
       currentUser = n;
-      if (n === ADMIN_NICKNAME) { window.location.href = 'admin.html'; return; }
+      if(n === ADMIN_NICKNAME) { window.location.href = 'admin.html'; return; }
       await updateIP(n);
-      const cloudBal = await getCloudBalance(n);
-      localStorage.setItem('bal_' + n, cloudBal);
+      localStorage.setItem('bal_' + n, await getCloudBalance(n));
       document.getElementById('login-form').style.display = 'none'; document.getElementById('user-panel').style.display = 'block';
       document.getElementById('current-user').textContent = n;
-      const bc = document.getElementById('badge-container'), bm = document.getElementById('banned-message'), bal = document.getElementById('balance-card'), gg = document.getElementById('games-list');
-      
-      const userIP = accountsCache[n]?.ip;
-      if (userIP && isIPBanned(userIP)) {
-        bc.innerHTML = '<span class="banned-badge">🚫 Вы забанены</span>';
-        bm.style.display = 'block';
-        bm.innerHTML = '🚫 Вы заблокированы администратором. <a href="ban.html">Подробнее</a>';
-        bal.style.display = 'none'; gg.style.display = 'none';
-        document.getElementById('game-section').style.display = 'block';
-        return;
-      }
-      
-      if (isBanned(n)) { bc.innerHTML = '<span class="banned-badge">🚫 Вы забанены</span>'; bm.style.display = 'block'; bm.innerHTML = '🚫 Вы заблокированы администратором. <a href="ban.html">Подробнее</a>'; bal.style.display = 'none'; gg.style.display = 'none'; }
-      else { bc.innerHTML = ''; bm.style.display = 'none'; bal.style.display = 'block'; gg.style.display = 'flex'; upBal(); }
+      const bc = document.getElementById('badge-container'), bm = document.getElementById('banned-message'), bal = document.querySelector('.balance-card'), gg = document.getElementById('games-list');
+      if((accountsCache[n]?.ip && isIPBanned(accountsCache[n].ip)) || isBanned(n)) {
+        bc.innerHTML = '<span class="banned-badge">🚫 Вы забанены</span>'; bm.style.display = 'block';
+        bm.innerHTML = '🚫 Вы заблокированы. <a href="ban.html">Подробнее</a>'; bal.style.display = 'none'; gg.style.display = 'none';
+      } else { bc.innerHTML = ''; bm.style.display = 'none'; bal.style.display = 'block'; gg.style.display = 'flex'; upBal(); }
       document.getElementById('game-section').style.display = 'block';
     }
 
@@ -205,27 +129,24 @@
     document.getElementById('tab-register').onclick = () => { document.getElementById('tab-register').classList.add('active'); document.getElementById('tab-login').classList.remove('active'); document.getElementById('form-register').style.display = 'flex'; document.getElementById('form-login').style.display = 'none'; };
 
     br.onclick = async () => {
-      if (!acb.checked) { document.getElementById('register-error').textContent = 'Согласитесь с условиями'; return; }
+      if(!acb.checked) { document.getElementById('register-error').textContent = 'Согласитесь с условиями'; return; }
       const n = document.getElementById('register-nickname').value.trim(), p = document.getElementById('register-password').value.trim(), el = document.getElementById('register-error');
-      if (!n || !p) { el.textContent = 'Заполните поля'; return; } if (n.length < 3) { el.textContent = 'Никнейм от 3 символов'; return; } if (p.length < 4) { el.textContent = 'Пароль от 4 символов'; return; }
-      if (n === ADMIN_NICKNAME) { el.textContent = 'Зарезервировано'; return; }
-      await loadAcc(); if (accountsCache[n]) { el.textContent = 'Существует'; return; }
-      const ip = await getIP();
-      accountsCache[n] = { password: p, balance: 1000, created: new Date().toISOString(), banned: false, ip: ip };
+      if(!n||!p) { el.textContent = 'Заполните поля'; return; } if(n.length<3) { el.textContent = 'Никнейм от 3 символов'; return; } if(p.length<4) { el.textContent = 'Пароль от 4 символов'; return; }
+      if(n===ADMIN_NICKNAME) { el.textContent = 'Зарезервировано'; return; }
+      await loadAcc(); if(accountsCache[n]) { el.textContent = 'Существует'; return; }
+      accountsCache[n] = { password: p, balance: 1000, created: new Date().toISOString(), banned: false, ip: await getIP() };
       await saveAcc(); localStorage.setItem('currentUser', n); localStorage.setItem('bal_' + n, 1000);
       el.style.color = '#2ed573'; el.textContent = 'Успешно!'; setTimeout(() => showUser(n), 500);
     };
 
     document.getElementById('btn-login').onclick = async () => {
       const n = document.getElementById('login-nickname').value.trim(), p = document.getElementById('login-password').value.trim(), el = document.getElementById('login-error');
-      if (!n || !p) { el.textContent = 'Заполните поля'; return; }
+      if(!n||!p) { el.textContent = 'Заполните поля'; return; }
       await loadAcc();
-      if (n === ADMIN_NICKNAME && accountsCache[ADMIN_NICKNAME] && accountsCache[ADMIN_NICKNAME].password === p) { localStorage.setItem('currentUser', ADMIN_NICKNAME); window.location.href = 'admin.html'; return; }
-      if (!accountsCache[n]) { el.textContent = 'Не найден'; return; }
-      if (accountsCache[n].password !== p) { el.textContent = 'Неверный пароль'; return; }
-      localStorage.setItem('currentUser', n);
-      const cloudBal = accountsCache[n].balance || 1000;
-      localStorage.setItem('bal_' + n, cloudBal);
+      if(n===ADMIN_NICKNAME && accountsCache[ADMIN_NICKNAME] && accountsCache[ADMIN_NICKNAME].password===p) { localStorage.setItem('currentUser', ADMIN_NICKNAME); window.location.href = 'admin.html'; return; }
+      if(!accountsCache[n]) { el.textContent = 'Не найден'; return; }
+      if(accountsCache[n].password!==p) { el.textContent = 'Неверный пароль'; return; }
+      localStorage.setItem('currentUser', n); localStorage.setItem('bal_' + n, accountsCache[n].balance || 1000);
       el.textContent = ''; showUser(n);
     };
 
@@ -233,13 +154,9 @@
 
     (async () => {
       await loadAcc();
-      if (localStorage.getItem('coming_back') === 'true') {
-        localStorage.removeItem('coming_back');
-        const u = localStorage.getItem('currentUser');
-        if (u && u !== ADMIN_NICKNAME && accountsCache[u]) { showUser(u); return; }
-      }
-    const u = localStorage.getItem('currentUser');
-      if (u) { if (u === ADMIN_NICKNAME) { window.location.href = 'admin.html'; return; } const cloudBal = accountsCache[u] ? (accountsCache[u].balance || 1000) : 1000; localStorage.setItem('bal_' + u, cloudBal); if (accountsCache[u]) showUser(u); else showLogin(); }
+      if(localStorage.getItem('coming_back')==='true') { localStorage.removeItem('coming_back'); const u = localStorage.getItem('currentUser'); if(u && u!==ADMIN_NICKNAME && accountsCache[u]) { showUser(u); return; } }
+      const u = localStorage.getItem('currentUser');
+      if(u) { if(u===ADMIN_NICKNAME) { window.location.href = 'admin.html'; return; } localStorage.setItem('bal_' + u, accountsCache[u] ? (accountsCache[u].balance||1000) : 1000); if(accountsCache[u]) showUser(u); else showLogin(); }
       else showLogin();
     })();
   </script>
