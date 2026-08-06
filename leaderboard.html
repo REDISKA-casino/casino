@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Лидерборд</title>
+  <style>
+    :root { --bg: #121212; --panel: #1e1e1e; --text: #e0e0e0; --accent: #ff4757; --gold: #ffd700; --success: #2ed573; }
+    body { background: var(--bg); color: var(--text); font-family: system-ui, sans-serif; margin: 0; display: flex; flex-direction: column; align-items: center; min-height: 100vh; padding: 16px; box-sizing: border-box; }
+    .container { width: 100%; max-width: 500px; background: var(--panel); padding: 20px; border-radius: 16px; border: 2px solid #333; }
+    h1 { font-weight: 400; text-align: center; font-size: 24px; color: var(--gold); margin-bottom: 20px; }
+    .player-row { display: flex; align-items: center; padding: 10px 12px; border-bottom: 1px solid #2a2a2a; gap: 10px; }
+    .player-row:last-child { border-bottom: none; }
+    .player-rank { font-size: 18px; font-weight: bold; width: 30px; text-align: center; }
+    .player-rank.gold { color: #ffd700; } .player-rank.silver { color: #c0c0c0; } .player-rank.bronze { color: #cd7f32; }
+    .player-name { flex: 1; font-size: 16px; }
+    .player-name.you { color: var(--gold); font-weight: bold; }
+    .player-balance { font-weight: bold; color: var(--success); font-size: 14px; }
+    .back-btn { display: block; text-align: center; margin-top: 20px; background: var(--accent); color: white; padding: 10px 20px; border-radius: 8px; text-decoration: none; font-weight: bold; }
+    .loading { text-align: center; padding: 20px; color: #666; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🏆 Лидерборд</h1>
+    <div id="leaderboard-container"><div class="loading">Загрузка...</div></div>
+    <a href="index.html" class="back-btn">← На главную</a>
+  </div>
+  <script>
+    const BIN_ID = '6a516a15f5f4af5e297ecf15';
+    const MASTER_KEY = '$2a$10$ESWoAwK.zv8By8WZCjzhu.zw1AIOFcUeILyVjiDrHmv62jIxygKoO';
+    const API_URL = `https://api.jsonbin.io/v3/b/${BIN_ID}`;
+    const ADMIN_NICKNAME = 'I-am-admin';
+    const currentUser = localStorage.getItem('currentUser');
+
+    async function loadLeaderboard() {
+      try {
+        const r = await fetch(API_URL + '/latest', { headers: { 'X-Master-Key': MASTER_KEY } });
+        const d = await r.json();
+        const accounts = d.record || {};
+        
+        const players = Object.entries(accounts)
+          .filter(([n]) => n !== ADMIN_NICKNAME)
+          .map(([n, data]) => ({ name: n, balance: data.balance || 0 }))
+          .sort((a, b) => b.balance - a.balance);
+        
+        const container = document.getElementById('leaderboard-container');
+        
+        if (players.length === 0) {
+          container.innerHTML = '<div class="loading">Нет игроков</div>';
+          return;
+        }
+        
+        container.innerHTML = players.map((p, i) => {
+          const rank = i + 1;
+          let rankClass = '';
+          if (rank === 1) rankClass = 'gold';
+          else if (rank === 2) rankClass = 'silver';
+          else if (rank === 3) rankClass = 'bronze';
+          
+          const isYou = currentUser && p.name === currentUser;
+          const nameClass = isYou ? 'you' : '';
+          
+          return `
+            <div class="player-row">
+              <div class="player-rank ${rankClass}">${rank === 1 ? '🥇' : rank === 2 ? '🥈' : rank === 3 ? '🥉' : '#' + rank}</div>
+              <div class="player-name ${nameClass}">${p.name}${isYou ? ' (Вы)' : ''}</div>
+              <div class="player-balance">${p.balance.toLocaleString()} ₽</div>
+            </div>
+          `;
+        }).join('');
+      } catch(e) {
+        document.getElementById('leaderboard-container').innerHTML = '<div class="loading">Ошибка загрузки</div>';
+      }
+    }
+
+    loadLeaderboard();
+  </script>
+</body>
+</html>
