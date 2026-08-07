@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Настройки</title>
+  <style>
+    :root { --bg: #121212; --panel: #1e1e1e; --text: #e0e0e0; --accent: #ff4757; --gold: #ffd700; --success: #2ed573; }
+    body { background: var(--bg); color: var(--text); font-family: system-ui, sans-serif; margin: 0; display: flex; flex-direction: column; align-items: center; min-height: 100vh; padding: 16px; box-sizing: border-box; }
+    .container { width: 100%; max-width: 500px; background: var(--panel); padding: 24px; border-radius: 16px; border: 2px solid #333; }
+    h1 { font-weight: 400; text-align: center; font-size: 24px; color: var(--gold); margin-bottom: 20px; }
+    .setting-item { display: flex; justify-content: space-between; align-items: center; padding: 14px 0; border-bottom: 1px solid #2a2a2a; }
+    .setting-label { font-size: 16px; }
+    .setting-desc { font-size: 12px; color: #aaa; margin-top: 2px; }
+    .toggle-switch { position: relative; width: 50px; height: 28px; flex-shrink: 0; }
+    .toggle-switch input { opacity: 0; width: 0; height: 0; }
+    .toggle-slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background: #555; border-radius: 28px; transition: 0.3s; }
+    .toggle-slider:before { content: ""; position: absolute; height: 22px; width: 22px; left: 3px; bottom: 3px; background: white; border-radius: 50%; transition: 0.3s; }
+    input:checked + .toggle-slider { background: var(--accent); }
+    input:checked + .toggle-slider:before { transform: translateX(22px); }
+    .back-btn { display: block; text-align: center; margin-top: 24px; background: var(--accent); color: white; padding: 12px 20px; border-radius: 8px; text-decoration: none; font-weight: bold; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>⚙️ Настройки</h1>
+    
+    <div class="setting-item">
+      <div><div class="setting-label">🔊 Звуки</div><div class="setting-desc">Звуковые эффекты в играх</div></div>
+      <label class="toggle-switch"><input type="checkbox" id="sound-toggle" checked onchange="saveSetting('sound', this.checked)"><span class="toggle-slider"></span></label>
+    </div>
+    
+    <div class="setting-item">
+      <div><div class="setting-label">🎵 Музыка</div><div class="setting-desc">Фоновая музыка</div></div>
+      <label class="toggle-switch"><input type="checkbox" id="music-toggle" onchange="saveSetting('music', this.checked)"><span class="toggle-slider"></span></label>
+    </div>
+    
+    <div class="setting-item">
+      <div><div class="setting-label">🔔 Уведомления</div><div class="setting-desc">Уведомления о выигрышах</div></div>
+      <label class="toggle-switch"><input type="checkbox" id="notify-toggle" checked onchange="saveSetting('notify', this.checked)"><span class="toggle-slider"></span></label>
+    </div>
+    
+    <div class="setting-item">
+      <div><div class="setting-label">📊 Статистика</div><div class="setting-desc">Показывать статистику игр</div></div>
+      <label class="toggle-switch"><input type="checkbox" id="stats-toggle" checked onchange="saveSetting('stats', this.checked)"><span class="toggle-slider"></span></label>
+    </div>
+    
+    <div class="setting-item">
+      <div><div class="setting-label">🎨 Тема</div><div class="setting-desc">Тёмная тема (всегда включена)</div></div>
+      <label class="toggle-switch"><input type="checkbox" checked disabled><span class="toggle-slider"></span></label>
+    </div>
+
+    <div class="setting-item">
+      <div><div class="setting-label">🌐 Язык</div><div class="setting-desc">Русский</div></div>
+      <span style="color:#aaa;">RU 🇷🇺</span>
+    </div>
+
+    <a href="index.html" class="back-btn">← На главную</a>
+  </div>
+  <script>
+    var currentUser = localStorage.getItem('currentUser');
+    
+    function loadSettings() {
+      var sound = localStorage.getItem('set_sound_' + currentUser);
+      var music = localStorage.getItem('set_music_' + currentUser);
+      var notify = localStorage.getItem('set_notify_' + currentUser);
+      var stats = localStorage.getItem('set_stats_' + currentUser);
+      
+      if (sound !== null) document.getElementById('sound-toggle').checked = sound === 'true';
+      if (music !== null) document.getElementById('music-toggle').checked = music === 'true';
+      if (notify !== null) document.getElementById('notify-toggle').checked = notify === 'true';
+      if (stats !== null) document.getElementById('stats-toggle').checked = stats === 'true';
+    }
+    
+    function saveSetting(name, value) {
+      localStorage.setItem('set_' + name + '_' + currentUser, value);
+    }
+    
+    loadSettings();
+  </script>
+</body>
+</html>
