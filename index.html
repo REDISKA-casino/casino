@@ -78,8 +78,12 @@
     </div>
   </div>
   <script>
-    const BIN_ID = '6a516a15f5f4af5e297ecf15', MASTER_KEY = '$2a$10$ESWoAwK.zv8By8WZCjzhu.zw1AIOFcUeILyVjiDrHmv62jIxygKoO', API_URL = `https://api.jsonbin.io/v3/b/${BIN_ID}`, ADMIN_NICKNAME = 'I-am-admin';
+    const BIN_ID = '6a516a15f5f4af5e297ecf15';
+    const MASTER_KEY = '$2a$10$ESWoAwK.zv8By8WZCjzhu.zw1AIOFcUeILyVjiDrHmv62jIxygKoO';
+    const API_URL = 'https://api.jsonbin.io/v3/b/' + BIN_ID;
+    const ADMIN_NICKNAME = 'I-am-admin';
     let accountsCache = {}, currentUser = null;
+
     const games = [
       { icon: '📈', title: 'Обвал', short: 'Выводи до обвала!', desc: 'Делай ставку и смотри как растёт график. Выведи деньги до обвала!', file: 'crash.html', color: 'crash-card' },
       { icon: '🎡', title: 'Рулетка', short: 'Красное, чёрное, зелёное!', desc: 'Классическая рулетка с 37 секторами. Ставь на цвет и крути!', file: 'roulette.html', color: 'roulette-card' },
@@ -94,69 +98,202 @@
       { icon: '🎯', title: 'Плинко', short: 'Шарик и гвоздики!', desc: 'Бросай шарик в поле с гвоздиками. Множители: x0.5, x1, x2, x3!', file: 'plinko.html', color: 'plinko-card' },
       { icon: '🃏', title: 'Блэкджек 21', short: 'Набери 21 очко!', desc: 'Игра против дилера. Блэкджек x2.5! Победа x2.', file: 'blackjack.html', color: 'blackjack-card' }
     ];
-    function renderGames() { document.getElementById('games-list').innerHTML = games.map((g, i) => `<div class="game-item ${g.color}" data-index="${i}"><div class="game-header" onclick="toggleGame(${i})"><div class="game-icon">${g.icon}</div><div class="game-info"><div class="game-title">${g.title}</div><div class="game-short">${g.short}</div></div><div class="game-arrow">▶</div></div><div class="game-details"><div class="game-desc">${g.desc}</div><a href="${g.file}" class="game-play-btn" onclick="localStorage.setItem('coming_back','true')">🎮 Играть</a></div></div>`).join(''); }
-    window.toggleGame = function(i) { document.querySelectorAll('.game-item').forEach((item, j) => item.classList.toggle('open', j === i ? !item.classList.contains('open') : false)); };
-    renderGames();
-    document.querySelectorAll('.toggle-password').forEach(btn => btn.addEventListener('click', function(e) { e.preventDefault(); const input = document.getElementById(this.dataset.target); if(input){ input.type = input.type === 'password' ? 'text' : 'password'; this.textContent = input.type === 'password' ? '🔒' : '👁️'; } }));
-    async function loadAcc() { try { const r = await fetch(API_URL + '/latest', { headers: { 'X-Master-Key': MASTER_KEY } }); const d = await r.json(); accountsCache = d.record || {}; } catch(e) {} }
-    async function saveAcc() { try { await fetch(API_URL, { method: 'PUT', headers: { 'Content-Type': 'application/json', 'X-Master-Key': MASTER_KEY }, body: JSON.stringify(accountsCache) }); } catch(e) {} }
-    function isBanned(n) { return accountsCache[n] && accountsCache[n].banned === true; }
-    function isIPBanned(ip) { if(!ip) return false; for(const [n, d] of Object.entries(accountsCache)) { if(d.banned && d.ip === ip) return true; } return false; }
-    async function getCloudBalance(n) { await loadAcc(); return accountsCache[n] ? (accountsCache[n].balance || 1000) : 1000; }
-    function upBal() { document.getElementById('main-balance').textContent = `${(parseInt(localStorage.getItem('bal_' + currentUser)) || 0).toLocaleString()} ₽`; }
-    async function getIP() { for(const url of ['https://api64.ipify.org?format=json','https://api.ip.sb/ip','https://api.my-ip.io/ip.json','https://ipapi.co/json/']){ try { const r = await fetch(url); if(r.ok){ const d = await r.json(); return d.ip || 'неизвестно'; } } catch(e) {} } return 'неизвестно'; }
-    async function updateIP(n) { if(!accountsCache[n] || accountsCache[n].ip) return; accountsCache[n].ip = await getIP(); await saveAcc(); }
-    const acb = document.getElementById('agree-checkbox'), br = document.getElementById('btn-register');
-    acb.addEventListener('change', () => br.disabled = !acb.checked);
-    function showLogin() {
-      document.getElementById('login-form').style.display = 'block'; document.getElementById('user-panel').style.display = 'none'; document.getElementById('game-section').style.display = 'none';
-      ['login-nickname','login-password','register-nickname','register-password'].forEach(id => { document.getElementById(id).value = ''; if(id.includes('password')) document.getElementById(id).type = 'password'; });
-      document.querySelectorAll('.toggle-password').forEach(b => b.textContent = '🔒'); acb.checked = false; br.disabled = true;
+
+    function renderGames() {
+      document.getElementById('games-list').innerHTML = games.map((g, i) =>
+        '<div class="game-item ' + g.color + '" data-index="' + i + '">' +
+        '<div class="game-header" onclick="toggleGame(' + i + ')">' +
+        '<div class="game-icon">' + g.icon + '</div>' +
+        '<div class="game-info"><div class="game-title">' + g.title + '</div><div class="game-short">' + g.short + '</div></div>' +
+        '<div class="game-arrow">▶</div></div>' +
+        '<div class="game-details"><div class="game-desc">' + g.desc + '</div>' +
+        '<a href="' + g.file + '" class="game-play-btn" onclick="localStorage.setItem(\'coming_back\',\'true\')">🎮 Играть</a></div></div>'
+      ).join('');
     }
+
+    window.toggleGame = function(i) {
+      document.querySelectorAll('.game-item').forEach(function(item, j) {
+        item.classList.toggle('open', j === i ? !item.classList.contains('open') : false);
+      });
+    };
+
+    renderGames();
+
+    document.querySelectorAll('.toggle-password').forEach(function(btn) {
+      btn.addEventListener('click', function(e) {
+        e.preventDefault();
+        var input = document.getElementById(this.dataset.target);
+        if (input) {
+          input.type = input.type === 'password' ? 'text' : 'password';
+          this.textContent = input.type === 'password' ? '🔒' : '👁️';
+        }
+      });
+    });
+
+    async function loadAcc() {
+      try {
+        var r = await fetch(API_URL + '/latest', { headers: { 'X-Master-Key': MASTER_KEY } });
+        var d = await r.json();
+        accountsCache = d.record || {};
+      } catch(e) {}
+    }
+
+    async function saveAcc() {
+      try {
+        await fetch(API_URL, { method: 'PUT', headers: { 'Content-Type': 'application/json', 'X-Master-Key': MASTER_KEY }, body: JSON.stringify(accountsCache) });
+      } catch(e) {}
+    }
+
+    function isBanned(n) { return accountsCache[n] && accountsCache[n].banned === true; }
+
+    function isIPBanned(ip) {
+      if (!ip) return false;
+      for (var nickname in accountsCache) {
+        if (accountsCache[nickname].banned && accountsCache[nickname].ip === ip) return true;
+      }
+      return false;
+    }
+
+    async function getCloudBalance(n) {
+      await loadAcc();
+      return accountsCache[n] ? (accountsCache[n].balance || 1000) : 1000;
+    }
+
+    function upBal() {
+      document.getElementById('main-balance').textContent = (parseInt(localStorage.getItem('bal_' + currentUser)) || 0).toLocaleString() + ' ₽';
+    }
+
+    async function getIP() {
+      var services = ['https://api64.ipify.org?format=json', 'https://api.ip.sb/ip', 'https://api.my-ip.io/ip.json', 'https://ipapi.co/json/'];
+      for (var i = 0; i < services.length; i++) {
+        try {
+          var r = await fetch(services[i]);
+          if (r.ok) {
+            var d = await r.json();
+            return d.ip || 'неизвестно';
+          }
+        } catch(e) {}
+      }
+      return 'неизвестно';
+    }
+
+    async function updateIP(n) {
+      if (!accountsCache[n] || accountsCache[n].ip) return;
+      accountsCache[n].ip = await getIP();
+      await saveAcc();
+    }
+
+    var acb = document.getElementById('agree-checkbox');
+    var br = document.getElementById('btn-register');
+    acb.addEventListener('change', function() { br.disabled = !acb.checked; });
+
+    function showLogin() {
+      document.getElementById('login-form').style.display = 'block';
+      document.getElementById('user-panel').style.display = 'none';
+      document.getElementById('game-section').style.display = 'none';
+      document.getElementById('login-nickname').value = '';
+      document.getElementById('register-nickname').value = '';
+      var lp = document.getElementById('login-password'); lp.value = ''; lp.type = 'password';
+      var rp = document.getElementById('register-password'); rp.value = ''; rp.type = 'password';
+      document.querySelectorAll('.toggle-password').forEach(function(b) { b.textContent = '🔒'; });
+      acb.checked = false; br.disabled = true;
+    }
+
     async function showUser(n) {
       currentUser = n;
-      if(n === ADMIN_NICKNAME) { window.location.href = 'admin.html'; return; }
+      if (n === ADMIN_NICKNAME) { window.location.href = 'admin.html'; return; }
       await updateIP(n);
       localStorage.setItem('bal_' + n, await getCloudBalance(n));
-      document.getElementById('login-form').style.display = 'none'; document.getElementById('user-panel').style.display = 'block';
+      document.getElementById('login-form').style.display = 'none';
+      document.getElementById('user-panel').style.display = 'block';
       document.getElementById('current-user').textContent = n;
-      const bc = document.getElementById('badge-container'), bm = document.getElementById('banned-message'), bal = document.querySelector('.balance-card'), gg = document.getElementById('games-list');
-      if((accountsCache[n]?.ip && isIPBanned(accountsCache[n].ip)) || isBanned(n)) {
-        bc.innerHTML = '<span class="banned-badge">🚫 Вы забанены</span>'; bm.style.display = 'block';
-        bm.innerHTML = '🚫 Вы заблокированы. <a href="ban.html">Подробнее</a>'; bal.style.display = 'none'; gg.style.display = 'none';
-      } else { bc.innerHTML = ''; bm.style.display = 'none'; bal.style.display = 'block'; gg.style.display = 'flex'; upBal(); }
+      var bc = document.getElementById('badge-container');
+      var bm = document.getElementById('banned-message');
+      var bal = document.querySelector('.balance-card');
+      var gg = document.getElementById('games-list');
+      if ((accountsCache[n] && accountsCache[n].ip && isIPBanned(accountsCache[n].ip)) || isBanned(n)) {
+        bc.innerHTML = '<span class="banned-badge">🚫 Вы забанены</span>';
+        bm.style.display = 'block';
+        bm.innerHTML = '🚫 Вы заблокированы. <a href="ban.html">Подробнее</a>';
+        bal.style.display = 'none'; gg.style.display = 'none';
+      } else {
+        bc.innerHTML = ''; bm.style.display = 'none';
+        bal.style.display = 'block'; gg.style.display = 'flex'; upBal();
+      }
       document.getElementById('game-section').style.display = 'block';
     }
-    document.getElementById('tab-login').onclick = () => { document.getElementById('tab-login').classList.add('active'); document.getElementById('tab-register').classList.remove('active'); document.getElementById('form-login').style.display = 'flex'; document.getElementById('form-register').style.display = 'none'; };
-    document.getElementById('tab-register').onclick = () => { document.getElementById('tab-register').classList.add('active'); document.getElementById('tab-login').classList.remove('active'); document.getElementById('form-register').style.display = 'flex'; document.getElementById('form-login').style.display = 'none'; };
-    br.onclick = async () => {
-      if(!acb.checked) { document.getElementById('register-error').textContent = 'Согласитесь с условиями'; return; }
-      const n = document.getElementById('register-nickname').value.trim(), p = document.getElementById('register-password').value.trim(), el = document.getElementById('register-error');
-      if(!n||!p) { el.textContent = 'Заполните поля'; return; } if(n.length<3) { el.textContent = 'Никнейм от 3 символов'; return; } if(p.length<4) { el.textContent = 'Пароль от 4 символов'; return; }
-      if(n===ADMIN_NICKNAME) { el.textContent = 'Зарезервировано'; return; }
-      await loadAcc(); if(accountsCache[n]) { el.textContent = 'Существует'; return; }
-      accountsCache[n] = { password: p, balance: 1000, created: new Date().toISOString(), banned: false, ip: await getIP() };
-      await saveAcc(); localStorage.setItem('currentUser', n); localStorage.setItem('bal_' + n, 1000);
-      el.style.color = '#2ed573'; el.textContent = 'Успешно!'; setTimeout(() => showUser(n), 500);
+
+    document.getElementById('tab-login').onclick = function() {
+      document.getElementById('tab-login').classList.add('active');
+      document.getElementById('tab-register').classList.remove('active');
+      document.getElementById('form-login').style.display = 'flex';
+      document.getElementById('form-register').style.display = 'none';
     };
-    document.getElementById('btn-login').onclick = async () => {
-      const n = document.getElementById('login-nickname').value.trim(), p = document.getElementById('login-password').value.trim(), el = document.getElementById('login-error');
-      if(!n||!p) { el.textContent = 'Заполните поля'; return; }
+
+    document.getElementById('tab-register').onclick = function() {
+      document.getElementById('tab-register').classList.add('active');
+      document.getElementById('tab-login').classList.remove('active');
+      document.getElementById('form-register').style.display = 'flex';
+      document.getElementById('form-login').style.display = 'none';
+    };
+
+    br.onclick = async function() {
+      if (!acb.checked) { document.getElementById('register-error').textContent = 'Согласитесь с условиями'; return; }
+      var n = document.getElementById('register-nickname').value.trim();
+      var p = document.getElementById('register-password').value.trim();
+      var el = document.getElementById('register-error');
+      if (!n || !p) { el.textContent = 'Заполните поля'; return; }
+      if (n.length < 3) { el.textContent = 'Никнейм от 3 символов'; return; }
+      if (p.length < 4) { el.textContent = 'Пароль от 4 символов'; return; }
+      if (n === ADMIN_NICKNAME) { el.textContent = 'Зарезервировано'; return; }
       await loadAcc();
-      if(n===ADMIN_NICKNAME && accountsCache[ADMIN_NICKNAME] && accountsCache[ADMIN_NICKNAME].password===p) { localStorage.setItem('currentUser', ADMIN_NICKNAME); window.location.href = 'admin.html'; return; }
-      if(!accountsCache[n]) { el.textContent = 'Не найден'; return; }
-      if(accountsCache[n].password!==p) { el.textContent = 'Неверный пароль'; return; }
-      localStorage.setItem('currentUser', n); localStorage.setItem('bal_' + n, accountsCache[n].balance || 1000);
+      if (accountsCache[n]) { el.textContent = 'Существует'; return; }
+      accountsCache[n] = { password: p, balance: 1000, created: new Date().toISOString(), banned: false, ip: await getIP() };
+      await saveAcc();
+      localStorage.setItem('currentUser', n);
+      localStorage.setItem('bal_' + n, 1000);
+      el.style.color = '#2ed573'; el.textContent = 'Успешно!';
+      setTimeout(function() { showUser(n); }, 500);
+    };
+
+    document.getElementById('btn-login').onclick = async function() {
+      var n = document.getElementById('login-nickname').value.trim();
+      var p = document.getElementById('login-password').value.trim();
+      var el = document.getElementById('login-error');
+      if (!n || !p) { el.textContent = 'Заполните поля'; return; }
+      await loadAcc();
+      if (n === ADMIN_NICKNAME && accountsCache[ADMIN_NICKNAME] && accountsCache[ADMIN_NICKNAME].password === p) {
+        localStorage.setItem('currentUser', ADMIN_NICKNAME);
+        window.location.href = 'admin.html';
+        return;
+      }
+      if (!accountsCache[n]) { el.textContent = 'Не найден'; return; }
+      if (accountsCache[n].password !== p) { el.textContent = 'Неверный пароль'; return; }
+      localStorage.setItem('currentUser', n);
+      localStorage.setItem('bal_' + n, accountsCache[n].balance || 1000);
       el.textContent = ''; showUser(n);
     };
-    document.getElementById('btn-logout').onclick = () => { localStorage.removeItem('currentUser'); currentUser = null; showLogin(); };
-    (async () => {
+
+    document.getElementById('btn-logout').onclick = function() {
+      localStorage.removeItem('currentUser');
+      currentUser = null;
+      showLogin();
+    };
+
+    (async function() {
       await loadAcc();
-      if(localStorage.getItem('coming_back')==='true') { localStorage.removeItem('coming_back'); const u = localStorage.getItem('currentUser'); if(u && u!==ADMIN_NICKNAME && accountsCache[u]) { showUser(u); return; } }
-      const u = localStorage.getItem('currentUser');
-      if(u) { if(u===ADMIN_NICKNAME) { window.location.href = 'admin.html'; return; } localStorage.setItem('bal_' + u, accountsCache[u] ? (accountsCache[u].balance||1000) : 1000); if(accountsCache[u]) showUser(u); else showLogin(); }
-      else showLogin();
+      if (localStorage.getItem('coming_back') === 'true') {
+        localStorage.removeItem('coming_back');
+        var u = localStorage.getItem('currentUser');
+        if (u && u !== ADMIN_NICKNAME && accountsCache[u]) { showUser(u); return; }
+      }
+      var u = localStorage.getItem('currentUser');
+      if (u) {
+        if (u === ADMIN_NICKNAME) { window.location.href = 'admin.html'; return; }
+        localStorage.setItem('bal_' + u, accountsCache[u] ? (accountsCache[u].balance || 1000) : 1000);
+        if (accountsCache[u]) showUser(u); else showLogin();
+      } else showLogin();
     })();
   </script>
 </body>
-  </html>
+</html>
