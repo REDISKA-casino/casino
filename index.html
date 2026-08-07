@@ -21,8 +21,11 @@
     .auth-btn { width: 100%; padding: 14px; border: none; border-radius: 8px; font-size: 16px; font-weight: 600; cursor: pointer; }
     .auth-btn:active { transform: scale(0.98); } .auth-btn:disabled { opacity: 0.4; }
     .btn-login { background: var(--success); color: white; } .btn-register { background: var(--accent); color: white; }
-    .btn-logout { background: #555; color: white; }
-    .btn-lb { display: block; text-align: center; background: #ffa502; color: #000; padding: 14px; border-radius: 8px; font-weight: 600; text-decoration: none; margin-bottom: 8px; }
+    .btn-row { display: flex; gap: 8px; }
+    .btn-sm { flex: 1; padding: 12px 8px; border: none; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; text-align: center; text-decoration: none; color: white; }
+    .btn-lb { background: #ffa502; color: #000; }
+    .btn-settings { background: #7b68ee; }
+    .btn-logout { background: #555; }
     .user-info { text-align: center; margin-bottom: 16px; } .user-nickname { font-size: 20px; font-weight: 600; color: var(--gold); }
     .banned-badge { display: inline-block; background: #ff0000; color: white; padding: 4px 12px; border-radius: 12px; font-size: 12px; margin-top: 4px; }
     .auth-error { color: #ff4757; font-size: 14px; text-align: center; min-height: 20px; }
@@ -68,8 +71,11 @@
       </div>
       <div id="user-panel" style="display:none;">
         <div class="user-info"><div>Добро пожаловать,</div><div class="user-nickname" id="current-user"></div><div id="badge-container"></div></div>
-        <a href="leaderboard.html" class="btn-lb">🏆 Лидерборд</a>
-        <button class="auth-btn btn-logout" id="btn-logout">Выйти</button>
+        <div class="btn-row">
+          <a href="leaderboard.html" class="btn-sm btn-lb">🏆 Лидерборд</a>
+          <a href="settings.html" class="btn-sm btn-settings">⚙️ Настройки</a>
+          <button class="btn-sm btn-logout" id="btn-logout">🚪 Выйти</button>
+        </div>
       </div>
     </div>
     <div id="game-section" style="display:none;">
