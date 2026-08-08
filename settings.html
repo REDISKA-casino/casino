@@ -206,23 +206,17 @@
       
       audioElement = new Audio(musicData);
       audioElement.volume = (parseInt(localStorage.getItem('set_volume_' + currentUser)) || 50) / 100;
-      
-      var playPromise = audioElement.play();
-      if (playPromise !== undefined) {
-        playPromise.then(function() {
-          document.getElementById('btn-test').textContent = '⏹ Стоп';
-        }).catch(function() {
-          alert('Нажмите на страницу и попробуйте снова.');
-          audioElement = null;
-        });
-      } else {
-        document.getElementById('btn-test').textContent = '⏹ Стоп';
-      }
-      
       audioElement.onended = function() {
         document.getElementById('btn-test').textContent = '▶ Тест';
         audioElement = null;
       };
+      
+      audioElement.play().then(function() {
+        document.getElementById('btn-test').textContent = '⏹ Стоп';
+      }).catch(function() {
+        alert('Не удалось воспроизвести. Попробуйте другой формат файла.');
+        audioElement = null;
+      });
     }
     
     function removeMusic() {
@@ -242,4 +236,4 @@
     loadSettings();
   </script>
 </body>
-</html>
+      </html>
