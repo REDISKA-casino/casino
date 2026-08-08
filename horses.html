@@ -36,11 +36,19 @@
   var v=parseInt(localStorage.getItem('set_volume_'+u))||50;
   var on=localStorage.getItem('set_music_on_'+u)!=='false';
   var a=document.getElementById('bg-music');
-  if(d&&on){a.src=d;a.volume=v/100;var p=a.play();if(p!==undefined){p.catch(function(){document.addEventListener('click',function(){a.play();},{once:true});});}}
+  var started=false;
+  function startMusic(){
+    if(started)return;
+    if(d&&on){a.src=d;a.volume=v/100;var p=a.play();if(p!==undefined){p.catch(function(){});}}
+    started=true;
+  }
+  document.addEventListener('click',startMusic,{once:true});
+  document.addEventListener('touchstart',startMusic,{once:true});
+  if(d&&on){a.src=d;a.volume=v/100;var p=a.play();if(p!==undefined){p.catch(function(){});}}
   window.addEventListener('storage',function(e){
     if(e.key==='set_volume_'+u)a.volume=(parseInt(e.newValue)||50)/100;
-    if(e.key==='set_music_'+u){a.src=e.newValue||'';if(e.newValue)a.play();}
-    if(e.key==='set_music_on_'+u){if(e.newValue==='false')a.pause();else a.play();}
+    if(e.key==='set_music_'+u){a.src=e.newValue||'';if(e.newValue)a.play().catch(function(){});}
+    if(e.key==='set_music_on_'+u){if(e.newValue==='false')a.pause();else a.play().catch(function(){});}
   });
 })();
 </script>
