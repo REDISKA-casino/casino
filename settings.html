@@ -33,6 +33,31 @@
   </style>
 </head>
 <body>
+  <audio id="bg-music" loop style="display:none;"></audio>
+  <script>
+  (function(){
+    var u=localStorage.getItem('currentUser');
+    if(!u)return;
+    var d=localStorage.getItem('set_music_'+u);
+    var v=parseInt(localStorage.getItem('set_volume_'+u))||50;
+    var on=localStorage.getItem('set_music_on_'+u)!=='false';
+    var a=document.getElementById('bg-music');
+    var started=false;
+    function startMusic(){
+      if(started)return;
+      if(d&&on){a.src=d;a.volume=v/100;var p=a.play();if(p!==undefined){p.catch(function(){});}}
+      started=true;
+    }
+    document.addEventListener('click',startMusic,{once:true});
+    document.addEventListener('touchstart',startMusic,{once:true});
+    if(d&&on){a.src=d;a.volume=v/100;var p=a.play();if(p!==undefined){p.catch(function(){});}}
+    window.addEventListener('storage',function(e){
+      if(e.key==='set_volume_'+u)a.volume=(parseInt(e.newValue)||50)/100;
+      if(e.key==='set_music_'+u){a.src=e.newValue||'';if(e.newValue)a.play().catch(function(){});}
+      if(e.key==='set_music_on_'+u){if(e.newValue==='false')a.pause();else a.play().catch(function(){});}
+    });
+  })();
+  </script>
   <div class="container">
     <h1>⚙️ Настройки</h1>
     
@@ -181,8 +206,18 @@
       
       audioElement = new Audio(musicData);
       audioElement.volume = (parseInt(localStorage.getItem('set_volume_' + currentUser)) || 50) / 100;
-      audioElement.play();
-      document.getElementById('btn-test').textContent = '⏹ Стоп';
+      
+      var playPromise = audioElement.play();
+      if (playPromise !== undefined) {
+        playPromise.then(function() {
+          document.getElementById('btn-test').textContent = '⏹ Стоп';
+        }).catch(function() {
+          alert('Нажмите на страницу и попробуйте снова.');
+          audioElement = null;
+        });
+      } else {
+        document.getElementById('btn-test').textContent = '⏹ Стоп';
+      }
       
       audioElement.onended = function() {
         document.getElementById('btn-test').textContent = '▶ Тест';
@@ -207,4 +242,4 @@
     loadSettings();
   </script>
 </body>
-    </html>
+</html>
