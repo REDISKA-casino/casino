@@ -52,32 +52,31 @@
   </style>
 </head>
 <body>
-  <audio id="bg-music" loop style="display:none;"></audio>
-  <script>
-  (function() {
-    var currentUser = localStorage.getItem('currentUser');
-    if (!currentUser) return;
-    var musicData = localStorage.getItem('set_music_' + currentUser);
-    var volume = parseInt(localStorage.getItem('set_volume_' + currentUser)) || 50;
-    var musicOn = localStorage.getItem('set_music_on_' + currentUser) !== 'false';
-    var audio = document.getElementById('bg-music');
-    if (musicData && musicOn) {
-      audio.src = musicData;
-      audio.volume = volume / 100;
-      var playPromise = audio.play();
-      if (playPromise !== undefined) {
-        playPromise.catch(function() {
-          document.addEventListener('click', function() { audio.play(); }, { once: true });
-        });
-      }
-    }
-    window.addEventListener('storage', function(e) {
-      if (e.key === 'set_volume_' + currentUser) audio.volume = (parseInt(e.newValue) || 50) / 100;
-      if (e.key === 'set_music_' + currentUser) { audio.src = e.newValue || ''; if (e.newValue) audio.play(); }
-      if (e.key === 'set_music_on_' + currentUser) { if (e.newValue === 'false') audio.pause(); else audio.play(); }
-    });
-  })();
-  </script>
+<audio id="bg-music" loop style="display:none;"></audio>
+<script>
+(function(){
+  var u=localStorage.getItem('currentUser');
+  if(!u)return;
+  var d=localStorage.getItem('set_music_'+u);
+  var v=parseInt(localStorage.getItem('set_volume_'+u))||50;
+  var on=localStorage.getItem('set_music_on_'+u)!=='false';
+  var a=document.getElementById('bg-music');
+  var started=false;
+  function startMusic(){
+    if(started)return;
+    if(d&&on){a.src=d;a.volume=v/100;var p=a.play();if(p!==undefined){p.catch(function(){});}}
+    started=true;
+  }
+  document.addEventListener('click',startMusic,{once:true});
+  document.addEventListener('touchstart',startMusic,{once:true});
+  if(d&&on){a.src=d;a.volume=v/100;var p=a.play();if(p!==undefined){p.catch(function(){});}}
+  window.addEventListener('storage',function(e){
+    if(e.key==='set_volume_'+u)a.volume=(parseInt(e.newValue)||50)/100;
+    if(e.key==='set_music_'+u){a.src=e.newValue||'';if(e.newValue)a.play().catch(function(){});}
+    if(e.key==='set_music_on_'+u){if(e.newValue==='false')a.pause();else a.play().catch(function(){});}
+  });
+})();
+</script>
   <div class="container">
     <h1>🎰 Lucky Finger <sup>©</sup></h1>
     <div class="auth-panel" id="auth-panel">
