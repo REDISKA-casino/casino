@@ -11,7 +11,7 @@
     h1 { font-weight: 400; text-align: center; font-size: 24px; color: var(--gold); margin-bottom: 20px; }
     .setting-item { padding: 14px 0; border-bottom: 1px solid #2a2a2a; }
     .setting-label { font-size: 16px; margin-bottom: 8px; }
-    .setting-desc { font-size: 12px; color: #aaa; margin-top: 2px; margin-bottom: 8px; }
+    .setting-desc { font-size: 12px; color: #aaa; margin-bottom: 8px; }
     .setting-row { display: flex; justify-content: space-between; align-items: center; }
     .toggle-switch { position: relative; width: 50px; height: 28px; flex-shrink: 0; }
     .toggle-switch input { opacity: 0; width: 0; height: 0; }
@@ -19,17 +19,12 @@
     .toggle-slider:before { content: ""; position: absolute; height: 22px; width: 22px; left: 3px; bottom: 3px; background: white; border-radius: 50%; transition: 0.3s; }
     input:checked + .toggle-slider { background: var(--accent); }
     input:checked + .toggle-slider:before { transform: translateX(22px); }
-    input:disabled + .toggle-slider { opacity: 0.3; }
-    .file-input { width: 100%; padding: 10px; border: 1px solid #333; border-radius: 6px; background: #000; color: #fff; font-size: 14px; box-sizing: border-box; margin-top: 8px; }
-    .volume-row { display: flex; align-items: center; gap: 10px; margin-top: 8px; }
+    .music-select { width: 100%; padding: 12px; border: 1px solid #333; border-radius: 8px; background: #000; color: #fff; font-size: 16px; box-sizing: border-box; margin-top: 8px; }
+    .volume-row { display: flex; align-items: center; gap: 10px; margin-top: 12px; }
     .volume-slider { flex: 1; -webkit-appearance: none; height: 6px; background: #555; border-radius: 3px; outline: none; }
     .volume-slider::-webkit-slider-thumb { -webkit-appearance: none; width: 20px; height: 20px; background: var(--accent); border-radius: 50%; cursor: pointer; }
     .volume-value { font-size: 14px; color: var(--gold); min-width: 40px; text-align: right; }
-    .current-music { font-size: 12px; color: #2ed573; margin-top: 4px; word-break: break-all; }
     .back-btn { display: block; text-align: center; margin-top: 24px; background: var(--accent); color: white; padding: 12px 20px; border-radius: 8px; text-decoration: none; font-weight: bold; }
-    .btn-test { padding: 8px 16px; border: none; border-radius: 6px; font-size: 13px; cursor: pointer; font-weight: bold; color: white; background: #ffa502; margin-top: 8px; }
-    .btn-test:disabled { opacity: 0.3; cursor: not-allowed; }
-    .btn-remove { padding: 8px 16px; border: none; border-radius: 6px; font-size: 13px; cursor: pointer; font-weight: bold; color: white; background: #ff4757; margin-top: 8px; margin-left: 8px; }
   </style>
 </head>
 <body>
@@ -45,15 +40,15 @@
     var started=false;
     function startMusic(){
       if(started)return;
-      if(d&&on){a.src=d;a.volume=v/100;var p=a.play();if(p!==undefined){p.catch(function(){});}}
+      if(d&&on&&d!=='none'){a.src=d;a.volume=v/100;a.play().catch(function(){});}
       started=true;
     }
     document.addEventListener('click',startMusic,{once:true});
     document.addEventListener('touchstart',startMusic,{once:true});
-    if(d&&on){a.src=d;a.volume=v/100;var p=a.play();if(p!==undefined){p.catch(function(){});}}
+    if(d&&on&&d!=='none'){a.src=d;a.volume=v/100;a.play().catch(function(){});}
     window.addEventListener('storage',function(e){
       if(e.key==='set_volume_'+u)a.volume=(parseInt(e.newValue)||50)/100;
-      if(e.key==='set_music_'+u){a.src=e.newValue||'';if(e.newValue)a.play().catch(function(){});}
+      if(e.key==='set_music_'+u){a.src=e.newValue||'';if(e.newValue&&e.newValue!=='none')a.play().catch(function(){});else a.pause();}
       if(e.key==='set_music_on_'+u){if(e.newValue==='false')a.pause();else a.play().catch(function(){});}
     });
   })();
@@ -66,22 +61,27 @@
       <div class="setting-desc">Звуковые эффекты в играх</div>
       <div class="setting-row">
         <span></span>
-        <label class="toggle-switch"><input type="checkbox" id="sound-toggle" checked onchange="saveSetting('sound', this.checked)"><span class="toggle-slider"></span></label>
+        <label class="toggle-switch"><input type="checkbox" id="sound-toggle" checked onchange="saveCheckbox('sound', this.checked)"><span class="toggle-slider"></span></label>
       </div>
     </div>
     
     <div class="setting-item">
       <div class="setting-label">🎵 Музыка</div>
-      <div class="setting-desc">Загрузите свой аудиофайл (MP3, WAV, OGG)</div>
-      <input type="file" class="file-input" id="music-file" accept="audio/*" onchange="loadMusicFile(this)">
-      <div class="current-music" id="music-name"></div>
-      <div class="volume-row" id="volume-controls" style="opacity:0.3;pointer-events:none;">
+      <div class="setting-desc">Выберите фоновую музыку</div>
+      <select class="music-select" id="music-select" onchange="changeMusic(this.value)">
+        <option value="none">🔇 Ничего</option>
+        <option value="https://rediska-casino.github.io/casino/music/1.mp3">🎵 Трек 1</option>
+        <option value="https://rediska-casino.github.io/casino/music/2.mp3">🎵 Трек 2</option>
+        <option value="https://rediska-casino.github.io/casino/music/3.mp3">🎵 Трек 3</option>
+        <option value="https://rediska-casino.github.io/casino/music/4.mp3">🎵 Трек 4</option>
+        <option value="https://rediska-casino.github.io/casino/music/5.mp3">🎵 Трек 5</option>
+        <option value="https://rediska-casino.github.io/casino/music/6.mp3">🎵 Трек 6</option>
+      </select>
+      <div class="volume-row">
         <span>🔈</span>
         <input type="range" class="volume-slider" id="volume-slider" min="1" max="100" value="50" oninput="changeVolume(this.value)">
         <span class="volume-value" id="volume-value">50%</span>
       </div>
-      <button class="btn-test" id="btn-test" disabled onclick="testMusic()">▶ Тест</button>
-      <button class="btn-remove" id="btn-remove" style="display:none;" onclick="removeMusic()">🗑 Удалить</button>
     </div>
     
     <div class="setting-item">
@@ -89,7 +89,7 @@
       <div class="setting-desc">Уведомления о выигрышах</div>
       <div class="setting-row">
         <span></span>
-        <label class="toggle-switch"><input type="checkbox" id="notify-toggle" checked onchange="saveSetting('notify', this.checked)"><span class="toggle-slider"></span></label>
+        <label class="toggle-switch"><input type="checkbox" id="notify-toggle" checked onchange="saveCheckbox('notify', this.checked)"><span class="toggle-slider"></span></label>
       </div>
     </div>
     
@@ -98,7 +98,7 @@
       <div class="setting-desc">Показывать статистику игр</div>
       <div class="setting-row">
         <span></span>
-        <label class="toggle-switch"><input type="checkbox" id="stats-toggle" checked onchange="saveSetting('stats', this.checked)"><span class="toggle-slider"></span></label>
+        <label class="toggle-switch"><input type="checkbox" id="stats-toggle" checked onchange="saveCheckbox('stats', this.checked)"><span class="toggle-slider"></span></label>
       </div>
     </div>
 
@@ -124,13 +124,13 @@
   </div>
   <script>
     var currentUser = localStorage.getItem('currentUser');
-    var audioElement = null;
     
     function loadSettings() {
       var sound = localStorage.getItem('set_sound_' + currentUser);
       var notify = localStorage.getItem('set_notify_' + currentUser);
       var stats = localStorage.getItem('set_stats_' + currentUser);
       var volume = localStorage.getItem('set_volume_' + currentUser);
+      var music = localStorage.getItem('set_music_' + currentUser);
       
       if (sound !== null) document.getElementById('sound-toggle').checked = sound === 'true';
       if (notify !== null) document.getElementById('notify-toggle').checked = notify === 'true';
@@ -139,101 +139,38 @@
       if (volume !== null) {
         document.getElementById('volume-slider').value = volume;
         document.getElementById('volume-value').textContent = volume + '%';
-        document.getElementById('volume-controls').style.opacity = '1';
-        document.getElementById('volume-controls').style.pointerEvents = 'auto';
-        document.getElementById('btn-test').disabled = false;
       }
       
-      var musicData = localStorage.getItem('set_music_' + currentUser);
-      if (musicData) {
-        document.getElementById('music-name').textContent = 'Загружено: ' + musicData.substring(0, 30) + '...';
-        document.getElementById('volume-controls').style.opacity = '1';
-        document.getElementById('volume-controls').style.pointerEvents = 'auto';
-        document.getElementById('btn-test').disabled = false;
-        document.getElementById('btn-remove').style.display = 'inline-block';
+      if (music) {
+        document.getElementById('music-select').value = music;
       }
     }
     
-    function saveSetting(name, value) {
+    function saveCheckbox(name, value) {
       localStorage.setItem('set_' + name + '_' + currentUser, value);
     }
     
-    function loadMusicFile(input) {
-      var file = input.files[0];
-      if (!file) return;
-      
-      if (file.size > 10 * 1024 * 1024) {
-        alert('Файл слишком большой. Максимальный размер 10 МБ.');
-        return;
+    function changeMusic(value) {
+      localStorage.setItem('set_music_' + currentUser, value);
+      var a = document.getElementById('bg-music');
+      if (value === 'none') {
+        a.pause();
+        a.src = '';
+      } else {
+        a.src = value;
+        a.volume = (parseInt(localStorage.getItem('set_volume_' + currentUser)) || 50) / 100;
+        a.play().catch(function(){});
       }
-      
-      var reader = new FileReader();
-      reader.onload = function(e) {
-        localStorage.setItem('set_music_' + currentUser, e.target.result);
-        document.getElementById('music-name').textContent = 'Загружено: ' + file.name;
-        document.getElementById('volume-controls').style.opacity = '1';
-        document.getElementById('volume-controls').style.pointerEvents = 'auto';
-        document.getElementById('btn-test').disabled = false;
-        document.getElementById('btn-remove').style.display = 'inline-block';
-        
-        if (!localStorage.getItem('set_volume_' + currentUser)) {
-          document.getElementById('volume-slider').value = 50;
-          document.getElementById('volume-value').textContent = '50%';
-          saveSetting('volume', 50);
-        }
-      };
-      reader.readAsDataURL(file);
     }
     
     function changeVolume(val) {
       document.getElementById('volume-value').textContent = val + '%';
-      saveSetting('volume', val);
-      if (audioElement) {
-        audioElement.volume = val / 100;
-      }
-    }
-    
-    function testMusic() {
-      if (audioElement) {
-        audioElement.pause();
-        audioElement = null;
-        document.getElementById('btn-test').textContent = '▶ Тест';
-        return;
-      }
-      
-      var musicData = localStorage.getItem('set_music_' + currentUser);
-      if (!musicData) return;
-      
-      audioElement = new Audio(musicData);
-      audioElement.volume = (parseInt(localStorage.getItem('set_volume_' + currentUser)) || 50) / 100;
-      audioElement.onended = function() {
-        document.getElementById('btn-test').textContent = '▶ Тест';
-        audioElement = null;
-      };
-      
-      audioElement.play().then(function() {
-        document.getElementById('btn-test').textContent = '⏹ Стоп';
-      }).catch(function() {
-        alert('Не удалось воспроизвести. Попробуйте другой формат файла.');
-        audioElement = null;
-      });
-    }
-    
-    function removeMusic() {
-      if (confirm('Удалить загруженную музыку?')) {
-        localStorage.removeItem('set_music_' + currentUser);
-        document.getElementById('music-name').textContent = '';
-        document.getElementById('volume-controls').style.opacity = '0.3';
-        document.getElementById('volume-controls').style.pointerEvents = 'none';
-        document.getElementById('btn-test').disabled = true;
-        document.getElementById('btn-remove').style.display = 'none';
-        document.getElementById('music-file').value = '';
-        if (audioElement) { audioElement.pause(); audioElement = null; }
-        document.getElementById('btn-test').textContent = '▶ Тест';
-      }
+      localStorage.setItem('set_volume_' + currentUser, val);
+      var a = document.getElementById('bg-music');
+      a.volume = val / 100;
     }
     
     loadSettings();
   </script>
 </body>
-      </html>
+  </html>
