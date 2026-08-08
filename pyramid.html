@@ -24,6 +24,23 @@
   </style>
 </head>
 <body>
+  <audio id="bg-music" loop style="display:none;"></audio>
+<script>
+(function(){
+  var u=localStorage.getItem('currentUser');
+  if(!u)return;
+  var d=localStorage.getItem('set_music_'+u);
+  var v=parseInt(localStorage.getItem('set_volume_'+u))||50;
+  var on=localStorage.getItem('set_music_on_'+u)!=='false';
+  var a=document.getElementById('bg-music');
+  if(d&&on){a.src=d;a.volume=v/100;var p=a.play();if(p!==undefined){p.catch(function(){document.addEventListener('click',function(){a.play();},{once:true});});}}
+  window.addEventListener('storage',function(e){
+    if(e.key==='set_volume_'+u)a.volume=(parseInt(e.newValue)||50)/100;
+    if(e.key==='set_music_'+u){a.src=e.newValue||'';if(e.newValue)a.play();}
+    if(e.key==='set_music_on_'+u){if(e.newValue==='false')a.pause();else a.play();}
+  });
+})();
+</script>
   <div class="header"><a href="index.html" class="back-btn" onclick="localStorage.setItem('coming_back','true')">← Назад</a></div>
   <div class="game-container"><h1>🔺 Пирамида</h1>
     <div class="status-text" id="status-text">Найдите алмаз! x3</div>
