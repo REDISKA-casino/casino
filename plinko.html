@@ -4,6 +4,8 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <title>Плинко</title>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
   <style>
     :root { --bg: #121212; --panel: #1e1e1e; --text: #e0e0e0; --accent: #ff4757; --success: #2ed573; --gold: #ffd700; }
     body { background: var(--bg); color: var(--text); font-family: system-ui, sans-serif; margin: 0; display: flex; flex-direction: column; align-items: center; min-height: 100vh; }
@@ -25,31 +27,26 @@
   </style>
 </head>
 <body>
-<audio id="bg-music" loop style="display:none;"></audio>
-<script>
-(function(){
-  var u=localStorage.getItem('currentUser');
-  if(!u)return;
-  var d=localStorage.getItem('set_music_'+u);
-  var v=parseInt(localStorage.getItem('set_volume_'+u))||50;
-  var on=localStorage.getItem('set_music_on_'+u)!=='false';
-  var a=document.getElementById('bg-music');
-  var started=false;
-  function startMusic(){
-    if(started)return;
-    if(d&&on){a.src=d;a.volume=v/100;var p=a.play();if(p!==undefined){p.catch(function(){});}}
-    started=true;
-  }
-  document.addEventListener('click',startMusic,{once:true});
-  document.addEventListener('touchstart',startMusic,{once:true});
-  if(d&&on){a.src=d;a.volume=v/100;var p=a.play();if(p!==undefined){p.catch(function(){});}}
-  window.addEventListener('storage',function(e){
-    if(e.key==='set_volume_'+u)a.volume=(parseInt(e.newValue)||50)/100;
-    if(e.key==='set_music_'+u){a.src=e.newValue||'';if(e.newValue)a.play().catch(function(){});}
-    if(e.key==='set_music_on_'+u){if(e.newValue==='false')a.pause();else a.play().catch(function(){});}
-  });
-})();
-</script>
+  <audio id="bg-music" loop style="display:none;"></audio>
+  <script>
+  (function(){
+    var u=localStorage.getItem('currentUser');
+    if(!u)return;
+    var d=localStorage.getItem('set_music_'+u);
+    var v=parseInt(localStorage.getItem('set_volume_'+u))||50;
+    var on=localStorage.getItem('set_music_on_'+u)!=='false';
+    var a=document.getElementById('bg-music');
+    var started=false;
+    function startMusic(){
+      if(started)return;
+      if(d&&on&&d!=='none'){a.src=d;a.volume=v/100;a.play().catch(function(){});}
+      started=true;
+    }
+    document.addEventListener('click',startMusic,{once:true});
+    document.addEventListener('touchstart',startMusic,{once:true});
+    if(d&&on&&d!=='none'){a.src=d;a.volume=v/100;a.play().catch(function(){});}
+  })();
+  </script>
   <div class="header"><a href="index.html" class="back-btn" onclick="localStorage.setItem('coming_back','true')">← Назад</a></div>
   <div class="game-container">
     <h1>🎯 Плинко</h1>
@@ -63,32 +60,41 @@
     <div class="history-box" id="history-box">История бросков</div>
   </div>
   <script>
-    const BIN_ID = '6a516a15f5f4af5e297ecf15';
-    const MASTER_KEY = '$2a$10$ESWoAwK.zv8By8WZCjzhu.zw1AIOFcUeILyVjiDrHmv62jIxygKoO';
-    const API_URL = `https://api.jsonbin.io/v3/b/${BIN_ID}`;
-    const currentUser = localStorage.getItem('currentUser');
+    var firebaseConfig = {
+      apiKey: "AIzaSyBKfDdHsbTzZjfc4hHX3SJV563UbVBvqPQ",
+      authDomain: "lucky-finger-b8b05.firebaseapp.com",
+      databaseURL: "https://lucky-finger-b8b05-default-rtdb.firebaseio.com",
+      projectId: "lucky-finger-b8b05",
+      storageBucket: "lucky-finger-b8b05.firebasestorage.app",
+      messagingSenderId: "843623003093",
+      appId: "1:843623003093:web:05acfb8aa828e6cc2e835c"
+    };
+    firebase.initializeApp(firebaseConfig);
+    var database = firebase.database();
+    var accountsCache = {};
+    var currentUser = localStorage.getItem('currentUser');
     if (!currentUser) window.location.href = 'index.html';
-    let balance = parseInt(localStorage.getItem('bal_' + currentUser)) || 1000;
-    let isDropping = false, accountsCache = {};
-    const COLS = 7, ROWS = 9, multipliers = [0.5, 1, 2, 3, 2, 1, 0.5];
-    const slotColors = ['#2c3e50','#34495e','#e67e22','#e74c3c','#e67e22','#34495e','#2c3e50'];
+    var balance = parseInt(localStorage.getItem('bal_' + currentUser)) || 1000;
+    var isDropping = false;
+    var COLS = 7, ROWS = 9, multipliers = [0.5, 1, 2, 3, 2, 1, 0.5];
+    var slotColors = ['#2c3e50','#34495e','#e67e22','#e74c3c','#e67e22','#34495e','#2c3e50'];
 
-    async function loadAcc() { try { const r = await fetch(API_URL + '/latest', { headers: { 'X-Master-Key': MASTER_KEY } }); const d = await r.json(); accountsCache = d.record || {}; } catch(e) {} }
-    async function saveAcc() { try { await fetch(API_URL, { method: 'PUT', headers: { 'Content-Type': 'application/json', 'X-Master-Key': MASTER_KEY }, body: JSON.stringify(accountsCache) }); } catch(e) {} }
-    function saveBal() { localStorage.setItem('bal_' + currentUser, balance); document.getElementById('balance-display').textContent = `${balance.toLocaleString()} ₽`; syncNow(); }
+    async function loadAcc() { try { var snapshot = await database.ref('accounts').get(); accountsCache = snapshot.val() || {}; } catch(e) {} }
+    async function saveAcc() { try { await database.ref('accounts').set(accountsCache); } catch(e) {} }
+    function saveBal() { localStorage.setItem('bal_' + currentUser, balance); document.getElementById('balance-display').textContent = balance.toLocaleString() + ' ₽'; syncNow(); }
     async function syncNow() { if (accountsCache[currentUser]) { accountsCache[currentUser].balance = balance; await saveAcc(); } }
-    function addHistory(text) { const box = document.getElementById('history-box'); if(!box) return; const div = document.createElement('div'); div.textContent = text; div.style.padding = '4px 0'; div.style.borderBottom = '1px solid #2a2a2a'; box.insertBefore(div, box.firstChild); while(box.children.length > 20) { box.removeChild(box.lastChild); } }
-    document.getElementById('balance-display').textContent = `${balance.toLocaleString()} ₽`;
+    function addHistory(text) { var box = document.getElementById('history-box'); if(!box) return; var div = document.createElement('div'); div.textContent = text; div.style.padding = '4px 0'; div.style.borderBottom = '1px solid #2a2a2a'; box.insertBefore(div, box.firstChild); while(box.children.length > 20) { box.removeChild(box.lastChild); } }
+    document.getElementById('balance-display').textContent = balance.toLocaleString() + ' ₽';
 
-    const board = document.getElementById('board'), ball = document.getElementById('ball');
-    const marginX = 15, marginTop = 25, boardW = board.clientWidth, boardH = 320;
-    const spacingX = (boardW - marginX*2) / (COLS - 1), spacingY = (boardH - marginTop - 50) / ROWS, ballR = 8;
+    var board = document.getElementById('board'), ball = document.getElementById('ball');
+    var marginX = 15, marginTop = 25, boardW = board.clientWidth, boardH = 320;
+    var spacingX = (boardW - marginX * 2) / (COLS - 1), spacingY = (boardH - marginTop - 50) / ROWS, ballR = 8;
 
-    for(let r = 0; r < ROWS; r++){
-      const pegsInRow = r % 2 === 0 ? COLS : COLS + 1;
-      const startX = r % 2 === 0 ? marginX : marginX - spacingX/2;
-      for(let c = 0; c < pegsInRow; c++){
-        const peg = document.createElement('div');
+    for(var r = 0; r < ROWS; r++) {
+      var pegsInRow = r % 2 === 0 ? COLS : COLS + 1;
+      var startX = r % 2 === 0 ? marginX : marginX - spacingX / 2;
+      for(var c = 0; c < pegsInRow; c++) {
+        var peg = document.createElement('div');
         peg.className = 'peg';
         peg.style.left = (startX + c * spacingX - 6) + 'px';
         peg.style.top = (marginTop + r * spacingY - 6) + 'px';
@@ -96,9 +102,9 @@
       }
     }
 
-    const slotWidth = (boardW - marginX*2) / COLS;
-    for(let c = 0; c < COLS; c++){
-      const slot = document.createElement('div');
+    var slotWidth = (boardW - marginX * 2) / COLS;
+    for(var c = 0; c < COLS; c++) {
+      var slot = document.createElement('div');
       slot.className = 'slot';
       slot.style.left = (marginX + c * slotWidth) + 'px';
       slot.style.width = slotWidth + 'px';
@@ -108,62 +114,51 @@
     }
 
     function checkPegCollision(bx, by, pegX, pegY) {
-      const dx = bx - (pegX + 6), dy = by - (pegY + 6);
-      return Math.sqrt(dx*dx + dy*dy) < (ballR + 6);
+      var dx = bx - (pegX + 6), dy = by - (pegY + 6);
+      return Math.sqrt(dx * dx + dy * dy) < (ballR + 6);
     }
 
-    document.getElementById('btn-drop').onclick = () => {
+    document.getElementById('btn-drop').onclick = function() {
       if(isDropping) return;
-      const bet = +document.getElementById('bet-input').value;
-      if(!bet||bet<=0||bet>balance){alert('Некорректная ставка');return;}
-      isDropping = true;
-      document.getElementById('btn-drop').disabled = true;
+      var bet = +document.getElementById('bet-input').value;
+      if(!bet || bet <= 0 || bet > balance) { alert('Некорректная ставка'); return; }
+      isDropping = true; document.getElementById('btn-drop').disabled = true;
       balance -= bet; saveBal();
-      
-      let posX = marginX + Math.random() * (boardW - marginX*2) - ballR, posY = 0;
-      let velX = (Math.random() - 0.5) * 1.5, velY = 0.3;
-      const gravity = 0.25;
-      
+      var posX = marginX + Math.random() * (boardW - marginX * 2) - ballR, posY = 0;
+      var velX = (Math.random() - 0.5) * 1.5, velY = 0.3;
+      var gravity = 0.25;
       ball.style.display = 'block';
       ball.style.left = posX + 'px';
       ball.style.top = posY + 'px';
       
       function animate() {
         if(posY > boardH - 45) {
-          const landedCol = Math.min(Math.max(Math.floor((posX - marginX) / slotWidth), 0), COLS-1);
-          const mult = multipliers[landedCol], win = Math.floor(bet * mult);
+          var landedCol = Math.min(Math.max(Math.floor((posX - marginX) / slotWidth), 0), COLS - 1);
+          var mult = multipliers[landedCol], win = Math.floor(bet * mult);
           balance += win; saveBal();
-          document.getElementById('status-text').textContent = `Выпало: x${mult}! ${win>=bet?'+'+win+'₽':'-'+bet+'₽'}`;
-          document.getElementById('status-text').style.color = win>=bet?'#2ed573':'#ff4757';
-          addHistory(`🎯 Плинко x${mult}: ${win>0?'+'+win+'₽':'-'+bet+'₽'}`);
-          setTimeout(() => { ball.style.display='none'; isDropping=false; document.getElementById('btn-drop').disabled=false; }, 500);
+          document.getElementById('status-text').textContent = 'Выпало: x' + mult + '! ' + (win >= bet ? '+' + win + '₽' : '-' + bet + '₽');
+          document.getElementById('status-text').style.color = win >= bet ? '#2ed573' : '#ff4757';
+          addHistory('🎯 Плинко x' + mult + ': ' + (win > 0 ? '+' + win + '₽' : '-' + bet + '₽'));
+          setTimeout(function() { ball.style.display = 'none'; isDropping = false; document.getElementById('btn-drop').disabled = false; }, 500);
           return;
         }
-        
-        velY += gravity;
-        posX += velX;
-        posY += velY;
-        
+        velY += gravity; posX += velX; posY += velY;
         if(posX < marginX) { posX = marginX; velX = Math.abs(velX) * 0.5; }
-        if(posX > boardW - marginX - ballR*2) { posX = boardW - marginX - ballR*2; velX = -Math.abs(velX) * 0.5; }
-        
-        const pegElements = board.querySelectorAll('.peg');
-        pegElements.forEach(peg => {
-          const pegX = parseFloat(peg.style.left), pegY = parseFloat(peg.style.top);
+        if(posX > boardW - marginX - ballR * 2) { posX = boardW - marginX - ballR * 2; velX = -Math.abs(velX) * 0.5; }
+        board.querySelectorAll('.peg').forEach(function(peg) {
+          var pegX = parseFloat(peg.style.left), pegY = parseFloat(peg.style.top);
           if(checkPegCollision(posX + ballR, posY + ballR, pegX, pegY)) {
-            const dx = (posX + ballR) - (pegX + 6), dy = (posY + ballR) - (pegY + 6);
-            const dist = Math.sqrt(dx*dx + dy*dy), nx = dx / dist, ny = dy / dist;
+            var dx = (posX + ballR) - (pegX + 6), dy = (posY + ballR) - (pegY + 6);
+            var dist = Math.sqrt(dx * dx + dy * dy), nx = dx / dist, ny = dy / dist;
             posX = pegX + 6 + nx * (ballR + 6) - ballR;
             posY = pegY + 6 + ny * (ballR + 6) - ballR;
             velX = (Math.random() - 0.5) * 3;
             velY = -Math.abs(velY) * (0.5 + Math.random() * 0.5);
           }
         });
-        
-        const speed = Math.sqrt(velX*velX + velY*velY);
-        if(speed > 6) { velX = velX/speed * 6; velY = velY/speed * 6; }
+        var speed = Math.sqrt(velX * velX + velY * velY);
+        if(speed > 6) { velX = velX / speed * 6; velY = velY / speed * 6; }
         if(posY > boardH - 50 && Math.abs(velX) < 0.3) velX = (Math.random() - 0.5) * 2;
-        
         ball.style.left = posX + 'px';
         ball.style.top = posY + 'px';
         requestAnimationFrame(animate);
@@ -171,7 +166,7 @@
       requestAnimationFrame(animate);
     };
 
-    (async () => { await loadAcc(); })();
+    (async function() { await loadAcc(); })();
   </script>
 </body>
 </html>
