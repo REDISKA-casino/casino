@@ -4,6 +4,8 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <title>Рыбалка</title>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
   <style>
     :root { --bg: #121212; --panel: #1e1e1e; --text: #e0e0e0; --accent: #ff4757; --success: #2ed573; --gold: #ffd700; }
     body { background: var(--bg); color: var(--text); font-family: system-ui, sans-serif; margin: 0; display: flex; flex-direction: column; align-items: center; min-height: 100vh; }
@@ -12,47 +14,51 @@
     h1 { margin: 16px 0; font-weight: 400; }
     .game-container { width: 100%; max-width: 500px; padding: 16px; }
     .fishing-area { background: linear-gradient(to bottom, #1a5276, #0e3d5c); border-radius: 16px; padding: 20px; margin-bottom: 16px; text-align: center; border: 2px solid #2980b9; min-height: 180px; display: flex; flex-direction: column; align-items: center; justify-content: center; }
-    .catch-display { font-size: 80px; margin: 10px 0; } .catch-display.bite { animation: bite 0.5s; } @keyframes bite { 0%,100%{transform:translateY(0);} 50%{transform:translateY(-20px);} }
-    .bobber { width: 20px; height: 20px; background: #ff4757; border-radius: 50%; margin: 10px auto; } .bobber.biting { animation: bob 0.3s infinite; } @keyframes bob { 0%,100%{transform:translateY(0);} 50%{transform:translateY(-15px);} }
+    .catch-display { font-size: 80px; margin: 10px 0; }
+    .catch-display.bite { animation: bite 0.5s; }
+    @keyframes bite { 0%,100%{transform:translateY(0);} 50%{transform:translateY(-20px);} }
+    .bobber { width: 20px; height: 20px; background: #ff4757; border-radius: 50%; margin: 10px auto; }
+    .bobber.biting { animation: bob 0.3s infinite; }
+    @keyframes bob { 0%,100%{transform:translateY(0);} 50%{transform:translateY(-15px);} }
     .controls-box { background: var(--panel); padding: 16px; border-radius: 12px; text-align: center; }
     .balance-box { display: flex; justify-content: space-between; padding: 8px 0; margin-bottom: 12px; font-size: 18px; }
     input[type="number"] { width: 100%; padding: 12px; border: 1px solid #333; border-radius: 6px; background: #000; color: #fff; text-align: center; font-size: 18px; box-sizing: border-box; margin-bottom: 12px; }
-    .btn-cast { width: 100%; padding: 14px; border: none; border-radius: 8px; font-size: 16px; cursor: pointer; font-weight: bold; color: white; background: #2980b9; } .btn-cast:disabled { opacity: 0.5; }
+    .btn-cast { width: 100%; padding: 14px; border: none; border-radius: 8px; font-size: 16px; cursor: pointer; font-weight: bold; color: white; background: #2980b9; }
+    .btn-cast:disabled { opacity: 0.5; }
     .btn-reel { width: 100%; padding: 14px; border: none; border-radius: 8px; font-size: 16px; cursor: pointer; font-weight: bold; color: white; background: var(--success); margin-top: 8px; display: none; }
     .status-text { text-align: center; font-size: 20px; font-weight: bold; margin-bottom: 12px; min-height: 28px; }
     .history-box { background: var(--panel); padding: 12px; border-radius: 8px; font-size: 13px; max-height: 120px; overflow-y: auto; color: #aaa; margin-top: 12px; }
   </style>
 </head>
 <body>
-<audio id="bg-music" loop style="display:none;"></audio>
-<script>
-(function(){
-  var u=localStorage.getItem('currentUser');
-  if(!u)return;
-  var d=localStorage.getItem('set_music_'+u);
-  var v=parseInt(localStorage.getItem('set_volume_'+u))||50;
-  var on=localStorage.getItem('set_music_on_'+u)!=='false';
-  var a=document.getElementById('bg-music');
-  var started=false;
-  function startMusic(){
-    if(started)return;
-    if(d&&on){a.src=d;a.volume=v/100;var p=a.play();if(p!==undefined){p.catch(function(){});}}
-    started=true;
-  }
-  document.addEventListener('click',startMusic,{once:true});
-  document.addEventListener('touchstart',startMusic,{once:true});
-  if(d&&on){a.src=d;a.volume=v/100;var p=a.play();if(p!==undefined){p.catch(function(){});}}
-  window.addEventListener('storage',function(e){
-    if(e.key==='set_volume_'+u)a.volume=(parseInt(e.newValue)||50)/100;
-    if(e.key==='set_music_'+u){a.src=e.newValue||'';if(e.newValue)a.play().catch(function(){});}
-    if(e.key==='set_music_on_'+u){if(e.newValue==='false')a.pause();else a.play().catch(function(){});}
-  });
-})();
-</script>
+  <audio id="bg-music" loop style="display:none;"></audio>
+  <script>
+  (function(){
+    var u=localStorage.getItem('currentUser');
+    if(!u)return;
+    var d=localStorage.getItem('set_music_'+u);
+    var v=parseInt(localStorage.getItem('set_volume_'+u))||50;
+    var on=localStorage.getItem('set_music_on_'+u)!=='false';
+    var a=document.getElementById('bg-music');
+    var started=false;
+    function startMusic(){
+      if(started)return;
+      if(d&&on&&d!=='none'){a.src=d;a.volume=v/100;a.play().catch(function(){});}
+      started=true;
+    }
+    document.addEventListener('click',startMusic,{once:true});
+    document.addEventListener('touchstart',startMusic,{once:true});
+    if(d&&on&&d!=='none'){a.src=d;a.volume=v/100;a.play().catch(function(){});}
+  })();
+  </script>
   <div class="header"><a href="index.html" class="back-btn" onclick="localStorage.setItem('coming_back','true')">← Назад</a></div>
-  <div class="game-container"><h1>🎣 Рыбалка</h1>
+  <div class="game-container">
+    <h1>🎣 Рыбалка</h1>
     <div class="status-text" id="status-text">Забросьте удочку</div>
-    <div class="fishing-area"><div class="catch-display" id="catch-display">🐟</div><div class="bobber" id="bobber"></div></div>
+    <div class="fishing-area">
+      <div class="catch-display" id="catch-display">🐟</div>
+      <div class="bobber" id="bobber"></div>
+    </div>
     <div class="controls-box">
       <div class="balance-box"><span>Баланс</span><span id="balance-display">1000 ₽</span></div>
       <input type="number" id="bet-input" min="1" value="100" placeholder="Ставка" />
@@ -62,47 +68,73 @@
     <div class="history-box" id="history-box">История улова</div>
   </div>
   <script>
-    const BIN_ID = '6a516a15f5f4af5e297ecf15';
-    const MASTER_KEY = '$2a$10$ESWoAwK.zv8By8WZCjzhu.zw1AIOFcUeILyVjiDrHmv62jIxygKoO';
-    const API_URL = `https://api.jsonbin.io/v3/b/${BIN_ID}`;
-    const currentUser = localStorage.getItem('currentUser');
+    var firebaseConfig = {
+      apiKey: "AIzaSyBKfDdHsbTzZjfc4hHX3SJV563UbVBvqPQ",
+      authDomain: "lucky-finger-b8b05.firebaseapp.com",
+      databaseURL: "https://lucky-finger-b8b05-default-rtdb.firebaseio.com",
+      projectId: "lucky-finger-b8b05",
+      storageBucket: "lucky-finger-b8b05.firebasestorage.app",
+      messagingSenderId: "843623003093",
+      appId: "1:843623003093:web:05acfb8aa828e6cc2e835c"
+    };
+    firebase.initializeApp(firebaseConfig);
+    var database = firebase.database();
+    var accountsCache = {};
+    var currentUser = localStorage.getItem('currentUser');
     if (!currentUser) window.location.href = 'index.html';
-    let balance = parseInt(localStorage.getItem('bal_' + currentUser)) || 1000;
-    let isFishing = false, currentBet = 0, ct = null, bt = null, accountsCache = {};
-    const fishList = [{n:'Мал. рыбка',i:'🐟',m:0.5,c:30},{n:'Карась',i:'🐠',m:1,c:25},{n:'Щука',i:'🐊',m:2,c:15},{n:'Сом',i:'🐋',m:5,c:8},{n:'Золотая',i:'🌟',m:10,c:3},{n:'Сапог',i:'👢',m:0,c:10},{n:'Водоросли',i:'🌿',m:0,c:9}];
+    var balance = parseInt(localStorage.getItem('bal_' + currentUser)) || 1000;
+    var isFishing = false, currentBet = 0, ct = null, bt = null;
+    var fishList = [{n:'Мал. рыбка',i:'🐟',m:0.5,c:30},{n:'Карась',i:'🐠',m:1,c:25},{n:'Щука',i:'🐊',m:2,c:15},{n:'Сом',i:'🐋',m:5,c:8},{n:'Золотая',i:'🌟',m:10,c:3},{n:'Сапог',i:'👢',m:0,c:10},{n:'Водоросли',i:'🌿',m:0,c:9}];
 
-    async function loadAcc() { try { const r = await fetch(API_URL + '/latest', { headers: { 'X-Master-Key': MASTER_KEY } }); const d = await r.json(); accountsCache = d.record || {}; } catch(e) {} }
-    async function saveAcc() { try { await fetch(API_URL, { method: 'PUT', headers: { 'Content-Type': 'application/json', 'X-Master-Key': MASTER_KEY }, body: JSON.stringify(accountsCache) }); } catch(e) {} }
-    function saveBal() { localStorage.setItem('bal_' + currentUser, balance); document.getElementById('balance-display').textContent = `${balance.toLocaleString()} ₽`; syncNow(); }
+    async function loadAcc() { try { var snapshot = await database.ref('accounts').get(); accountsCache = snapshot.val() || {}; } catch(e) {} }
+    async function saveAcc() { try { await database.ref('accounts').set(accountsCache); } catch(e) {} }
+    function saveBal() { localStorage.setItem('bal_' + currentUser, balance); document.getElementById('balance-display').textContent = balance.toLocaleString() + ' ₽'; syncNow(); }
     async function syncNow() { if (accountsCache[currentUser]) { accountsCache[currentUser].balance = balance; await saveAcc(); } }
-    document.getElementById('balance-display').textContent = `${balance.toLocaleString()} ₽`;
+    function addHistory(text) { var box = document.getElementById('history-box'); if(!box) return; var div = document.createElement('div'); div.textContent = text; div.style.padding = '4px 0'; div.style.borderBottom = '1px solid #2a2a2a'; box.insertBefore(div, box.firstChild); while(box.children.length > 20) { box.removeChild(box.lastChild); } }
+    document.getElementById('balance-display').textContent = balance.toLocaleString() + ' ₽';
 
-    function addHistory(text) { const box = document.getElementById('history-box'); if(!box) return; const div = document.createElement('div'); div.textContent = text; div.style.padding = '4px 0'; div.style.borderBottom = '1px solid #2a2a2a'; box.insertBefore(div, box.firstChild); while(box.children.length > 20) { box.removeChild(box.lastChild); } }
+    function getFish() { var t = fishList.reduce(function(s, f) { return s + f.c; }, 0); var r = Math.random() * t; for(var i = 0; i < fishList.length; i++) { r -= fishList[i].c; if(r <= 0) return fishList[i]; } return fishList[0]; }
+    function reset() { isFishing = false; document.getElementById('btn-cast').disabled = false; document.getElementById('btn-reel').style.display = 'none'; document.getElementById('bobber').classList.remove('biting'); clearTimeout(ct); clearTimeout(bt); }
 
-    function getFish(){ const t=fishList.reduce((s,f)=>s+f.c,0); let r=Math.random()*t; for(const f of fishList){r-=f.c;if(r<=0)return f;} return fishList[0]; }
-    function reset(){ isFishing=false; document.getElementById('btn-cast').disabled=false; document.getElementById('btn-reel').style.display='none'; document.getElementById('bobber').classList.remove('biting'); clearTimeout(ct); clearTimeout(bt); }
-
-    document.getElementById('btn-cast').onclick=()=>{
-      if(isFishing)return;
-      currentBet=+document.getElementById('bet-input').value;
-      if(!currentBet||currentBet<=0||currentBet>balance){alert('Некорректная ставка');return;}
-      isFishing=true; document.getElementById('btn-cast').disabled=true; balance-=currentBet; saveBal();
-      document.getElementById('catch-display').classList.remove('bite'); document.getElementById('bobber').classList.remove('biting'); document.getElementById('status-text').textContent='Ждём поклёвку...';
-      bt=setTimeout(()=>{document.getElementById('bobber').classList.add('biting');document.getElementById('status-text').textContent='Клюёт! Тяните!';document.getElementById('btn-reel').style.display='block';ct=setTimeout(()=>{if(isFishing){document.getElementById('bobber').classList.remove('biting');document.getElementById('status-text').textContent='Сорвалась!';reset();}},2000);},1000+Math.random()*3000);
+    document.getElementById('btn-cast').onclick = function() {
+      if(isFishing) return;
+      currentBet = +document.getElementById('bet-input').value;
+      if(!currentBet || currentBet <= 0 || currentBet > balance) { alert('Некорректная ставка'); return; }
+      isFishing = true; document.getElementById('btn-cast').disabled = true; balance -= currentBet; saveBal();
+      document.getElementById('catch-display').classList.remove('bite');
+      document.getElementById('bobber').classList.remove('biting');
+      document.getElementById('status-text').textContent = 'Ждём поклёвку...';
+      bt = setTimeout(function() {
+        document.getElementById('bobber').classList.add('biting');
+        document.getElementById('status-text').textContent = 'Клюёт! Тяните!';
+        document.getElementById('btn-reel').style.display = 'block';
+        ct = setTimeout(function() {
+          if(isFishing) {
+            document.getElementById('bobber').classList.remove('biting');
+            document.getElementById('status-text').textContent = 'Сорвалась!';
+            reset();
+          }
+        }, 2000);
+      }, 1000 + Math.random() * 3000);
     };
 
-    document.getElementById('btn-reel').onclick=()=>{
-      if(!isFishing)return;
+    document.getElementById('btn-reel').onclick = function() {
+      if(!isFishing) return;
       clearTimeout(ct); clearTimeout(bt);
-      const f=getFish(); document.getElementById('catch-display').textContent=f.i; document.getElementById('catch-display').classList.add('bite'); document.getElementById('bobber').classList.remove('biting');
-      const w=Math.floor(currentBet*f.m); balance+=w; saveBal();
-      document.getElementById('status-text').textContent=f.m>0?`${f.n}! +${w}₽`:`${f.n}! -${currentBet}₽`; document.getElementById('status-text').style.color=f.m>0?'#2ed573':'#ff4757';
-      addHistory(`${f.i} ${f.n}: ${f.m>0?'+'+w+'₽':'-'+currentBet+'₽'}`);
-      document.getElementById('btn-reel').style.display='none'; setTimeout(reset,2000);
+      var f = getFish();
+      document.getElementById('catch-display').textContent = f.i;
+      document.getElementById('catch-display').classList.add('bite');
+      document.getElementById('bobber').classList.remove('biting');
+      var w = Math.floor(currentBet * f.m);
+      balance += w; saveBal();
+      document.getElementById('status-text').textContent = f.m > 0 ? f.n + '! +' + w + '₽' : f.n + '! -' + currentBet + '₽';
+      document.getElementById('status-text').style.color = f.m > 0 ? '#2ed573' : '#ff4757';
+      addHistory(f.i + ' ' + f.n + ': ' + (f.m > 0 ? '+' + w + '₽' : '-' + currentBet + '₽'));
+      document.getElementById('btn-reel').style.display = 'none';
+      setTimeout(reset, 2000);
     };
 
-    window.addEventListener('beforeunload', async () => { if (accountsCache[currentUser]) { accountsCache[currentUser].balance = balance; await saveAcc(); } });
-    (async () => { await loadAcc(); })();
+    (async function() { await loadAcc(); })();
   </script>
 </body>
 </html>
