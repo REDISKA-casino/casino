@@ -4,6 +4,8 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <title>Админ-панель</title>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
   <style>
     :root { --bg: #121212; --panel: #1e1e1e; --text: #e0e0e0; --accent: #ff4757; --gold: #ffd700; --success: #2ed573; }
     body { background: var(--bg); color: var(--text); font-family: system-ui, sans-serif; margin: 0; display: flex; flex-direction: column; align-items: center; min-height: 100vh; }
@@ -48,74 +50,87 @@
     <button class="refresh-btn" id="refresh-btn">🔄 Обновить</button>
   </div>
   <script>
-    const BIN_ID = '6a516a15f5f4af5e297ecf15';
-    const MASTER_KEY = '$2a$10$ESWoAwK.zv8By8WZCjzhu.zw1AIOFcUeILyVjiDrHmv62jIxygKoO';
-    const API_URL = `https://api.jsonbin.io/v3/b/${BIN_ID}`;
-    const ADMIN_NICKNAME = 'I-am-admin';
-    let accountsCache = {};
+    var firebaseConfig = {
+      apiKey: "AIzaSyBKfDdHsbTzZjfc4hHX3SJV563UbVBvqPQ",
+      authDomain: "lucky-finger-b8b05.firebaseapp.com",
+      databaseURL: "https://lucky-finger-b8b05-default-rtdb.firebaseio.com",
+      projectId: "lucky-finger-b8b05",
+      storageBucket: "lucky-finger-b8b05.firebasestorage.app",
+      messagingSenderId: "843623003093",
+      appId: "1:843623003093:web:05acfb8aa828e6cc2e835c"
+    };
+    firebase.initializeApp(firebaseConfig);
+    var database = firebase.database();
+    var accountsCache = {};
+    var ADMIN_NICKNAME = 'I-am-admin';
 
-    async function loadAcc() { try { const r = await fetch(API_URL + '/latest', { headers: { 'X-Master-Key': MASTER_KEY } }); const d = await r.json(); accountsCache = d.record || {}; } catch(e) {} }
-    async function saveAcc() { await fetch(API_URL, { method: 'PUT', headers: { 'Content-Type': 'application/json', 'X-Master-Key': MASTER_KEY }, body: JSON.stringify(accountsCache) }); }
-
-    document.getElementById('logout-btn').onclick = () => { localStorage.removeItem('currentUser'); window.location.href = 'index.html'; };
-
-    function getBanList() {
-      const bannedIPs = [];
-      for (const [nickname, data] of Object.entries(accountsCache)) { if (data.banned && data.ip) bannedIPs.push(data.ip); }
-      return [...new Set(bannedIPs)];
+    async function loadAcc() {
+      try { var snapshot = await database.ref('accounts').get(); accountsCache = snapshot.val() || {}; } catch(e) { accountsCache = {}; }
     }
 
-    function isIPBanned(ip) { const banList = getBanList(); return banList.includes(ip); }
+    async function saveAcc() {
+      try { await database.ref('accounts').set(accountsCache); } catch(e) {}
+    }
+
+    document.getElementById('logout-btn').onclick = function() { localStorage.removeItem('currentUser'); window.location.href = 'index.html'; };
+
+    function isIPBanned(ip) {
+      if (!ip) return false;
+      for (var nickname in accountsCache) {
+        if (accountsCache[nickname].banned && accountsCache[nickname].ip === ip) return true;
+      }
+      return false;
+    }
 
     async function render() {
       await loadAcc();
-      const users = Object.entries(accountsCache).filter(([n]) => n !== ADMIN_NICKNAME);
-      let total = 0, banned = 0, html = '';
-      html += `<div class="account-item"><div class="account-nickname">${ADMIN_NICKNAME} <span class="admin-badge-small">👑</span></div><div class="account-date">Системный аккаунт</div><div class="account-balance">-</div></div>`;
-      users.forEach(([n, d]) => {
+      var users = Object.entries(accountsCache).filter(function(item) { return item[0] !== ADMIN_NICKNAME; });
+      var total = 0, banned = 0, html = '';
+      html += '<div class="account-item"><div class="account-nickname">' + ADMIN_NICKNAME + ' <span class="admin-badge-small">👑</span></div><div class="account-date">Системный аккаунт</div><div class="account-balance">-</div></div>';
+      users.forEach(function(entry) {
+        var n = entry[0], d = entry[1];
         total += d.balance || 0;
         if (d.banned) banned++;
-        html += `<div class="account-item ${d.banned ? 'banned' : ''}">
-          <div class="account-nickname">${n}${d.banned ? ' <span class="banned-badge-small">🚫 Забанен</span>' : ''}</div>
-          <div class="account-date">Создан: ${new Date(d.created).toLocaleDateString()}</div>
-          <div class="account-password">🔑 Пароль: ${d.password || 'неизвестно'}</div>
-          <div class="account-ip">🌐 IP: ${d.ip || 'неизвестно'}</div>
-          <div class="account-balance">💰 Баланс: ${(d.balance||0).toLocaleString()} ₽</div>
-          <div class="btn-group">
-            <button class="action-btn btn-refill" data-action="refill" data-user="${n}">💰 Пополнить</button>
-            <button class="action-btn btn-reduce" data-action="reduce" data-user="${n}">📉 Уменьшить</button>
-            <button class="action-btn btn-reset" data-action="reset" data-user="${n}">💸 Сброс 1000</button>
-            ${d.banned ? 
-              '<button class="action-btn btn-unban" data-action="unban" data-user="'+n+'">✓ Разбанить</button>' : 
-              '<button class="action-btn btn-ban" data-action="ban" data-user="'+n+'" data-ip="'+(d.ip||'')+'">🚫 Бан по IP</button>'
-            }
-            <button class="action-btn btn-delete" data-action="delete" data-user="${n}">🗑 Удалить</button>
-          </div>
-        </div>`;
+        html += '<div class="account-item ' + (d.banned ? 'banned' : '') + '">' +
+          '<div class="account-nickname">' + n + (d.banned ? ' <span class="banned-badge-small">🚫 Забанен</span>' : '') + '</div>' +
+          '<div class="account-date">Создан: ' + new Date(d.created).toLocaleDateString() + '</div>' +
+          '<div class="account-password">🔑 Пароль: ' + (d.password || 'неизвестно') + '</div>' +
+          '<div class="account-ip">🌐 IP: ' + (d.ip || 'неизвестно') + '</div>' +
+          '<div class="account-balance">💰 Баланс: ' + (d.balance || 0).toLocaleString() + ' ₽</div>' +
+          '<div class="btn-group">' +
+          '<button class="action-btn btn-refill" data-action="refill" data-user="' + n + '">💰 Пополнить</button>' +
+          '<button class="action-btn btn-reduce" data-action="reduce" data-user="' + n + '">📉 Уменьшить</button>' +
+          '<button class="action-btn btn-reset" data-action="reset" data-user="' + n + '">💸 Сброс 1000</button>' +
+          (d.banned ? '<button class="action-btn btn-unban" data-action="unban" data-user="' + n + '">✓ Разбанить</button>' : '<button class="action-btn btn-ban" data-action="ban" data-user="' + n + '" data-ip="' + (d.ip || '') + '">🚫 Бан по IP</button>') +
+          '<button class="action-btn btn-delete" data-action="delete" data-user="' + n + '">🗑 Удалить</button>' +
+          '</div></div>';
       });
       document.getElementById('accounts-container').innerHTML = html || '<div class="loading">Нет аккаунтов</div>';
       document.getElementById('total-accounts').textContent = users.length;
       document.getElementById('total-balance').textContent = total.toLocaleString() + ' ₽';
       document.getElementById('banned-count').textContent = banned;
 
-      document.querySelectorAll('.action-btn').forEach(btn => {
+      document.querySelectorAll('.action-btn').forEach(function(btn) {
         btn.onclick = async function() {
-          const action = this.dataset.action, user = this.dataset.user, ip = this.dataset.ip;
-          if (action === 'refill') { const am = parseInt(prompt('Сумма пополнения:', '100')); if (am > 0) { accountsCache[user].balance = (accountsCache[user].balance || 0) + am; await saveAcc(); render(); } }
-          else if (action === 'reduce') { const am = parseInt(prompt('Сумма уменьшения:', '100')); if (am > 0) { accountsCache[user].balance = Math.max(0, (accountsCache[user].balance || 0) - am); await saveAcc(); render(); } }
+          var action = this.dataset.action, user = this.dataset.user, ip = this.dataset.ip;
+          if (action === 'refill') { var am = parseInt(prompt('Сумма пополнения:', '100')); if (am > 0) { accountsCache[user].balance = (accountsCache[user].balance || 0) + am; await saveAcc(); render(); } }
+          else if (action === 'reduce') { var am = parseInt(prompt('Сумма уменьшения:', '100')); if (am > 0) { accountsCache[user].balance = Math.max(0, (accountsCache[user].balance || 0) - am); await saveAcc(); render(); } }
           else if (action === 'reset') { if (confirm('Сбросить до 1000₽?')) { accountsCache[user].balance = 1000; await saveAcc(); render(); } }
           else if (action === 'ban') {
             if (ip && ip !== 'неизвестно') {
-              if (confirm(`Забанить ВСЕ аккаунты с IP ${ip}?`)) { for (const [nickname, data] of Object.entries(accountsCache)) { if (data.ip === ip) data.banned = true; } await saveAcc(); render(); alert(`Все аккаунты с IP ${ip} забанены!`); }
-            } else { if (confirm(`Забанить аккаунт ${user}?`)) { accountsCache[user].banned = true; await saveAcc(); render(); } }
+              if (confirm('Забанить ВСЕ аккаунты с IP ' + ip + '?')) {
+                for (var nickname in accountsCache) { if (accountsCache[nickname].ip === ip) accountsCache[nickname].banned = true; }
+                await saveAcc(); render(); alert('Все аккаунты с IP ' + ip + ' забанены!');
+              }
+            } else { if (confirm('Забанить аккаунт ' + user + '?')) { accountsCache[user].banned = true; await saveAcc(); render(); } }
           }
-          else if (action === 'unban') { if (confirm(`Разбанить аккаунт ${user}?`)) { accountsCache[user].banned = false; await saveAcc(); render(); } }
-          else if (action === 'delete') { if (confirm(`Удалить аккаунт ${user} навсегда?`)) { delete accountsCache[user]; await saveAcc(); render(); } }
+          else if (action === 'unban') { if (confirm('Разбанить аккаунт ' + user + '?')) { accountsCache[user].banned = false; await saveAcc(); render(); } }
+          else if (action === 'delete') { if (confirm('Удалить аккаунт ' + user + ' навсегда?')) { delete accountsCache[user]; await saveAcc(); render(); } }
         };
       });
     }
 
-    document.getElementById('refresh-btn').onclick = () => render();
+    document.getElementById('refresh-btn').onclick = function() { render(); };
     render();
   </script>
 </body>
