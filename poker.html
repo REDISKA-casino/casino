@@ -4,6 +4,8 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <title>Покер</title>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
   <style>
     :root { --bg: #121212; --panel: #1e1e1e; --text: #e0e0e0; --accent: #ff4757; --success: #2ed573; --gold: #ffd700; }
     body { background: var(--bg); color: var(--text); font-family: system-ui, sans-serif; margin: 0; display: flex; flex-direction: column; align-items: center; min-height: 100vh; }
@@ -29,31 +31,26 @@
   </style>
 </head>
 <body>
-<audio id="bg-music" loop style="display:none;"></audio>
-<script>
-(function(){
-  var u=localStorage.getItem('currentUser');
-  if(!u)return;
-  var d=localStorage.getItem('set_music_'+u);
-  var v=parseInt(localStorage.getItem('set_volume_'+u))||50;
-  var on=localStorage.getItem('set_music_on_'+u)!=='false';
-  var a=document.getElementById('bg-music');
-  var started=false;
-  function startMusic(){
-    if(started)return;
-    if(d&&on){a.src=d;a.volume=v/100;var p=a.play();if(p!==undefined){p.catch(function(){});}}
-    started=true;
-  }
-  document.addEventListener('click',startMusic,{once:true});
-  document.addEventListener('touchstart',startMusic,{once:true});
-  if(d&&on){a.src=d;a.volume=v/100;var p=a.play();if(p!==undefined){p.catch(function(){});}}
-  window.addEventListener('storage',function(e){
-    if(e.key==='set_volume_'+u)a.volume=(parseInt(e.newValue)||50)/100;
-    if(e.key==='set_music_'+u){a.src=e.newValue||'';if(e.newValue)a.play().catch(function(){});}
-    if(e.key==='set_music_on_'+u){if(e.newValue==='false')a.pause();else a.play().catch(function(){});}
-  });
-})();
-</script>
+  <audio id="bg-music" loop style="display:none;"></audio>
+  <script>
+  (function(){
+    var u=localStorage.getItem('currentUser');
+    if(!u)return;
+    var d=localStorage.getItem('set_music_'+u);
+    var v=parseInt(localStorage.getItem('set_volume_'+u))||50;
+    var on=localStorage.getItem('set_music_on_'+u)!=='false';
+    var a=document.getElementById('bg-music');
+    var started=false;
+    function startMusic(){
+      if(started)return;
+      if(d&&on&&d!=='none'){a.src=d;a.volume=v/100;a.play().catch(function(){});}
+      started=true;
+    }
+    document.addEventListener('click',startMusic,{once:true});
+    document.addEventListener('touchstart',startMusic,{once:true});
+    if(d&&on&&d!=='none'){a.src=d;a.volume=v/100;a.play().catch(function(){});}
+  })();
+  </script>
   <div class="header"><a href="index.html" class="back-btn" onclick="localStorage.setItem('coming_back','true')">← Назад</a></div>
   <div class="game-container">
     <h1>🃏 Покер</h1>
@@ -70,63 +67,71 @@
     <div class="history-box" id="history-box">История игр</div>
   </div>
   <script>
-    const BIN_ID = '6a516a15f5f4af5e297ecf15';
-    const MASTER_KEY = '$2a$10$ESWoAwK.zv8By8WZCjzhu.zw1AIOFcUeILyVjiDrHmv62jIxygKoO';
-    const API_URL = `https://api.jsonbin.io/v3/b/${BIN_ID}`;
-    const currentUser = localStorage.getItem('currentUser');
+    var firebaseConfig = {
+      apiKey: "AIzaSyBKfDdHsbTzZjfc4hHX3SJV563UbVBvqPQ",
+      authDomain: "lucky-finger-b8b05.firebaseapp.com",
+      databaseURL: "https://lucky-finger-b8b05-default-rtdb.firebaseio.com",
+      projectId: "lucky-finger-b8b05",
+      storageBucket: "lucky-finger-b8b05.firebasestorage.app",
+      messagingSenderId: "843623003093",
+      appId: "1:843623003093:web:05acfb8aa828e6cc2e835c"
+    };
+    firebase.initializeApp(firebaseConfig);
+    var database = firebase.database();
+    var accountsCache = {};
+    var currentUser = localStorage.getItem('currentUser');
     if (!currentUser) window.location.href = 'index.html';
-    let balance = parseInt(localStorage.getItem('bal_' + currentUser)) || 1000;
-    let deck = [], hand = [], held = [false,false,false,false,false], gamePhase = 'bet', bet = 0, accountsCache = {};
-    const suits = ['♠','♥','♦','♣'];
-    const values = ['2','3','4','5','6','7','8','9','10','J','Q','K','A'];
+    var balance = parseInt(localStorage.getItem('bal_' + currentUser)) || 1000;
+    var deck = [], hand = [], held = [false,false,false,false,false], gamePhase = 'bet', bet = 0;
+    var suits = ['♠','♥','♦','♣'];
+    var values = ['2','3','4','5','6','7','8','9','10','J','Q','K','A'];
 
-    async function loadAcc() { try { const r = await fetch(API_URL + '/latest', { headers: { 'X-Master-Key': MASTER_KEY } }); const d = await r.json(); accountsCache = d.record || {}; } catch(e) {} }
-    async function saveAcc() { try { await fetch(API_URL, { method: 'PUT', headers: { 'Content-Type': 'application/json', 'X-Master-Key': MASTER_KEY }, body: JSON.stringify(accountsCache) }); } catch(e) {} }
-    function saveBal() { localStorage.setItem('bal_' + currentUser, balance); document.getElementById('balance-display').textContent = `${balance.toLocaleString()} ₽`; syncNow(); }
+    async function loadAcc() { try { var snapshot = await database.ref('accounts').get(); accountsCache = snapshot.val() || {}; } catch(e) {} }
+    async function saveAcc() { try { await database.ref('accounts').set(accountsCache); } catch(e) {} }
+    function saveBal() { localStorage.setItem('bal_' + currentUser, balance); document.getElementById('balance-display').textContent = balance.toLocaleString() + ' ₽'; syncNow(); }
     async function syncNow() { if (accountsCache[currentUser]) { accountsCache[currentUser].balance = balance; await saveAcc(); } }
-    function addHistory(text) { const box = document.getElementById('history-box'); if(!box) return; const div = document.createElement('div'); div.textContent = text; div.style.padding = '4px 0'; div.style.borderBottom = '1px solid #2a2a2a'; box.insertBefore(div, box.firstChild); while(box.children.length > 20) { box.removeChild(box.lastChild); } }
-    document.getElementById('balance-display').textContent = `${balance.toLocaleString()} ₽`;
+    function addHistory(text) { var box = document.getElementById('history-box'); if(!box) return; var div = document.createElement('div'); div.textContent = text; div.style.padding = '4px 0'; div.style.borderBottom = '1px solid #2a2a2a'; box.insertBefore(div, box.firstChild); while(box.children.length > 20) { box.removeChild(box.lastChild); } }
+    document.getElementById('balance-display').textContent = balance.toLocaleString() + ' ₽';
 
-    function shuffle() { deck = []; for(let s of suits) for(let v of values) deck.push({v,s}); for(let i=deck.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [deck[i],deck[j]]=[deck[j],deck[i]]; } }
-    function deal() { shuffle(); hand = deck.slice(0,5); held = [false,false,false,false,false]; renderCards(); }
+    function shuffle() { deck = []; for(var s = 0; s < suits.length; s++) for(var v = 0; v < values.length; v++) deck.push({v: values[v], s: suits[s]}); for(var i = deck.length - 1; i > 0; i--) { var j = Math.floor(Math.random() * (i + 1)); var tmp = deck[i]; deck[i] = deck[j]; deck[j] = tmp; } }
+    function deal() { shuffle(); hand = deck.slice(0, 5); held = [false,false,false,false,false]; renderCards(); }
     function renderCards() {
-      const area = document.getElementById('cards-area');
+      var area = document.getElementById('cards-area');
       area.innerHTML = '';
-      hand.forEach((c,i) => {
-        const div = document.createElement('div');
+      hand.forEach(function(c, i) {
+        var div = document.createElement('div');
         div.className = 'card ' + (c.s === '♥' || c.s === '♦' ? 'red' : '') + (held[i] ? ' held' : '');
         div.innerHTML = c.v + '<span class="card-suit">' + c.s + '</span>';
-        div.onclick = () => { if(gamePhase==='hold'){ held[i]=!held[i]; renderCards(); } };
+        div.onclick = function() { if(gamePhase === 'hold') { held[i] = !held[i]; renderCards(); } };
         area.appendChild(div);
       });
     }
-
     function getCombo() {
-      const vals = hand.map(c => values.indexOf(c.v));
-      const suitsArr = hand.map(c => c.s);
-      vals.sort((a,b) => a-b);
-      const isFlush = suitsArr.every(s => s === suitsArr[0]);
-      const isStraight = vals[4]-vals[0]===4 && new Set(vals).size===5;
-      const isRoyal = isStraight && isFlush && vals[0]===8;
-      const counts = {}; vals.forEach(v => counts[v]=(counts[v]||0)+1);
-      const countVals = Object.values(counts).sort((a,b)=>b-a);
-      
-      if(isRoyal) return {name:'Роял Флеш',mult:250};
-      if(isStraight&&isFlush) return {name:'Стрит Флеш',mult:50};
-      if(countVals[0]===4) return {name:'Каре',mult:25};
-      if(countVals[0]===3&&countVals[1]===2) return {name:'Фулл Хаус',mult:9};
-      if(isFlush) return {name:'Флеш',mult:6};
-      if(isStraight) return {name:'Стрит',mult:4};
-      if(countVals[0]===3) return {name:'Тройка',mult:3};
-      if(countVals[0]===2&&countVals[1]===2) return {name:'Две пары',mult:2};
-      if(countVals[0]===2){ const pairVal=parseInt(Object.keys(counts).find(k=>counts[k]===2)); if(pairVal>=8) return {name:'Пара (JJ+)',mult:1}; }
-      return {name:'Нет комбинации',mult:0};
+      var vals = hand.map(function(c) { return values.indexOf(c.v); });
+      var suitsArr = hand.map(function(c) { return c.s; });
+      vals.sort(function(a, b) { return a - b; });
+      var isFlush = suitsArr.every(function(s) { return s === suitsArr[0]; });
+      var isStraight = vals[4] - vals[0] === 4 && new Set(vals).size === 5;
+      var isRoyal = isStraight && isFlush && vals[0] === 8;
+      var counts = {};
+      vals.forEach(function(v) { counts[v] = (counts[v] || 0) + 1; });
+      var countVals = Object.values(counts).sort(function(a, b) { return b - a; });
+      if(isRoyal) return {name:'Роял Флеш', mult:250};
+      if(isStraight && isFlush) return {name:'Стрит Флеш', mult:50};
+      if(countVals[0] === 4) return {name:'Каре', mult:25};
+      if(countVals[0] === 3 && countVals[1] === 2) return {name:'Фулл Хаус', mult:9};
+      if(isFlush) return {name:'Флеш', mult:6};
+      if(isStraight) return {name:'Стрит', mult:4};
+      if(countVals[0] === 3) return {name:'Тройка', mult:3};
+      if(countVals[0] === 2 && countVals[1] === 2) return {name:'Две пары', mult:2};
+      if(countVals[0] === 2) { var pairVal = parseInt(Object.keys(counts).find(function(k) { return counts[k] === 2; })); if(pairVal >= 8) return {name:'Пара (JJ+)', mult:1}; }
+      return {name:'Нет комбинации', mult:0};
     }
 
-    document.getElementById('btn-deal').onclick = () => {
-      if(gamePhase!=='bet') return;
+    document.getElementById('btn-deal').onclick = function() {
+      if(gamePhase !== 'bet') return;
       bet = +document.getElementById('bet-input').value;
-      if(!bet||bet<=0||bet>balance){alert('Некорректная ставка');return;}
+      if(!bet || bet <= 0 || bet > balance) { alert('Некорректная ставка'); return; }
       balance -= bet; saveBal();
       deal(); gamePhase = 'hold';
       document.getElementById('btn-deal').style.display = 'none';
@@ -135,24 +140,24 @@
       document.getElementById('combo-text').textContent = '';
     };
 
-    document.getElementById('btn-draw').onclick = () => {
-      if(gamePhase!=='hold') return;
-      for(let i=0;i<5;i++){ if(!held[i]){ hand[i]=deck[5+i]; } }
+    document.getElementById('btn-draw').onclick = function() {
+      if(gamePhase !== 'hold') return;
+      for(var i = 0; i < 5; i++) { if(!held[i]) hand[i] = deck[5 + i]; }
       gamePhase = 'bet';
       document.getElementById('btn-deal').style.display = 'block';
       document.getElementById('btn-draw').style.display = 'none';
       held = [false,false,false,false,false];
       renderCards();
-      const combo = getCombo();
-      const win = Math.floor(bet * combo.mult);
+      var combo = getCombo();
+      var win = Math.floor(bet * combo.mult);
       balance += win; saveBal();
       document.getElementById('combo-text').textContent = combo.name;
-      document.getElementById('status-text').textContent = combo.mult>0 ? `Выигрыш: +${win}₽ (${combo.name})` : `Проигрыш: -${bet}₽`;
-      document.getElementById('status-text').style.color = combo.mult>0?'#2ed573':'#ff4757';
-      addHistory(combo.mult>0?`${combo.name}: +${win}₽`:`Нет комбинации: -${bet}₽`);
+      document.getElementById('status-text').textContent = combo.mult > 0 ? 'Выигрыш: +' + win + '₽ (' + combo.name + ')' : 'Проигрыш: -' + bet + '₽';
+      document.getElementById('status-text').style.color = combo.mult > 0 ? '#2ed573' : '#ff4757';
+      addHistory(combo.mult > 0 ? combo.name + ': +' + win + '₽' : 'Нет комбинации: -' + bet + '₽');
     };
 
-    (async () => { await loadAcc(); })();
+    (async function() { await loadAcc(); })();
   </script>
 </body>
 </html>
