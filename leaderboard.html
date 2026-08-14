@@ -4,6 +4,8 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <title>Лидерборд</title>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
   <style>
     :root { --bg: #121212; --panel: #1e1e1e; --text: #e0e0e0; --accent: #ff4757; --gold: #ffd700; --success: #2ed573; }
     body { background: var(--bg); color: var(--text); font-family: system-ui, sans-serif; margin: 0; display: flex; flex-direction: column; align-items: center; min-height: 100vh; padding: 16px; box-sizing: border-box; }
@@ -21,53 +23,82 @@
   </style>
 </head>
 <body>
+  <audio id="bg-music" loop style="display:none;"></audio>
+  <script>
+  (function(){
+    var u=localStorage.getItem('currentUser');
+    if(!u)return;
+    var d=localStorage.getItem('set_music_'+u);
+    var v=parseInt(localStorage.getItem('set_volume_'+u))||50;
+    var on=localStorage.getItem('set_music_on_'+u)!=='false';
+    var a=document.getElementById('bg-music');
+    var started=false;
+    function startMusic(){
+      if(started)return;
+      if(d&&on&&d!=='none'){a.src=d;a.volume=v/100;a.play().catch(function(){});}
+      started=true;
+    }
+    document.addEventListener('click',startMusic,{once:true});
+    document.addEventListener('touchstart',startMusic,{once:true});
+    if(d&&on&&d!=='none'){a.src=d;a.volume=v/100;a.play().catch(function(){});}
+  })();
+  </script>
   <div class="container">
     <h1>🏆 Лидерборд</h1>
     <div id="leaderboard-container"><div class="loading">Загрузка...</div></div>
     <a href="index.html" class="back-btn">← На главную</a>
   </div>
   <script>
-    const BIN_ID = '6a516a15f5f4af5e297ecf15';
-    const MASTER_KEY = '$2a$10$ESWoAwK.zv8By8WZCjzhu.zw1AIOFcUeILyVjiDrHmv62jIxygKoO';
-    const API_URL = `https://api.jsonbin.io/v3/b/${BIN_ID}`;
-    const ADMIN_NICKNAME = 'I-am-admin';
-    const currentUser = localStorage.getItem('currentUser');
+    var firebaseConfig = {
+      apiKey: "AIzaSyBKfDdHsbTzZjfc4hHX3SJV563UbVBvqPQ",
+      authDomain: "lucky-finger-b8b05.firebaseapp.com",
+      databaseURL: "https://lucky-finger-b8b05-default-rtdb.firebaseio.com",
+      projectId: "lucky-finger-b8b05",
+      storageBucket: "lucky-finger-b8b05.firebasestorage.app",
+      messagingSenderId: "843623003093",
+      appId: "1:843623003093:web:05acfb8aa828e6cc2e835c"
+    };
+    firebase.initializeApp(firebaseConfig);
+    var database = firebase.database();
+    var currentUser = localStorage.getItem('currentUser');
+    var ADMIN_NICKNAME = 'I-am-admin';
 
     async function loadLeaderboard() {
       try {
-        const r = await fetch(API_URL + '/latest', { headers: { 'X-Master-Key': MASTER_KEY } });
-        const d = await r.json();
-        const accounts = d.record || {};
+        var snapshot = await database.ref('accounts').get();
+        var accounts = snapshot.val() || {};
         
-        const players = Object.entries(accounts)
-          .filter(([n]) => n !== ADMIN_NICKNAME)
-          .map(([n, data]) => ({ name: n, balance: data.balance || 0 }))
-          .sort((a, b) => b.balance - a.balance);
+        var players = [];
+        for (var nickname in accounts) {
+          if (nickname !== ADMIN_NICKNAME) {
+            players.push({ name: nickname, balance: accounts[nickname].balance || 0 });
+          }
+        }
         
-        const container = document.getElementById('leaderboard-container');
+        players.sort(function(a, b) { return b.balance - a.balance; });
+        
+        var container = document.getElementById('leaderboard-container');
         
         if (players.length === 0) {
           container.innerHTML = '<div class="loading">Нет игроков</div>';
           return;
         }
         
-        container.innerHTML = players.map((p, i) => {
-          const rank = i + 1;
-          let rankClass = '';
+        container.innerHTML = players.map(function(p, i) {
+          var rank = i + 1;
+          var rankClass = '';
           if (rank === 1) rankClass = 'gold';
           else if (rank === 2) rankClass = 'silver';
           else if (rank === 3) rankClass = 'bronze';
           
-          const isYou = currentUser && p.name === currentUser;
-          const nameClass = isYou ? 'you' : '';
+          var isYou = currentUser && p.name === currentUser;
+          var nameClass = isYou ? 'you' : '';
           
-          return `
-            <div class="player-row">
-              <div class="player-rank ${rankClass}">${rank === 1 ? '🥇' : rank === 2 ? '🥈' : rank === 3 ? '🥉' : '#' + rank}</div>
-              <div class="player-name ${nameClass}">${p.name}${isYou ? ' (Вы)' : ''}</div>
-              <div class="player-balance">${p.balance.toLocaleString()} ₽</div>
-            </div>
-          `;
+          return '<div class="player-row">' +
+            '<div class="player-rank ' + rankClass + '">' + (rank === 1 ? '🥇' : rank === 2 ? '🥈' : rank === 3 ? '🥉' : '#' + rank) + '</div>' +
+            '<div class="player-name ' + nameClass + '">' + p.name + (isYou ? ' (Вы)' : '') + '</div>' +
+            '<div class="player-balance">' + p.balance.toLocaleString() + ' ₽</div>' +
+            '</div>';
         }).join('');
       } catch(e) {
         document.getElementById('leaderboard-container').innerHTML = '<div class="loading">Ошибка загрузки</div>';
