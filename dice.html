@@ -4,6 +4,8 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <title>Кости</title>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
   <style>
     :root { --bg: #121212; --panel: #1e1e1e; --text: #e0e0e0; --accent: #ff4757; --success: #2ed573; --gold: #ffd700; }
     body { background: var(--bg); color: var(--text); font-family: system-ui, sans-serif; margin: 0; display: flex; flex-direction: column; align-items: center; min-height: 100vh; }
@@ -17,9 +19,12 @@
     .controls-box { background: var(--panel); padding: 16px; border-radius: 12px; text-align: center; }
     .balance-box { display: flex; justify-content: space-between; padding: 8px 0; margin-bottom: 12px; font-size: 18px; }
     input[type="number"] { width: 100%; padding: 12px; border: 1px solid #333; border-radius: 6px; background: #000; color: #fff; text-align: center; font-size: 18px; box-sizing: border-box; margin-bottom: 12px; }
-    .bet-buttons { display: flex; flex-direction: column; gap: 8px; margin-bottom: 12px; } .bet-row { display: grid; gap: 8px; } .bet-row.top { grid-template-columns: 1fr 1fr 1fr; } .bet-row.bottom { grid-template-columns: 1fr 1fr; }
-    .bet-btn { padding: 12px; border: none; border-radius: 8px; font-size: 14px; font-weight: bold; cursor: pointer; color: white; } .bet-btn.selected { border: 2px solid #fff; }
-    .btn-roll { width: 100%; padding: 14px; border: none; border-radius: 8px; font-size: 16px; cursor: pointer; font-weight: bold; color: white; background: var(--accent); } .btn-roll:disabled { opacity: 0.5; }
+    .bet-buttons { display: flex; flex-direction: column; gap: 8px; margin-bottom: 12px; }
+    .bet-row { display: grid; gap: 8px; } .bet-row.top { grid-template-columns: 1fr 1fr 1fr; } .bet-row.bottom { grid-template-columns: 1fr 1fr; }
+    .bet-btn { padding: 12px; border: none; border-radius: 8px; font-size: 14px; font-weight: bold; cursor: pointer; color: white; }
+    .bet-btn.selected { border: 2px solid #fff; }
+    .btn-roll { width: 100%; padding: 14px; border: none; border-radius: 8px; font-size: 16px; cursor: pointer; font-weight: bold; color: white; background: var(--accent); }
+    .btn-roll:disabled { opacity: 0.5; }
     .status-text { text-align: center; font-size: 20px; font-weight: bold; margin-bottom: 12px; min-height: 28px; }
     .payout-info { font-size: 13px; color: #aaa; margin-top: 8px; }
     .history-box { background: var(--panel); padding: 12px; border-radius: 8px; font-size: 13px; max-height: 120px; overflow-y: auto; color: #aaa; margin-top: 12px; }
@@ -27,32 +32,28 @@
 </head>
 <body>
   <audio id="bg-music" loop style="display:none;"></audio>
-<script>
-(function(){
-  var u=localStorage.getItem('currentUser');
-  if(!u)return;
-  var d=localStorage.getItem('set_music_'+u);
-  var v=parseInt(localStorage.getItem('set_volume_'+u))||50;
-  var on=localStorage.getItem('set_music_on_'+u)!=='false';
-  var a=document.getElementById('bg-music');
-  var started=false;
-  function startMusic(){
-    if(started)return;
-    if(d&&on){a.src=d;a.volume=v/100;var p=a.play();if(p!==undefined){p.catch(function(){});}}
-    started=true;
-  }
-  document.addEventListener('click',startMusic,{once:true});
-  document.addEventListener('touchstart',startMusic,{once:true});
-  if(d&&on){a.src=d;a.volume=v/100;var p=a.play();if(p!==undefined){p.catch(function(){});}}
-  window.addEventListener('storage',function(e){
-    if(e.key==='set_volume_'+u)a.volume=(parseInt(e.newValue)||50)/100;
-    if(e.key==='set_music_'+u){a.src=e.newValue||'';if(e.newValue)a.play().catch(function(){});}
-    if(e.key==='set_music_on_'+u){if(e.newValue==='false')a.pause();else a.play().catch(function(){});}
-  });
-})();
- </script>
+  <script>
+  (function(){
+    var u=localStorage.getItem('currentUser');
+    if(!u)return;
+    var d=localStorage.getItem('set_music_'+u);
+    var v=parseInt(localStorage.getItem('set_volume_'+u))||50;
+    var on=localStorage.getItem('set_music_on_'+u)!=='false';
+    var a=document.getElementById('bg-music');
+    var started=false;
+    function startMusic(){
+      if(started)return;
+      if(d&&on&&d!=='none'){a.src=d;a.volume=v/100;a.play().catch(function(){});}
+      started=true;
+    }
+    document.addEventListener('click',startMusic,{once:true});
+    document.addEventListener('touchstart',startMusic,{once:true});
+    if(d&&on&&d!=='none'){a.src=d;a.volume=v/100;a.play().catch(function(){});}
+  })();
+  </script>
   <div class="header"><a href="index.html" class="back-btn" onclick="localStorage.setItem('coming_back','true')">← Назад</a></div>
-  <div class="game-container"><h1>🎲 Кости</h1>
+  <div class="game-container">
+    <h1>🎲 Кости</h1>
     <div class="status-text" id="status-text">Выберите ставку</div>
     <div class="dice-area"><div class="dice" id="dice1">⚀</div><div class="dice" id="dice2">⚀</div></div>
     <div class="controls-box">
@@ -75,43 +76,74 @@
     <div class="history-box" id="history-box">История бросков</div>
   </div>
   <script>
-    const BIN_ID = '6a516a15f5f4af5e297ecf15';
-    const MASTER_KEY = '$2a$10$ESWoAwK.zv8By8WZCjzhu.zw1AIOFcUeILyVjiDrHmv62jIxygKoO';
-    const API_URL = `https://api.jsonbin.io/v3/b/${BIN_ID}`;
-    const currentUser = localStorage.getItem('currentUser');
+    var firebaseConfig = {
+      apiKey: "AIzaSyBKfDdHsbTzZjfc4hHX3SJV563UbVBvqPQ",
+      authDomain: "lucky-finger-b8b05.firebaseapp.com",
+      databaseURL: "https://lucky-finger-b8b05-default-rtdb.firebaseio.com",
+      projectId: "lucky-finger-b8b05",
+      storageBucket: "lucky-finger-b8b05.firebasestorage.app",
+      messagingSenderId: "843623003093",
+      appId: "1:843623003093:web:05acfb8aa828e6cc2e835c"
+    };
+    firebase.initializeApp(firebaseConfig);
+    var database = firebase.database();
+    var accountsCache = {};
+    var currentUser = localStorage.getItem('currentUser');
     if (!currentUser) window.location.href = 'index.html';
-    let balance = parseInt(localStorage.getItem('bal_' + currentUser)) || 1000;
-    let selectedBet = null, isRolling = false, accountsCache = {};
-    const diceFaces = ['⚀','⚁','⚂','⚃','⚄','⚅'];
+    var balance = parseInt(localStorage.getItem('bal_' + currentUser)) || 1000;
+    var selectedBet = null, isRolling = false;
+    var diceFaces = ['⚀','⚁','⚂','⚃','⚄','⚅'];
 
-    async function loadAcc() { try { const r = await fetch(API_URL + '/latest', { headers: { 'X-Master-Key': MASTER_KEY } }); const d = await r.json(); accountsCache = d.record || {}; } catch(e) {} }
-    async function saveAcc() { try { await fetch(API_URL, { method: 'PUT', headers: { 'Content-Type': 'application/json', 'X-Master-Key': MASTER_KEY }, body: JSON.stringify(accountsCache) }); } catch(e) {} }
-    function saveBal() { localStorage.setItem('bal_' + currentUser, balance); document.getElementById('balance-display').textContent = `${balance.toLocaleString()} ₽`; syncNow(); }
+    async function loadAcc() { try { var snapshot = await database.ref('accounts').get(); accountsCache = snapshot.val() || {}; } catch(e) {} }
+    async function saveAcc() { try { await database.ref('accounts').set(accountsCache); } catch(e) {} }
+    function saveBal() { localStorage.setItem('bal_' + currentUser, balance); document.getElementById('balance-display').textContent = balance.toLocaleString() + ' ₽'; syncNow(); }
     async function syncNow() { if (accountsCache[currentUser]) { accountsCache[currentUser].balance = balance; await saveAcc(); } }
-    document.getElementById('balance-display').textContent = `${balance.toLocaleString()} ₽`;
+    function addHistory(text) { var box = document.getElementById('history-box'); if(!box) return; var div = document.createElement('div'); div.textContent = text; div.style.padding = '4px 0'; div.style.borderBottom = '1px solid #2a2a2a'; box.insertBefore(div, box.firstChild); while(box.children.length > 20) { box.removeChild(box.lastChild); } }
+    document.getElementById('balance-display').textContent = balance.toLocaleString() + ' ₽';
 
-    function addHistory(text) { const box = document.getElementById('history-box'); if(!box) return; const div = document.createElement('div'); div.textContent = text; div.style.padding = '4px 0'; div.style.borderBottom = '1px solid #2a2a2a'; box.insertBefore(div, box.firstChild); while(box.children.length > 20) { box.removeChild(box.lastChild); } }
+    document.querySelectorAll('.bet-btn').forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        document.querySelectorAll('.bet-btn').forEach(function(b) { b.classList.remove('selected'); });
+        this.classList.add('selected');
+        selectedBet = this.dataset.bet;
+      });
+    });
 
-    document.querySelectorAll('.bet-btn').forEach(b=>b.addEventListener('click',()=>{document.querySelectorAll('.bet-btn').forEach(x=>x.classList.remove('selected'));b.classList.add('selected');selectedBet=b.dataset.bet;}));
-
-    document.getElementById('btn-roll').onclick=()=>{
-      if(isRolling||!selectedBet)return;
-      const bet=+document.getElementById('bet-input').value;
-      if(!bet||bet<=0||bet>balance){alert('Некорректная ставка');return;}
-      isRolling=true; document.getElementById('btn-roll').disabled=true; balance-=bet; saveBal();
-      const d1=document.getElementById('dice1'),d2=document.getElementById('dice2'); d1.classList.add('rolling'); d2.classList.add('rolling');
-      let c=0; const iv=setInterval(()=>{d1.textContent=diceFaces[Math.floor(Math.random()*6)];d2.textContent=diceFaces[Math.floor(Math.random()*6)];c++;if(c>=15){clearInterval(iv);d1.classList.remove('rolling');d2.classList.remove('rolling');
-        const v1=Math.floor(Math.random()*6)+1,v2=Math.floor(Math.random()*6)+1,sum=v1+v2; d1.textContent=diceFaces[v1-1];d2.textContent=diceFaces[v2-1];
-        let w=0,won=false;
-        switch(selectedBet){case'7':if(sum===7){w=bet*4;won=true;}break;case'11':if(sum===11){w=bet*5;won=true;}break;case'2-12':if(sum===2||sum===12){w=bet*10;won=true;}break;case'even':if(sum%2===0){w=Math.floor(bet*1.5);won=true;}break;case'odd':if(sum%2===1){w=Math.floor(bet*1.5);won=true;}break;}
-        balance+=w; saveBal(); document.getElementById('status-text').textContent=won?`${v1}+${v2}=${sum}! +${w}₽`:`${v1}+${v2}=${sum}. -${bet}₽`; document.getElementById('status-text').style.color=won?'#2ed573':'#ff4757';
-        addHistory(`🎲 ${v1}+${v2}=${sum}: ${won?'+'+w+'₽':'-'+bet+'₽'}`);
-        isRolling=false; document.getElementById('btn-roll').disabled=false;
-      }},80);
+    document.getElementById('btn-roll').onclick = function() {
+      if(isRolling || !selectedBet) return;
+      var bet = +document.getElementById('bet-input').value;
+      if(!bet || bet <= 0 || bet > balance) { alert('Некорректная ставка'); return; }
+      isRolling = true; document.getElementById('btn-roll').disabled = true; balance -= bet; saveBal();
+      var d1 = document.getElementById('dice1'), d2 = document.getElementById('dice2');
+      d1.classList.add('rolling'); d2.classList.add('rolling');
+      var c = 0;
+      var iv = setInterval(function() {
+        d1.textContent = diceFaces[Math.floor(Math.random() * 6)];
+        d2.textContent = diceFaces[Math.floor(Math.random() * 6)];
+        c++;
+        if(c >= 15) {
+          clearInterval(iv);
+          d1.classList.remove('rolling'); d2.classList.remove('rolling');
+          var v1 = Math.floor(Math.random() * 6) + 1, v2 = Math.floor(Math.random() * 6) + 1, sum = v1 + v2;
+          d1.textContent = diceFaces[v1 - 1]; d2.textContent = diceFaces[v2 - 1];
+          var w = 0, won = false;
+          switch(selectedBet) {
+            case '7': if(sum === 7) { w = bet * 4; won = true; } break;
+            case '11': if(sum === 11) { w = bet * 5; won = true; } break;
+            case '2-12': if(sum === 2 || sum === 12) { w = bet * 10; won = true; } break;
+            case 'even': if(sum % 2 === 0) { w = Math.floor(bet * 1.5); won = true; } break;
+            case 'odd': if(sum % 2 === 1) { w = Math.floor(bet * 1.5); won = true; } break;
+          }
+          balance += w; saveBal();
+          document.getElementById('status-text').textContent = won ? v1 + '+' + v2 + '=' + sum + '! +' + w + '₽' : v1 + '+' + v2 + '=' + sum + '. -' + bet + '₽';
+          document.getElementById('status-text').style.color = won ? '#2ed573' : '#ff4757';
+          addHistory('🎲 ' + v1 + '+' + v2 + '=' + sum + ': ' + (won ? '+' + w + '₽' : '-' + bet + '₽'));
+          isRolling = false; document.getElementById('btn-roll').disabled = false;
+        }
+      }, 80);
     };
 
-    window.addEventListener('beforeunload', async () => { if (accountsCache[currentUser]) { accountsCache[currentUser].balance = balance; await saveAcc(); } });
-    (async () => { await loadAcc(); })();
+    (async function() { await loadAcc(); })();
   </script>
 </body>
 </html>
