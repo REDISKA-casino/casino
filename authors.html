@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Авторы</title>
+  <style>
+    :root { --bg: #121212; --panel: #1e1e1e; --text: #e0e0e0; --accent: #ff4757; --gold: #ffd700; --success: #2ed573; }
+    body { background: var(--bg); color: var(--text); font-family: system-ui, sans-serif; margin: 0; display: flex; flex-direction: column; align-items: center; min-height: 100vh; }
+    .container { width: 100%; max-width: 500px; padding: 16px; }
+    h1 { margin: 16px 0; font-weight: 400; text-align: center; font-size: 28px; }
+    .back-btn { display: inline-block; background: #555; color: white; border: none; padding: 10px 16px; border-radius: 8px; font-size: 14px; cursor: pointer; text-decoration: none; margin-bottom: 16px; }
+    .authors-card { background: var(--panel); padding: 20px; border-radius: 16px; border: 2px solid #333; }
+    .author-section { margin-bottom: 20px; }
+    .author-title { font-size: 16px; font-weight: bold; margin-bottom: 8px; }
+    .author-name { font-size: 18px; color: #ff6b6b; font-weight: bold; }
+    .music-authors { color: #aaa; font-size: 16px; }
+    .thanks-section { margin-top: 20px; }
+    .thanks-link { display: flex; align-items: center; gap: 8px; padding: 12px; border-radius: 8px; text-decoration: none; color: white; font-weight: 600; margin-bottom: 8px; transition: all 0.3s ease; }
+    .thanks-link:hover { transform: translateX(5px); opacity: 0.8; }
+    .github-link { background: #2d3436; }
+    .firebase-link { background: #ffa502; color: #000; }
+    .author-label { color: #ff6b6b; font-weight: bold; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>👥 Авторы</h1>
+    <a href="index.html" class="back-btn">← Назад</a>
+    <div class="authors-card">
+      <div class="author-section">
+        <div class="author-title"><span class="author-label">Автор:</span></div>
+        <div class="author-name">REDISKA</div>
+      </div>
+      <div class="author-section">
+        <div class="author-title"><span class="author-label">Музыка:</span></div>
+        <div class="music-authors">Авторы музыки (забыл)</div>
+      </div>
+      <div class="author-section">
+        <div class="author-title"><span class="author-label">Благодарность:</span></div>
+      </div>
+      <div class="thanks-section">
+        <a href="https://github.com" target="_blank" class="thanks-link github-link">GitHub</a>
+        <a href="https://firebase.google.com" target="_blank" class="thanks-link firebase-link">Firebase</a>
+      </div>
+    </div>
+  </div>
+</body>
+</html>
