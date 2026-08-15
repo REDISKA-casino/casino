@@ -23,11 +23,11 @@
     input:checked + .toggle-slider:before { transform: translateX(22px); }
     .music-list { display: flex; flex-direction: column; gap: 8px; margin-top: 8px; }
     .music-item { display: flex; align-items: center; gap: 10px; padding: 10px; background: #1a1a1a; border-radius: 8px; border: 1px solid #333; }
-    .music-icon { font-size: 24px; }
+    .music-icon { font-size: 24px; width: 30px; text-align: center; }
     .music-info { flex: 1; }
     .music-name { font-size: 14px; font-weight: 600; }
     .music-price { font-size: 11px; color: #aaa; }
-    .music-btn { padding: 8px 14px; border: none; border-radius: 6px; font-size: 12px; cursor: pointer; font-weight: bold; color: white; }
+    .music-btn { padding: 8px 14px; border: none; border-radius: 6px; font-size: 12px; cursor: pointer; font-weight: bold; color: white; white-space: nowrap; }
     .btn-buy { background: var(--gold); color: #000; }
     .btn-select { background: var(--success); }
     .btn-selected { background: #555; }
@@ -137,12 +137,13 @@
     if (!currentUser) window.location.href = 'index.html';
     
     var musicList = [
+      { id: 'none', name: 'Ничего', icon: '🔇', url: 'none', price: 0 },
       { id: '1', name: 'Трек 1', icon: '🎵', url: 'https://rediska-casino.github.io/casino/music/1.mp3', price: 2000 },
-      { id: '2', name: 'Трек 2', icon: '🎶', url: 'https://rediska-casino.github.io/casino/music/2.mp3', price: 2000 },
-      { id: '3', name: 'Трек 3', icon: '🎼', url: 'https://rediska-casino.github.io/casino/music/3.mp3', price: 2000 },
-      { id: '4', name: 'Трек 4', icon: '🎹', url: 'https://rediska-casino.github.io/casino/music/4.mp3', price: 2000 },
-      { id: '5', name: 'Трек 5', icon: '🎷', url: 'https://rediska-casino.github.io/casino/music/5.mp3', price: 2000 },
-      { id: '6', name: 'Трек 6', icon: '🎸', url: 'https://rediska-casino.github.io/casino/music/6.mp3', price: 2000 }
+      { id: '2', name: 'Трек 2', icon: '🎵', url: 'https://rediska-casino.github.io/casino/music/2.mp3', price: 2000 },
+      { id: '3', name: 'Трек 3', icon: '🎵', url: 'https://rediska-casino.github.io/casino/music/3.mp3', price: 2000 },
+      { id: '4', name: 'Трек 4', icon: '🎵', url: 'https://rediska-casino.github.io/casino/music/4.mp3', price: 2000 },
+      { id: '5', name: 'Трек 5', icon: '🎵', url: 'https://rediska-casino.github.io/casino/music/5.mp3', price: 2000 },
+      { id: '6', name: 'Трек 6', icon: '🎵', url: 'https://rediska-casino.github.io/casino/music/6.mp3', price: 2000 }
     ];
 
     async function loadAcc() {
@@ -167,6 +168,15 @@
       var container = document.getElementById('music-list');
       
       container.innerHTML = musicList.map(function(m) {
+        if (m.id === 'none') {
+          var isSelected = selected === 'none';
+          return '<div class="music-item">' +
+            '<div class="music-icon">' + m.icon + '</div>' +
+            '<div class="music-info"><div class="music-name">' + m.name + '</div><div class="music-price">Без музыки</div></div>' +
+            (isSelected ? '<button class="music-btn btn-selected" disabled>✓</button>' : '<button class="music-btn btn-select" onclick="selectMusic(\'none\')">Выбрать</button>') +
+            '</div>';
+        }
+        
         var isOwned = owned.indexOf(m.id) !== -1;
         var isSelected = selected === m.url;
         
@@ -217,9 +227,14 @@
       if (!music) return;
       localStorage.setItem('set_music_' + currentUser, music.url);
       var a = document.getElementById('bg-music');
-      a.src = music.url;
-      a.volume = (parseInt(localStorage.getItem('set_volume_' + currentUser)) || 50) / 100;
-      a.play().catch(function() {});
+      if (music.url === 'none') {
+        a.pause();
+        a.src = '';
+      } else {
+        a.src = music.url;
+        a.volume = (parseInt(localStorage.getItem('set_volume_' + currentUser)) || 50) / 100;
+        a.play().catch(function() {});
+      }
       renderMusicList();
     };
 
@@ -252,4 +267,4 @@
     })();
   </script>
 </body>
-  </html>
+</html>
