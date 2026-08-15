@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Новости</title>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+  <style>
+    :root { --bg: #121212; --panel: #1e1e1e; --text: #e0e0e0; --accent: #ff4757; --gold: #ffd700; }
+    body { background: var(--bg); color: var(--text); font-family: system-ui, sans-serif; margin: 0; display: flex; flex-direction: column; align-items: center; min-height: 100vh; padding: 16px; box-sizing: border-box; }
+    .container { width: 100%; max-width: 500px; background: var(--panel); padding: 24px; border-radius: 16px; border: 2px solid #333; }
+    h1 { font-weight: 400; text-align: center; font-size: 24px; color: var(--gold); margin-bottom: 20px; }
+    .news-item { padding: 16px; border-bottom: 1px solid #2a2a2a; }
+    .news-item:last-child { border-bottom: none; }
+    .news-title { font-size: 18px; font-weight: 600; margin-bottom: 8px; }
+    .news-text { font-size: 14px; color: #bbb; line-height: 1.6; }
+    .news-date { font-size: 12px; color: #666; margin-top: 8px; }
+    .back-btn { display: block; text-align: center; margin-top: 24px; background: var(--accent); color: white; padding: 12px 20px; border-radius: 8px; text-decoration: none; font-weight: bold; }
+    .loading { text-align: center; padding: 20px; color: #666; }
+  </style>
+</head>
+<body>
+  <audio id="bg-music" loop style="display:none;"></audio>
+  <script>
+  (function(){
+    var u=localStorage.getItem('currentUser');
+    if(!u)return;
+    var d=localStorage.getItem('set_music_'+u);
+    var v=parseInt(localStorage.getItem('set_volume_'+u))||50;
+    var on=localStorage.getItem('set_music_on_'+u)!=='false';
+    var a=document.getElementById('bg-music');
+    var started=false;
+    function startMusic(){
+      if(started)return;
+      if(d&&on&&d!=='none'){a.src=d;a.volume=v/100;a.play().catch(function(){});}
+      started=true;
+    }
+    document.addEventListener('click',startMusic,{once:true});
+    document.addEventListener('touchstart',startMusic,{once:true});
+    if(d&&on&&d!=='none'){a.src=d;a.volume=v/100;a.play().catch(function(){});}
+  })();
+  </script>
+  <div class="container">
+    <h1>📰 Новости</h1>
+    <div id="news-container"><div class="loading">Загрузка...</div></div>
+    <a href="index.html" class="back-btn">← На главную</a>
+  </div>
+  <script>
+    var firebaseConfig = {
+      apiKey: "AIzaSyBKfDdHsbTzZjfc4hHX3SJV563UbVBvqPQ",
+      authDomain: "lucky-finger-b8b05.firebaseapp.com",
+      databaseURL: "https://lucky-finger-b8b05-default-rtdb.firebaseio.com",
+      projectId: "lucky-finger-b8b05",
+      storageBucket: "lucky-finger-b8b05.firebasestorage.app",
+      messagingSenderId: "843623003093",
+      appId: "1:843623003093:web:05acfb8aa828e6cc2e835c"
+    };
+    firebase.initializeApp(firebaseConfig);
+    var database = firebase.database();
+    var currentUser = localStorage.getItem('currentUser');
+
+    async function loadNews() {
+      try {
+        var snapshot = await database.ref('news').get();
+        var news = snapshot.val() || {};
+        var container = document.getElementById('news-container');
+        
+        var keys = Object.keys(news).reverse();
+        
+        if (keys.length === 0) {
+          container.innerHTML = '<div class="loading">Новостей пока нет</div>';
+          return;
+        }
+        
+        container.innerHTML = keys.map(function(key) {
+          var n = news[key];
+          var date = n.date ? new Date(n.date).toLocaleDateString('ru-RU') : '';
+          var time = n.date ? new Date(n.date).toLocaleTimeString('ru-RU', {hour: '2-digit', minute: '2-digit'}) : '';
+          return '<div class="news-item">' +
+            '<div class="news-title">' + n.title + '</div>' +
+            '<div class="news-text">' + n.text + '</div>' +
+            '<div class="news-date">' + date + ' ' + time + '</div>' +
+            '</div>';
+        }).join('');
+        
+        // Сохраняем последнюю прочитанную новость
+        if (currentUser && keys.length > 0) {
+          localStorage.setItem('last_news_read_' + currentUser, keys[0]);
+        }
+      } catch(e) {
+        document.getElementById('news-container').innerHTML = '<div class="loading">Ошибка загрузки</div>';
+      }
+    }
+
+    loadNews();
+  </script>
+</body>
+</html>
