@@ -23,11 +23,16 @@
     .auth-btn { width: 100%; padding: 14px; border: none; border-radius: 8px; font-size: 16px; font-weight: 600; cursor: pointer; }
     .auth-btn:active { transform: scale(0.98); } .auth-btn:disabled { opacity: 0.4; }
     .btn-login { background: var(--success); color: white; } .btn-register { background: var(--accent); color: white; }
-    .btn-row { display: flex; gap: 8px; }
-    .btn-sm { flex: 1; padding: 12px 8px; border: none; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; text-align: center; text-decoration: none; color: white; }
-    .btn-lb { background: #ffa502; color: #000; }
-    .btn-settings { background: #7b68ee; }
-    .btn-logout { background: #555; }
+    .header-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+    .burger-btn { background: none; border: none; color: var(--text); font-size: 28px; cursor: pointer; padding: 4px 8px; }
+    .logout-btn { background: #555; color: white; border: none; padding: 10px 16px; border-radius: 8px; font-size: 14px; cursor: pointer; }
+    .burger-menu { display: none; flex-direction: column; gap: 8px; margin-bottom: 16px; background: #1a1a1a; padding: 12px; border-radius: 12px; border: 1px solid #333; }
+    .burger-menu.open { display: flex; }
+    .menu-item { display: block; padding: 12px; border-radius: 8px; text-decoration: none; color: white; font-weight: 600; text-align: center; position: relative; }
+    .menu-item.lb { background: #ffa502; color: #000; }
+    .menu-item.news { background: #3498db; }
+    .menu-item.settings { background: #7b68ee; }
+    .notification-dot { position: absolute; top: 4px; right: 4px; width: 12px; height: 12px; background: #ffd700; border-radius: 50%; border: 2px solid #3498db; }
     .user-info { text-align: center; margin-bottom: 16px; } .user-nickname { font-size: 20px; font-weight: 600; color: var(--gold); }
     .banned-badge { display: inline-block; background: #ff0000; color: white; padding: 4px 12px; border-radius: 12px; font-size: 12px; margin-top: 4px; }
     .auth-error { color: #ff4757; font-size: 14px; text-align: center; min-height: 20px; }
@@ -92,12 +97,16 @@
         </div>
       </div>
       <div id="user-panel" style="display:none;">
-        <div class="user-info"><div>Добро пожаловать,</div><div class="user-nickname" id="current-user"></div><div id="badge-container"></div></div>
-        <div class="btn-row">
-          <a href="leaderboard.html" class="btn-sm btn-lb">🏆 Лидерборд</a>
-          <a href="settings.html" class="btn-sm btn-settings">⚙️ Настройки</a>
-          <button class="btn-sm btn-logout" id="btn-logout">🚪 Выйти</button>
+        <div class="header-row">
+          <button class="burger-btn" id="burger-btn">☰</button>
+          <button class="logout-btn" id="btn-logout">🚪 Выйти</button>
         </div>
+        <div class="burger-menu" id="burger-menu">
+          <a href="leaderboard.html" class="menu-item lb">🏆 Лидерборд</a>
+          <a href="news.html" class="menu-item news">📰 Новости<span class="notification-dot" id="news-dot" style="display:none;"></span></a>
+          <a href="settings.html" class="menu-item settings">⚙️ Настройки</a>
+        </div>
+        <div class="user-info"><div>Добро пожаловать,</div><div class="user-nickname" id="current-user"></div><div id="badge-container"></div></div>
       </div>
     </div>
     <div id="game-section" style="display:none;">
@@ -155,6 +164,24 @@
       });
     };
 
+    document.getElementById('burger-btn').onclick = function() {
+      document.getElementById('burger-menu').classList.toggle('open');
+    };
+
+    async function checkNews() {
+      try {
+        var snapshot = await database.ref('news').get();
+        var news = snapshot.val() || {};
+        var newsKeys = Object.keys(news);
+        if (newsKeys.length > 0) {
+          var lastRead = localStorage.getItem('last_news_read_' + currentUser);
+          if (!lastRead || lastRead < newsKeys[newsKeys.length - 1]) {
+            document.getElementById('news-dot').style.display = 'block';
+          }
+        }
+      } catch(e) {}
+    }
+
     renderGames();
 
     document.querySelectorAll('.toggle-password').forEach(function(btn) {
@@ -169,16 +196,11 @@
     });
 
     async function loadAcc() {
-      try {
-        var snapshot = await database.ref('accounts').get();
-        accountsCache = snapshot.val() || {};
-      } catch(e) { accountsCache = {}; }
+      try { var snapshot = await database.ref('accounts').get(); accountsCache = snapshot.val() || {}; } catch(e) {}
     }
 
     async function saveAcc() {
-      try {
-        await database.ref('accounts').set(accountsCache);
-      } catch(e) {}
+      try { await database.ref('accounts').set(accountsCache); } catch(e) {}
     }
 
     function isBanned(n) { return accountsCache[n] && accountsCache[n].banned === true; }
@@ -221,6 +243,7 @@
         bm.innerHTML = '🚫 Вы заблокированы. <a href="ban.html">Подробнее</a>'; bal.style.display = 'none'; gg.style.display = 'none';
       } else { bc.innerHTML = ''; bm.style.display = 'none'; bal.style.display = 'block'; gg.style.display = 'flex'; upBal(); }
       document.getElementById('game-section').style.display = 'block';
+      checkNews();
     }
 
     document.getElementById('tab-login').onclick = function() {
@@ -250,7 +273,7 @@
 
     document.getElementById('btn-login').onclick = async function() {
       var n = document.getElementById('login-nickname').value.trim(), p = document.getElementById('login-password').value.trim(), el = document.getElementById('login-error');
-      if (!n || !p) { el.textContent = 'Заполните поля'; return; }
+ if (!n || !p) { el.textContent = 'Заполните поля'; return; }
       await loadAcc();
       if (n === ADMIN_NICKNAME && accountsCache[ADMIN_NICKNAME] && accountsCache[ADMIN_NICKNAME].password === p) {
         localStorage.setItem('currentUser', ADMIN_NICKNAME); window.location.href = 'admin.html'; return;
@@ -280,4 +303,4 @@
     })();
   </script>
 </body>
-  </html>
+</html
