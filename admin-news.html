@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Управление новостями</title>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+  <style>
+    :root { --bg: #121212; --panel: #1e1e1e; --text: #e0e0e0; --accent: #ff4757; --gold: #ffd700; }
+    body { background: var(--bg); color: var(--text); font-family: system-ui, sans-serif; margin: 0; display: flex; flex-direction: column; align-items: center; min-height: 100vh; padding: 16px; box-sizing: border-box; }
+    .container { width: 100%; max-width: 500px; background: var(--panel); padding: 24px; border-radius: 16px; border: 2px solid #333; }
+    h1 { font-weight: 400; text-align: center; font-size: 24px; color: var(--gold); margin-bottom: 20px; }
+    .input-field { width: 100%; padding: 12px; border: 1px solid #333; border-radius: 8px; background: #000; color: #fff; font-size: 16px; box-sizing: border-box; margin-bottom: 12px; }
+    .textarea-field { width: 100%; padding: 12px; border: 1px solid #333; border-radius: 8px; background: #000; color: #fff; font-size: 14px; box-sizing: border-box; margin-bottom: 12px; min-height: 120px; resize: vertical; }
+    .btn-add { width: 100%; padding: 14px; border: none; border-radius: 8px; font-size: 16px; cursor: pointer; font-weight: bold; color: white; background: var(--accent); }
+    .back-btn { display: block; text-align: center; margin-top: 16px; background: #555; color: white; padding: 10px 20px; border-radius: 8px; text-decoration: none; font-weight: bold; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>📰 Добавить новость</h1>
+    <input type="text" class="input-field" id="news-title" placeholder="Заголовок новости">
+    <textarea class="textarea-field" id="news-text" placeholder="Текст новости"></textarea>
+    <button class="btn-add" onclick="addNews()">📰 Опубликовать</button>
+    <a href="admin.html" class="back-btn">← Назад в админ-панель</a>
+  </div>
+  <script>
+    var firebaseConfig = {
+      apiKey: "AIzaSyBKfDdHsbTzZjfc4hHX3SJV563UbVBvqPQ",
+      authDomain: "lucky-finger-b8b05.firebaseapp.com",
+      databaseURL: "https://lucky-finger-b8b05-default-rtdb.firebaseio.com",
+      projectId: "lucky-finger-b8b05",
+      storageBucket: "lucky-finger-b8b05.firebasestorage.app",
+      messagingSenderId: "843623003093",
+      appId: "1:843623003093:web:05acfb8aa828e6cc2e835c"
+    };
+    firebase.initializeApp(firebaseConfig);
+    var database = firebase.database();
+
+    function addNews() {
+      var title = document.getElementById('news-title').value.trim();
+      var text = document.getElementById('news-text').value.trim();
+      
+      if (!title || !text) {
+        alert('Заполните все поля');
+        return;
+      }
+      
+      var newsRef = database.ref('news').push();
+      newsRef.set({
+        title: title,
+        text: text,
+        date: new Date().toISOString()
+      }).then(function() {
+        alert('Новость опубликована!');
+        document.getElementById('news-title').value = '';
+        document.getElementById('news-text').value = '';
+      }).catch(function() {
+        alert('Ошибка при публикации');
+      });
+    }
+  </script>
+</body>
+</html>
