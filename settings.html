@@ -4,6 +4,8 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <title>Настройки</title>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
   <style>
     :root { --bg: #121212; --panel: #1e1e1e; --text: #e0e0e0; --accent: #ff4757; --gold: #ffd700; --success: #2ed573; }
     body { background: var(--bg); color: var(--text); font-family: system-ui, sans-serif; margin: 0; display: flex; flex-direction: column; align-items: center; min-height: 100vh; padding: 16px; box-sizing: border-box; }
@@ -19,7 +21,16 @@
     .toggle-slider:before { content: ""; position: absolute; height: 22px; width: 22px; left: 3px; bottom: 3px; background: white; border-radius: 50%; transition: 0.3s; }
     input:checked + .toggle-slider { background: var(--accent); }
     input:checked + .toggle-slider:before { transform: translateX(22px); }
-    .music-select { width: 100%; padding: 12px; border: 1px solid #333; border-radius: 8px; background: #000; color: #fff; font-size: 16px; box-sizing: border-box; margin-top: 8px; }
+    .music-list { display: flex; flex-direction: column; gap: 8px; margin-top: 8px; }
+    .music-item { display: flex; align-items: center; gap: 10px; padding: 10px; background: #1a1a1a; border-radius: 8px; border: 1px solid #333; }
+    .music-icon { font-size: 24px; }
+    .music-info { flex: 1; }
+    .music-name { font-size: 14px; font-weight: 600; }
+    .music-price { font-size: 11px; color: #aaa; }
+    .music-btn { padding: 8px 14px; border: none; border-radius: 6px; font-size: 12px; cursor: pointer; font-weight: bold; color: white; }
+    .btn-buy { background: var(--gold); color: #000; }
+    .btn-select { background: var(--success); }
+    .btn-selected { background: #555; }
     .volume-row { display: flex; align-items: center; gap: 10px; margin-top: 12px; }
     .volume-slider { flex: 1; -webkit-appearance: none; height: 6px; background: #555; border-radius: 3px; outline: none; }
     .volume-slider::-webkit-slider-thumb { -webkit-appearance: none; width: 20px; height: 20px; background: var(--accent); border-radius: 50%; cursor: pointer; }
@@ -46,11 +57,6 @@
     document.addEventListener('click',startMusic,{once:true});
     document.addEventListener('touchstart',startMusic,{once:true});
     if(d&&on&&d!=='none'){a.src=d;a.volume=v/100;a.play().catch(function(){});}
-    window.addEventListener('storage',function(e){
-      if(e.key==='set_volume_'+u)a.volume=(parseInt(e.newValue)||50)/100;
-      if(e.key==='set_music_'+u){a.src=e.newValue||'';if(e.newValue&&e.newValue!=='none')a.play().catch(function(){});else a.pause();}
-      if(e.key==='set_music_on_'+u){if(e.newValue==='false')a.pause();else a.play().catch(function(){});}
-    });
   })();
   </script>
   <div class="container">
@@ -67,16 +73,8 @@
     
     <div class="setting-item">
       <div class="setting-label">🎵 Музыка</div>
-      <div class="setting-desc">Выберите фоновую музыку</div>
-      <select class="music-select" id="music-select" onchange="changeMusic(this.value)">
-        <option value="none">🔇 Ничего</option>
-        <option value="https://rediska-casino.github.io/casino/music/1.mp3">🎵 Трек 1</option>
-        <option value="https://rediska-casino.github.io/casino/music/2.mp3">🎵 Трек 2</option>
-        <option value="https://rediska-casino.github.io/casino/music/3.mp3">🎵 Трек 3</option>
-        <option value="https://rediska-casino.github.io/casino/music/4.mp3">🎵 Трек 4</option>
-        <option value="https://rediska-casino.github.io/casino/music/5.mp3">🎵 Трек 5</option>
-        <option value="https://rediska-casino.github.io/casino/music/6.mp3">🎵 Трек 6</option>
-      </select>
+      <div class="setting-desc">Покупайте музыку за игровую валюту</div>
+      <div class="music-list" id="music-list"></div>
       <div class="volume-row">
         <span>🔈</span>
         <input type="range" class="volume-slider" id="volume-slider" min="1" max="100" value="50" oninput="changeVolume(this.value)">
@@ -123,54 +121,135 @@
     <a href="index.html" class="back-btn">← На главную</a>
   </div>
   <script>
+    var firebaseConfig = {
+      apiKey: "AIzaSyBKfDdHsbTzZjfc4hHX3SJV563UbVBvqPQ",
+      authDomain: "lucky-finger-b8b05.firebaseapp.com",
+      databaseURL: "https://lucky-finger-b8b05-default-rtdb.firebaseio.com",
+      projectId: "lucky-finger-b8b05",
+      storageBucket: "lucky-finger-b8b05.firebasestorage.app",
+      messagingSenderId: "843623003093",
+      appId: "1:843623003093:web:05acfb8aa828e6cc2e835c"
+    };
+    firebase.initializeApp(firebaseConfig);
+    var database = firebase.database();
+    var accountsCache = {};
     var currentUser = localStorage.getItem('currentUser');
+    if (!currentUser) window.location.href = 'index.html';
     
-    function loadSettings() {
-      var sound = localStorage.getItem('set_sound_' + currentUser);
-      var notify = localStorage.getItem('set_notify_' + currentUser);
-      var stats = localStorage.getItem('set_stats_' + currentUser);
-      var volume = localStorage.getItem('set_volume_' + currentUser);
-      var music = localStorage.getItem('set_music_' + currentUser);
+    var musicList = [
+      { id: '1', name: 'Трек 1', icon: '🎵', url: 'https://rediska-casino.github.io/casino/music/1.mp3', price: 2000 },
+      { id: '2', name: 'Трек 2', icon: '🎶', url: 'https://rediska-casino.github.io/casino/music/2.mp3', price: 2000 },
+      { id: '3', name: 'Трек 3', icon: '🎼', url: 'https://rediska-casino.github.io/casino/music/3.mp3', price: 2000 },
+      { id: '4', name: 'Трек 4', icon: '🎹', url: 'https://rediska-casino.github.io/casino/music/4.mp3', price: 2000 },
+      { id: '5', name: 'Трек 5', icon: '🎷', url: 'https://rediska-casino.github.io/casino/music/5.mp3', price: 2000 },
+      { id: '6', name: 'Трек 6', icon: '🎸', url: 'https://rediska-casino.github.io/casino/music/6.mp3', price: 2000 }
+    ];
+
+    async function loadAcc() {
+      try { var snapshot = await database.ref('accounts').get(); accountsCache = snapshot.val() || {}; } catch(e) {}
+    }
+
+    async function saveAcc() {
+      try { await database.ref('accounts').set(accountsCache); } catch(e) {}
+    }
+
+    function getUserBalance() {
+      return accountsCache[currentUser] ? (accountsCache[currentUser].balance || 0) : 0;
+    }
+
+    function getUserMusic() {
+      return accountsCache[currentUser] ? (accountsCache[currentUser].ownedMusic || []) : [];
+    }
+
+    function renderMusicList() {
+      var owned = getUserMusic();
+      var selected = localStorage.getItem('set_music_' + currentUser) || 'none';
+      var container = document.getElementById('music-list');
       
-      if (sound !== null) document.getElementById('sound-toggle').checked = sound === 'true';
-      if (notify !== null) document.getElementById('notify-toggle').checked = notify === 'true';
-      if (stats !== null) document.getElementById('stats-toggle').checked = stats === 'true';
+      container.innerHTML = musicList.map(function(m) {
+        var isOwned = owned.indexOf(m.id) !== -1;
+        var isSelected = selected === m.url;
+        
+        if (isSelected) {
+          return '<div class="music-item">' +
+            '<div class="music-icon">' + m.icon + '</div>' +
+            '<div class="music-info"><div class="music-name">' + m.name + '</div><div class="music-price">Выбрано</div></div>' +
+            '<button class="music-btn btn-selected" disabled>✓</button>' +
+            '</div>';
+        } else if (isOwned) {
+          return '<div class="music-item">' +
+            '<div class="music-icon">' + m.icon + '</div>' +
+            '<div class="music-info"><div class="music-name">' + m.name + '</div><div class="music-price">Куплено</div></div>' +
+            '<button class="music-btn btn-select" onclick="selectMusic(\'' + m.id + '\')">Выбрать</button>' +
+            '</div>';
+        } else {
+          return '<div class="music-item">' +
+            '<div class="music-icon">' + m.icon + '</div>' +
+            '<div class="music-info"><div class="music-name">' + m.name + '</div><div class="music-price">' + m.price.toLocaleString() + ' ₽</div></div>' +
+            '<button class="music-btn btn-buy" onclick="buyMusic(\'' + m.id + '\')">Купить</button>' +
+            '</div>';
+        }
+      }).join('');
+    }
+
+    window.buyMusic = async function(id) {
+      var music = musicList.find(function(m) { return m.id === id; });
+      if (!music) return;
       
-      if (volume !== null) {
-        document.getElementById('volume-slider').value = volume;
-        document.getElementById('volume-value').textContent = volume + '%';
+      var balance = getUserBalance();
+      if (balance < music.price) {
+        alert('Недостаточно средств! Нужно ' + music.price.toLocaleString() + ' ₽, у вас ' + balance.toLocaleString() + ' ₽');
+        return;
       }
       
-      if (music) {
-        document.getElementById('music-select').value = music;
-      }
-    }
-    
-    function saveCheckbox(name, value) {
-      localStorage.setItem('set_' + name + '_' + currentUser, value);
-    }
-    
-    function changeMusic(value) {
-      localStorage.setItem('set_music_' + currentUser, value);
+      if (!confirm('Купить "' + music.name + '" за ' + music.price.toLocaleString() + ' ₽?')) return;
+      
+      accountsCache[currentUser].balance = balance - music.price;
+      if (!accountsCache[currentUser].ownedMusic) accountsCache[currentUser].ownedMusic = [];
+      accountsCache[currentUser].ownedMusic.push(music.id);
+      await saveAcc();
+      renderMusicList();
+      alert('Музыка куплена!');
+    };
+
+    window.selectMusic = function(id) {
+      var music = musicList.find(function(m) { return m.id === id; });
+      if (!music) return;
+      localStorage.setItem('set_music_' + currentUser, music.url);
       var a = document.getElementById('bg-music');
-      if (value === 'none') {
-        a.pause();
-        a.src = '';
-      } else {
-        a.src = value;
-        a.volume = (parseInt(localStorage.getItem('set_volume_' + currentUser)) || 50) / 100;
-        a.play().catch(function(){});
-      }
-    }
-    
+      a.src = music.url;
+      a.volume = (parseInt(localStorage.getItem('set_volume_' + currentUser)) || 50) / 100;
+      a.play().catch(function() {});
+      renderMusicList();
+    };
+
     function changeVolume(val) {
       document.getElementById('volume-value').textContent = val + '%';
       localStorage.setItem('set_volume_' + currentUser, val);
       var a = document.getElementById('bg-music');
       a.volume = val / 100;
     }
-    
-    loadSettings();
+
+    function saveCheckbox(name, value) {
+      localStorage.setItem('set_' + name + '_' + currentUser, value);
+    }
+
+    (async function() {
+      await loadAcc();
+      if (!accountsCache[currentUser]) { window.location.href = 'index.html'; return; }
+      renderMusicList();
+      var volume = localStorage.getItem('set_volume_' + currentUser);
+      if (volume) {
+        document.getElementById('volume-slider').value = volume;
+        document.getElementById('volume-value').textContent = volume + '%';
+      }
+      var sound = localStorage.getItem('set_sound_' + currentUser);
+      if (sound !== null) document.getElementById('sound-toggle').checked = sound === 'true';
+      var notify = localStorage.getItem('set_notify_' + currentUser);
+      if (notify !== null) document.getElementById('notify-toggle').checked = notify === 'true';
+      var stats = localStorage.getItem('set_stats_' + currentUser);
+      if (stats !== null) document.getElementById('stats-toggle').checked = stats === 'true';
+    })();
   </script>
 </body>
   </html>
