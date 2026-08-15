@@ -10,8 +10,10 @@
     :root { --bg: #121212; --panel: #1e1e1e; --text: #e0e0e0; --accent: #ff4757; --gold: #ffd700; --success: #2ed573; }
     body { background: var(--bg); color: var(--text); font-family: system-ui, sans-serif; margin: 0; display: flex; flex-direction: column; align-items: center; min-height: 100vh; }
     .container { width: 100%; max-width: 600px; padding: 16px; }
-    .header { display: flex; align-items: center; justify-content: flex-end; margin-bottom: 20px; }
+    .header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; gap: 8px; }
+    .header-btns { display: flex; gap: 8px; }
     .logout-btn { background: #555; color: white; border: none; padding: 8px 16px; border-radius: 8px; font-size: 14px; cursor: pointer; font-weight: bold; }
+    .news-btn { background: #3498db; color: white; border: none; padding: 8px 16px; border-radius: 8px; font-size: 14px; cursor: pointer; font-weight: bold; text-decoration: none; display: inline-block; }
     h1 { margin: 16px 0; font-weight: 400; text-align: center; font-size: 24px; color: #ff6b6b; }
     .admin-info { background: var(--panel); padding: 16px; border-radius: 12px; margin-bottom: 20px; border: 2px solid #ff6b6b; text-align: center; }
     .stats { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin-bottom: 20px; }
@@ -38,7 +40,10 @@
 </head>
 <body>
   <div class="container">
-    <div class="header"><button class="logout-btn" id="logout-btn">🚪 Выйти</button></div>
+    <div class="header">
+      <a href="admin-news.html" class="news-btn">📰 Новости</a>
+      <button class="logout-btn" id="logout-btn">🚪 Выйти</button>
+    </div>
     <h1>🔧 Панель администратора</h1>
     <div class="admin-info"><div style="font-size:18px;">👑 I-am-admin</div><div style="color:#aaa;">Управление аккаунтами</div></div>
     <div class="stats">
@@ -134,4 +139,4 @@
     render();
   </script>
 </body>
-</html>
+  </html>
