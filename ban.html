@@ -5,52 +5,137 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <title>Причины блокировки</title>
   <style>
-    :root { --bg: #121212; --panel: #1e1e1e; --text: #e0e0e0; --accent: #ff4757; --gold: #ffd700; }
-    body { background: var(--bg); color: var(--text); font-family: system-ui, sans-serif; margin: 0; display: flex; flex-direction: column; align-items: center; min-height: 100vh; padding: 16px; box-sizing: border-box; }
-    .container { width: 100%; max-width: 600px; background: var(--panel); padding: 24px; border-radius: 16px; border: 2px solid #333; }
-    h1 { color: var(--accent); font-weight: 400; text-align: center; font-size: 24px; }
-    h2 { color: var(--text); font-size: 18px; margin-top: 20px; }
-    p, li { line-height: 1.6; color: #bbb; font-size: 14px; }
-    ul { padding-left: 20px; }
-    .back-btn { display: inline-block; background: var(--accent); color: white; padding: 10px 20px; border-radius: 8px; text-decoration: none; font-weight: bold; margin-top: 20px; }
+    @font-face {
+      font-family: 'PixelFont';
+      src: url('pixel-font.ttf') format('truetype');
+      font-display: swap;
+    }
+    :root {
+      --bg: #0a0a0a;
+      --panel: #1a1a1a;
+      --panel-light: #2a2a2a;
+      --text: #ffffff;
+      --text-dim: #888888;
+      --border: #e0e0e0;
+      --border-dim: #444444;
+    }
+    * { box-sizing: border-box; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'PixelFont', 'Courier New', monospace;
+      margin: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
+      padding: 16px;
+      image-rendering: pixelated;
+      -webkit-font-smoothing: none;
+    }
+    .container {
+      width: 100%;
+      max-width: 600px;
+      background: var(--panel);
+      padding: 24px;
+      border: 3px solid var(--border);
+      box-shadow: 4px 4px 0 var(--border-dim);
+    }
+    h1 {
+      color: var(--text);
+      font-weight: 400;
+      text-align: center;
+      font-size: 18px;
+      margin-bottom: 24px;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      text-shadow: 2px 2px 0 var(--border-dim);
+    }
+    h2 {
+      color: var(--text);
+      font-size: 14px;
+      margin-top: 24px;
+      margin-bottom: 12px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      border-bottom: 2px solid var(--border-dim);
+      padding-bottom: 8px;
+    }
+    p, li {
+      line-height: 1.6;
+      color: var(--text-dim);
+      font-size: 11px;
+      margin-bottom: 12px;
+    }
+    p strong {
+      color: var(--text);
+      font-weight: 400;
+    }
+    ul {
+      padding-left: 16px;
+      margin-top: 8px;
+      margin-bottom: 16px;
+    }
+    li {
+      margin-bottom: 8px;
+    }
+    .back-btn {
+      display: block;
+      text-align: center;
+      background: var(--panel-light);
+      color: var(--text);
+      padding: 14px;
+      border: 3px solid var(--border);
+      text-decoration: none;
+      font-weight: 400;
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      box-shadow: 4px 4px 0 var(--border-dim);
+      margin-top: 24px;
+    }
+    .back-btn:active {
+      transform: translate(2px, 2px);
+      box-shadow: 2px 2px 0 var(--border-dim);
+    }
   </style>
 </head>
 <body>
   <div class="container">
-    <h1>🚫 Причины блокировки</h1>
-    <p><strong>Ваш аккаунт или IP-адрес был заблокирован администратором.</strong></p>
-    <p>Блокировка применяется в следующих случаях:</p>
+    <h1>ПРИЧИНЫ БЛОКИРОВКИ</h1>
+    <p><strong>ВАШ АККАУНТ ИЛИ IP-АДРЕС БЫЛ ЗАБЛОКИРОВАН АДМИНИСТРАТОРОМ.</strong></p>
+    <p>БЛОКИРОВКА ПРИМЕНЯЕТСЯ В СЛЕДУЮЩИХ СЛУЧАЯХ:</p>
     
-    <h2>1. Читерство и использование уязвимостей</h2>
+    <h2>1. ЧИТЕРСТВО И УЯЗВИМОСТИ</h2>
     <ul>
       <li>Использование багов игры для получения нечестного преимущества</li>
       <li>Эксплуатация уязвимостей в коде для накрутки баланса</li>
       <li>Использование сторонних программ или скриптов для автоматизации игры</li>
     </ul>
     
-    <h2>2. Нарушение правил платформы</h2>
+    <h2>2. НАРУШЕНИЕ ПРАВИЛ</h2>
     <ul>
       <li>Попытки взлома или несанкционированного доступа к админ-панели</li>
       <li>Мошенничество и обман других пользователей</li>
       <li>Распространение вредоносного кода или ссылок</li>
     </ul>
     
-    <h2>3. Мультиаккаунтинг</h2>
+    <h2>3. МУЛЬТИАККАУНТИНГ</h2>
     <ul>
       <li>Создание множества аккаунтов для обхода ограничений</li>
-      <li>Использование нескольких аккаунтов с одного устройства для получения преимущества</li>
+      <li>Использование нескольких аккаунтов с одного устройства</li>
     </ul>
     
-    <h2>4. Оскорбительное поведение</h2>
+    <h2>4. ОСКОРБИТЕЛЬНОЕ ПОВЕДЕНИЕ</h2>
     <ul>
       <li>Использование оскорбительных никнеймов</li>
-      <li>Неуважительное поведение по отношению к другим игрокам или администрации</li>
+      <li>Неуважительное поведение к игрокам или администрации</li>
     </ul>
     
-    <p><strong>Если вы считаете, что блокировка была применена ошибочно, свяжитесь с администратором.</strong></p>
-    <p>Помните, что Lucky Finger © — это развлекательная платформа, и все участники должны соблюдать правила честной игры.</p>
+    <p><strong>ЕСЛИ ВЫ СЧИТАЕТЕ, ЧТО БЛОКИРОВКА БЫЛА ПРИМЕНЕНА ОШИБОЧНО, СВЯЖИТЕСЬ С АДМИНИСТРАТОРОМ.</strong></p>
+    <p>ПОМНИТЕ, ЧТО LUCKY FINGER — ЭТО РАЗВЛЕКАТЕЛЬНАЯ ПЛАТФОРМА, И ВСЕ УЧАСТНИКИ ДОЛЖНЫ СОБЛЮДАТЬ ПРАВИЛА ЧЕСТНОЙ ИГРЫ.</p>
     
-    <a href="index.html" class="back-btn">← На главную</a>
+    <a href="index.html" class="back-btn">&lt;&lt; НА ГЛАВНУЮ</a>
   </div>
 </body>
-</html>
+  </html>
