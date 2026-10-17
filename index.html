@@ -3,166 +3,745 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>🎰 Lucky Finger ©</title>
+  <title>LUCKY FINGER</title>
+  <meta name="theme-color" content="#0a0a0a" />
+  <link rel="manifest" href="/manifest.json" />
+  <link rel="apple-touch-icon" href="/icon-192.png" />
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
   <style>
-    :root { --bg: #121212; --panel: #1e1e1e; --text: #e0e0e0; --accent: #ff4757; --gold: #ffd700; --success: #2ed573; }
-    body { background: var(--bg); color: var(--text); font-family: system-ui, sans-serif; margin: 0; display: flex; flex-direction: column; align-items: center; min-height: 100vh; }
+    @font-face {
+      font-family: 'PixelFont';
+      src: url('pixel-font.ttf') format('truetype');
+      font-display: swap;
+    }
+    :root {
+      --bg: #0a0a0a;
+      --panel: #1a1a1a;
+      --panel-light: #2a2a2a;
+      --text: #ffffff;
+      --text-dim: #888888;
+      --border: #e0e0e0;
+      --border-dim: #444444;
+      --accent: #ffffff;
+      --danger: #ffffff;
+      --success: #ffffff;
+    }
+    * { box-sizing: border-box; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'PixelFont', 'Courier New', monospace;
+      margin: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
+      image-rendering: pixelated;
+      -webkit-font-smoothing: none;
+    }
     .container { width: 100%; max-width: 500px; padding: 16px; }
-    h1 { margin: 16px 0; font-weight: 400; text-align: center; font-size: 28px; }
-    .auth-panel { background: var(--panel); padding: 20px; border-radius: 16px; margin-bottom: 20px; border: 2px solid #333; }
-    .auth-tabs { display: flex; gap: 8px; margin-bottom: 16px; }
-    .auth-tab { flex: 1; padding: 10px; border: none; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; background: #2a2a2a; color: #aaa; }
-    .auth-tab.active { background: var(--accent); color: white; }
+    h1 {
+      margin: 16px 0;
+      font-weight: 400;
+      text-align: center;
+      font-size: 20px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--text);
+      text-shadow: 2px 2px 0 var(--border-dim);
+    }
+    .auth-panel {
+      background: var(--panel);
+      padding: 20px;
+      margin-bottom: 20px;
+      border: 3px solid var(--border);
+      box-shadow: 4px 4px 0 var(--border-dim);
+    }
+    .auth-tabs { display: flex; gap: 0; margin-bottom: 16px; }
+    .auth-tab {
+      flex: 1;
+      padding: 12px 8px;
+      border: 3px solid var(--border);
+      font-size: 12px;
+      font-weight: 400;
+      cursor: pointer;
+      background: var(--panel-light);
+      color: var(--text-dim);
+      font-family: inherit;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+    .auth-tab.active {
+      background: var(--border);
+      color: var(--bg);
+    }
+    .auth-tab + .auth-tab { margin-left: -3px; }
     .auth-form { display: flex; flex-direction: column; gap: 12px; }
-    .auth-input { width: 100%; padding: 12px; border: 1px solid #333; border-radius: 8px; background: #000; color: #fff; font-size: 16px; box-sizing: border-box; }
+    .auth-input {
+      width: 100%;
+      padding: 12px;
+      border: 3px solid var(--border);
+      background: var(--bg);
+      color: var(--text);
+      font-size: 14px;
+      font-family: inherit;
+      letter-spacing: 1px;
+    }
+    .auth-input::placeholder { color: var(--text-dim); }
+    .auth-input:focus { outline: none; border-color: var(--text); }
     .password-wrapper { position: relative; }
     .password-wrapper .auth-input { padding-right: 50px; }
-    .toggle-password { position: absolute; right: 8px; top: 50%; transform: translateY(-50%); background: none; border: none; color: #aaa; font-size: 20px; cursor: pointer; padding: 4px 8px; z-index: 2; }
-    .auth-btn { width: 100%; padding: 14px; border: none; border-radius: 8px; font-size: 16px; font-weight: 600; cursor: pointer; }
-    .auth-btn:active { transform: scale(0.98); } .auth-btn:disabled { opacity: 0.4; }
-    .btn-login { background: var(--success); color: white; } .btn-register { background: var(--accent); color: white; }
-    .header-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+    .toggle-password {
+      position: absolute;
+      right: 6px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: var(--panel-light);
+      border: 2px solid var(--border);
+      color: var(--text);
+      font-size: 14px;
+      cursor: pointer;
+      padding: 4px 8px;
+      font-family: inherit;
+    }
+    .auth-btn {
+      width: 100%;
+      padding: 14px;
+      border: 3px solid var(--border);
+      font-size: 14px;
+      font-weight: 400;
+      cursor: pointer;
+      background: var(--border);
+      color: var(--bg);
+      font-family: inherit;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      box-shadow: 4px 4px 0 var(--border-dim);
+    }
+    .auth-btn:active {
+      transform: translate(2px, 2px);
+      box-shadow: 2px 2px 0 var(--border-dim);
+    }
+    .auth-btn:disabled {
+      opacity: 0.4;
+      box-shadow: 2px 2px 0 var(--border-dim);
+    }
+    .btn-login { background: var(--border); color: var(--bg); }
+    .btn-register { background: var(--panel-light); color: var(--text); }
+    .header-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 16px;
+    }
     .burger-wrapper { position: relative; }
-    .burger-btn { background: none; border: none; color: var(--text); font-size: 28px; cursor: pointer; padding: 4px 8px; }
-    .burger-dot { position: absolute; top: 0; right: 0; width: 12px; height: 12px; background: #ffd700; border-radius: 50%; border: 2px solid #121212; display: none; }
-    .logout-btn { background: #555; color: white; border: none; padding: 10px 16px; border-radius: 8px; font-size: 14px; cursor: pointer; }
-    .burger-menu { display: none; flex-direction: column; gap: 8px; margin-bottom: 16px; background: #1a1a1a; padding: 12px; border-radius: 12px; border: 1px solid #333; }
+    .burger-btn {
+      background: var(--panel-light);
+      border: 3px solid var(--border);
+      color: var(--text);
+      font-size: 18px;
+      cursor: pointer;
+      padding: 6px 12px;
+      font-family: inherit;
+      box-shadow: 3px 3px 0 var(--border-dim);
+    }
+    .burger-btn:active {
+      transform: translate(2px, 2px);
+      box-shadow: 1px 1px 0 var(--border-dim);
+    }
+    .burger-dot {
+      position: absolute;
+      top: -4px;
+      right: -4px;
+      width: 12px;
+      height: 12px;
+      background: var(--text);
+      border: 2px solid var(--bg);
+      display: none;
+    }
+    .logout-btn {
+      background: var(--panel-light);
+      color: var(--text);
+      border: 3px solid var(--border);
+      padding: 10px 16px;
+      font-size: 12px;
+      cursor: pointer;
+      font-family: inherit;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      box-shadow: 3px 3px 0 var(--border-dim);
+    }
+    .logout-btn:active {
+      transform: translate(2px, 2px);
+      box-shadow: 1px 1px 0 var(--border-dim);
+    }
+    .burger-menu {
+      display: none;
+      flex-direction: column;
+      gap: 8px;
+      margin-bottom: 16px;
+      background: var(--panel);
+      padding: 12px;
+      border: 3px solid var(--border);
+      box-shadow: 4px 4px 0 var(--border-dim);
+    }
     .burger-menu.open { display: flex; }
-    .menu-item { display: block; padding: 12px; border-radius: 8px; text-decoration: none; color: white; font-weight: 600; text-align: center; position: relative; }
-    .menu-item.lb { background: #ffa502; color: #000; }
-    .menu-item.news { background: #3498db; }
-    .menu-item.settings { background: #7b68ee; }
-    .menu-item.authors { background: #e17055; }
-    .notification-dot { position: absolute; top: 4px; right: 4px; width: 12px; height: 12px; background: #ffd700; border-radius: 50%; border: 2px solid #3498db; display: none; }
-    .user-info { text-align: center; margin-bottom: 16px; } .user-nickname { font-size: 20px; font-weight: 600; color: var(--gold); }
-    .banned-badge { display: inline-block; background: #ff0000; color: white; padding: 4px 12px; border-radius: 12px; font-size: 12px; margin-top: 4px; }
-    .auth-error { color: #ff4757; font-size: 14px; text-align: center; min-height: 20px; }
-    .checkbox-container { display: flex; align-items: flex-start; gap: 8px; margin: 8px 0; }
-    .checkbox-container input[type="checkbox"] { margin-top: 2px; width: 18px; height: 18px; accent-color: var(--accent); cursor: pointer; flex-shrink: 0; }
-    .checkbox-label { font-size: 13px; color: #aaa; } .checkbox-label a { color: var(--gold); text-decoration: underline; }
-    .balance-card { background: var(--panel); padding: 20px; border-radius: 16px; text-align: center; margin-bottom: 16px; border: 2px solid #333; }
-    .balance-label { font-size: 16px; color: #aaa; margin-bottom: 8px; }
-    .balance-amount { font-size: 36px; font-weight: bold; background: linear-gradient(135deg, #ffd700, #ffa502); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
-    .games-list { display: flex; flex-direction: column; gap: 8px; }
-    .game-item { background: var(--panel); border-radius: 16px; border: 2px solid #333; overflow: hidden; }
-    .game-header { display: flex; align-items: center; padding: 16px; cursor: pointer; gap: 12px; }
-    .game-icon { font-size: 36px; } .game-info { flex: 1; } .game-title { font-size: 16px; font-weight: 600; } .game-short { font-size: 11px; color: #aaa; }
-    .game-arrow { font-size: 14px; color: #666; transition: transform 0.3s; }
+    .menu-item {
+      display: block;
+      padding: 12px;
+      border: 3px solid var(--border);
+      text-decoration: none;
+      color: var(--text);
+      font-weight: 400;
+      text-align: center;
+      position: relative;
+      background: var(--panel-light);
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      box-shadow: 3px 3px 0 var(--border-dim);
+    }
+    .menu-item:active {
+      transform: translate(2px, 2px);
+      box-shadow: 1px 1px 0 var(--border-dim);
+    }
+    .notification-dot {
+      position: absolute;
+      top: 4px;
+      right: 4px;
+      width: 12px;
+      height: 12px;
+      background: var(--text);
+      border: 2px solid var(--bg);
+      display: none;
+    }
+    .user-info { text-align: center; margin-bottom: 16px; }
+    .user-info > div:first-child { font-size: 12px; color: var(--text-dim); text-transform: uppercase; }
+    .user-nickname {
+      font-size: 18px;
+      font-weight: 400;
+      color: var(--text);
+      margin-top: 8px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+    }
+    .banned-badge {
+      display: inline-block;
+      background: var(--bg);
+      color: var(--text);
+      padding: 4px 12px;
+      border: 2px solid var(--border);
+      font-size: 10px;
+      margin-top: 8px;
+      text-transform: uppercase;
+    }
+    .auth-error {
+      color: var(--text);
+      font-size: 12px;
+      text-align: center;
+      min-height: 20px;
+    }
+    .checkbox-container {
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+      margin: 8px 0;
+    }
+    .checkbox-container input[type="checkbox"] {
+      margin-top: 2px;
+      width: 18px;
+      height: 18px;
+      accent-color: var(--border);
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+    .checkbox-label { font-size: 11px; color: var(--text-dim); line-height: 1.5; }
+    .checkbox-label a { color: var(--text); text-decoration: underline; }
+    .balance-card {
+      background: var(--panel);
+      padding: 20px;
+      text-align: center;
+      margin-bottom: 16px;
+      border: 3px solid var(--border);
+      box-shadow: 4px 4px 0 var(--border-dim);
+    }
+    .balance-label {
+      font-size: 12px;
+      color: var(--text-dim);
+      margin-bottom: 8px;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+    }
+    .balance-amount {
+      font-size: 28px;
+      font-weight: 400;
+      color: var(--text);
+      letter-spacing: 2px;
+      text-shadow: 2px 2px 0 var(--border-dim);
+    }
+    .games-list { display: flex; flex-direction: column; gap: 12px; }
+    .game-item {
+      background: var(--panel);
+      border: 3px solid var(--border);
+      overflow: hidden;
+      box-shadow: 4px 4px 0 var(--border-dim);
+    }
+    .game-header {
+      display: flex;
+      align-items: center;
+      padding: 16px;
+      cursor: pointer;
+      gap: 12px;
+    }
+    .game-icon { font-size: 28px; }
+    .game-info { flex: 1; }
+    .game-title {
+      font-size: 13px;
+      font-weight: 400;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+    .game-short { font-size: 10px; color: var(--text-dim); margin-top: 4px; }
+    .game-arrow {
+      font-size: 12px;
+      color: var(--text);
+      transition: transform 0.2s;
+    }
     .game-item.open .game-arrow { transform: rotate(90deg); }
-    .game-details { max-height: 0; overflow: hidden; transition: max-height 0.3s ease-out; background: #1a1a1a; }
-    .game-item.open .game-details { max-height: 200px; }
-    .game-desc { padding: 0 16px 12px 16px; font-size: 13px; color: #aaa; line-height: 1.4; }
-    .game-play-btn { display: block; margin: 0 16px 16px 16px; padding: 12px; background: var(--accent); color: white; border: none; border-radius: 8px; font-size: 14px; font-weight: bold; cursor: pointer; text-align: center; text-decoration: none; }
-    .crash-card { border-left: 4px solid var(--success); } .roulette-card { border-left: 4px solid var(--accent); } .slots-card { border-left: 4px solid var(--gold); } .mines-card { border-left: 4px solid #ff6b6b; }
-    .coin-card { border-left: 4px solid #ffa502; } .poker-card { border-left: 4px solid #7b68ee; } .plinko-card { border-left: 4px solid #e74c3c; } .blackjack-card { border-left: 4px solid #1abc9c; }
-    .banned-message { background: rgba(255,0,0,0.1); border: 2px solid #ff0000; padding: 16px; border-radius: 12px; text-align: center; color: #ff4757; font-weight: bold; margin-bottom: 20px; }
-    .banned-message a { color: #ffa502; text-decoration: underline; }
+    .game-details {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.3s ease-out;
+      background: var(--panel-light);
+      border-top: 0 solid var(--border);
+    }
+    .game-item.open .game-details {
+      max-height: 250px;
+      border-top: 3px solid var(--border);
+    }
+    .game-desc {
+      padding: 12px 16px;
+      font-size: 10px;
+      color: var(--text-dim);
+      line-height: 1.6;
+    }
+    .game-play-btn {
+      display: block;
+      margin: 0 16px 16px 16px;
+      padding: 12px;
+      background: var(--border);
+      color: var(--bg);
+      border: 3px solid var(--border);
+      font-size: 12px;
+      font-weight: 400;
+      cursor: pointer;
+      text-align: center;
+      text-decoration: none;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      font-family: inherit;
+      box-shadow: 3px 3px 0 var(--border-dim);
+    }
+    .game-play-btn:active {
+      transform: translate(2px, 2px);
+      box-shadow: 1px 1px 0 var(--border-dim);
+    }
+    .banned-message {
+      background: var(--bg);
+      border: 3px solid var(--border);
+      padding: 16px;
+      text-align: center;
+      color: var(--text);
+      font-weight: 400;
+      margin-bottom: 20px;
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      box-shadow: 4px 4px 0 var(--border-dim);
+    }
+    .banned-message a { color: var(--text); text-decoration: underline; }
+    .offline-banner {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      background: var(--border);
+      color: var(--bg);
+      text-align: center;
+      padding: 8px;
+      font-size: 11px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      z-index: 9999;
+      display: none;
+      border-bottom: 3px solid var(--border-dim);
+    }
+    .offline-banner.show { display: block; }
+    @keyframes blink {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+    .offline-banner.show { animation: blink 2s infinite; }
   </style>
 </head>
 <body>
+  <div class="offline-banner" id="offline-banner">НЕТ ИНТЕРНЕТА</div>
   <audio id="bg-music" loop style="display:none;"></audio>
-  <script>
-  (function(){
-    var u=localStorage.getItem('currentUser');
-    if(!u)return;
-    var d=localStorage.getItem('set_music_'+u);
-    var v=parseInt(localStorage.getItem('set_volume_'+u))||50;
-    var on=localStorage.getItem('set_music_on_'+u)!=='false';
-    var a=document.getElementById('bg-music');
-    var started=false;
-    function startMusic(){
-      if(started)return;
-      if(d&&on&&d!=='none'){a.src=d;a.volume=v/100;a.play().catch(function(){});}
-      started=true;
-    }
-    document.addEventListener('click',startMusic,{once:true});
-    document.addEventListener('touchstart',startMusic,{once:true});
-    if(d&&on&&d!=='none'){a.src=d;a.volume=v/100;a.play().catch(function(){});}
-  })();
-  </script>
   <div class="container">
-    <h1>🎰 Lucky Finger <sup>©</sup></h1>
+    <h1>LUCKY FINGER</h1>
     <div class="auth-panel" id="auth-panel">
       <div id="login-form">
-        <div class="auth-tabs"><button class="auth-tab active" id="tab-login">Вход</button><button class="auth-tab" id="tab-register">Регистрация</button></div>
+        <div class="auth-tabs">
+          <button class="auth-tab active" id="tab-login">ВХОД</button>
+          <button class="auth-tab" id="tab-register">РЕГИСТРАЦИЯ</button>
+        </div>
         <div id="form-login" class="auth-form">
-          <input type="text" class="auth-input" id="login-nickname" placeholder="Никнейм" autocomplete="username" />
-          <div class="password-wrapper"><input type="password" class="auth-input" id="login-password" placeholder="Пароль" autocomplete="current-password" /><button type="button" class="toggle-password" data-target="login-password">🔒</button></div>
-          <button class="auth-btn btn-login" id="btn-login">Войти</button><div class="auth-error" id="login-error"></div>
+          <input type="text" class="auth-input" id="login-nickname" placeholder="НИКНЕЙМ" autocomplete="username" />
+          <div class="password-wrapper">
+            <input type="password" class="auth-input" id="login-password" placeholder="ПАРОЛЬ" autocomplete="current-password" />
+            <button type="button" class="toggle-password" data-target="login-password">*</button>
+          </div>
+          <button class="auth-btn btn-login" id="btn-login">ВОЙТИ</button>
+          <div class="auth-error" id="login-error"></div>
         </div>
         <div id="form-register" class="auth-form" style="display:none;">
-          <input type="text" class="auth-input" id="register-nickname" placeholder="Придумайте никнейм" autocomplete="username" />
-          <div class="password-wrapper"><input type="password" class="auth-input" id="register-password" placeholder="Придумайте пароль" autocomplete="new-password" /><button type="button" class="toggle-password" data-target="register-password">🔒</button></div>
-          <div class="checkbox-container"><input type="checkbox" id="agree-checkbox" /><label class="checkbox-label" for="agree-checkbox">Я соглашаюсь с условиями <a href="pol.html" target="_blank">политики</a> и <a href="con.html" target="_blank">конфиденциальности</a></label></div>
-          <button class="auth-btn btn-register" id="btn-register" disabled>Зарегистрироваться</button><div class="auth-error" id="register-error"></div>
+          <input type="text" class="auth-input" id="register-nickname" placeholder="ПРИДУМАЙТЕ НИКНЕЙМ" autocomplete="username" />
+          <div class="password-wrapper">
+            <input type="password" class="auth-input" id="register-password" placeholder="ПРИДУМАЙТЕ ПАРОЛЬ" autocomplete="new-password" />
+            <button type="button" class="toggle-password" data-target="register-password">*</button>
+          </div>
+          <div class="checkbox-container">
+            <input type="checkbox" id="agree-checkbox" />
+            <label class="checkbox-label" for="agree-checkbox">Я соглашаюсь с <a href="pol.html" target="_blank">политикой</a> и <a href="con.html" target="_blank">конфиденциальностью</a></label>
+          </div>
+          <button class="auth-btn btn-register" id="btn-register" disabled>ЗАРЕГИСТРИРОВАТЬСЯ</button>
+          <div class="auth-error" id="register-error"></div>
         </div>
       </div>
       <div id="user-panel" style="display:none;">
         <div class="header-row">
           <div class="burger-wrapper">
-            <button class="burger-btn" id="burger-btn">☰</button>
+            <button class="burger-btn" id="burger-btn">=</button>
             <span class="burger-dot" id="burger-dot"></span>
           </div>
-          <button class="logout-btn" id="btn-logout">🚪 Выйти</button>
+          <button class="logout-btn" id="btn-logout">ВЫЙТИ</button>
         </div>
         <div class="burger-menu" id="burger-menu">
-          <a href="leaderboard.html" class="menu-item lb">🏆 Лидерборд</a>
-          <a href="news.html" class="menu-item news">📰 Новости<span class="notification-dot" id="news-dot"></span></a>
-          <a href="settings.html" class="menu-item settings">⚙️ Настройки</a>
-          <a href="authors.html" class="menu-item authors">👥 Авторы</a>
+          <a href="leaderboard.html" class="menu-item" id="menu-lb">ЛИДЕРБОРД</a>
+          <a href="news.html" class="menu-item" id="menu-news">НОВОСТИ<span class="notification-dot" id="news-dot"></span></a>
+          <a href="settings.html" class="menu-item">НАСТРОЙКИ</a>
+          <a href="authors.html" class="menu-item">АВТОРЫ</a>
         </div>
-        <div class="user-info"><div>Добро пожаловать,</div><div class="user-nickname" id="current-user"></div><div id="badge-container"></div></div>
+        <div class="user-info">
+          <div>ДОБРО ПОЖАЛОВАТЬ</div>
+          <div class="user-nickname" id="current-user"></div>
+          <div id="badge-container"></div>
+        </div>
       </div>
     </div>
     <div id="game-section" style="display:none;">
       <div id="banned-message" class="banned-message" style="display:none;"></div>
-      <div class="balance-card" id="balance-card"><div class="balance-label">Ваш баланс</div><div class="balance-amount" id="main-balance">1 000 ₽</div></div>
+      <div class="balance-card" id="balance-card">
+        <div class="balance-label">БАЛАНС</div>
+        <div class="balance-amount" id="main-balance">1 000</div>
+      </div>
       <div class="games-list" id="games-list"></div>
     </div>
   </div>
   <script>
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('/service-worker.js').catch(function(e){});
+    }
+
     var firebaseConfig={apiKey:"AIzaSyBKfDdHsbTzZjfc4hHX3SJV563UbVBvqPQ",authDomain:"lucky-finger-b8b05.firebaseapp.com",databaseURL:"https://lucky-finger-b8b05-default-rtdb.firebaseio.com",projectId:"lucky-finger-b8b05",storageBucket:"lucky-finger-b8b05.firebasestorage.app",messagingSenderId:"843623003093",appId:"1:843623003093:web:05acfb8aa828e6cc2e835c"};
     firebase.initializeApp(firebaseConfig);
     var database=firebase.database();
     var accountsCache={},currentUser=null,ADMIN_NICKNAME='I-am-admin';
+    var isOnline=navigator.onLine;
+
     var games=[
-      {icon:'📈',title:'Обвал',short:'Выводи до обвала!',desc:'Делай ставку и смотри как растёт график. Выведи деньги до обвала!',file:'crash.html',color:'crash-card'},
-      {icon:'🎡',title:'Рулетка',short:'Красное, чёрное, зелёное!',desc:'Классическая рулетка с 37 секторами. Ставь на цвет и крути!',file:'roulette.html',color:'roulette-card'},
-      {icon:'🎰',title:'Слоты 777',short:'Крути барабаны!',desc:'Собирай комбинации. Джекпот x20!',file:'slots.html',color:'slots-card'},
-      {icon:'💣',title:'Минное поле',short:'Избегай мин!',desc:'Открывай клетки 10x10. Безопасные приносят прибыль, мины забирают всё.',file:'mines.html',color:'mines-card'},
-      {icon:'🎲',title:'Кости',short:'Бросай кубики!',desc:'Угадывай сумму двух кубиков. Множители до x10!',file:'dice.html',color:'slots-card'},
-      {icon:'🐴',title:'Скачки',short:'Ставь на лошадь!',desc:'Выбери лошадь и смотри забег. Множители от x2 до x5.',file:'horses.html',color:'mines-card'},
-      {icon:'🔺',title:'Пирамида',short:'Найди алмаз! x3',desc:'Три чаши, под одной алмаз. Угадай — получи x3!',file:'pyramid.html',color:'slots-card'},
-      {icon:'🎣',title:'Рыбалка',short:'Лови рыбу!',desc:'Забрось удочку и жди поклёвки. Разная рыба — разная прибыль.',file:'fishing.html',color:'crash-card'},
-      {icon:'🪙',title:'Орёл и Решка',short:'Угадай сторону!',desc:'Подбрось монетку. Угадал — x2. Шанс ребра 1% — x50!',file:'coin.html',color:'coin-card'},
-      {icon:'🃏',title:'Покер',short:'Собери комбинацию!',desc:'Видеопокер с обменом карт. Комбинации до Роял Флеша x250!',file:'poker.html',color:'poker-card'},
-      {icon:'🎯',title:'Плинко',short:'Шарик и гвоздики!',desc:'Бросай шарик. Множители: x0.5, x1, x2, x3!',file:'plinko.html',color:'plinko-card'},
-      {icon:'🃏',title:'Блэкджек 21',short:'Набери 21 очко!',desc:'Игра против дилера. Блэкджек x2.5! Победа x2.',file:'blackjack.html',color:'blackjack-card'}
+      {icon:'[C]',title:'ОБВАЛ',short:'Выводи до обвала',desc:'Делай ставку и смотри как растёт график. Выведи деньги до обвала.',file:'crash.html'},
+      {icon:'[R]',title:'РУЛЕТКА',short:'Красное, чёрное',desc:'Классическая рулетка с 37 секторами. Ставь на цвет и крути.',file:'roulette.html'},
+      {icon:'[S]',title:'СЛОТЫ 777',short:'Крути барабаны',desc:'Собирай комбинации. Джекпот x20.',file:'slots.html'},
+      {icon:'[M]',title:'МИННОЕ ПОЛЕ',short:'Избегай мин',desc:'Открывай клетки 10x10. Безопасные приносят прибыль, мины забирают всё.',file:'mines.html'},
+      {icon:'[D]',title:'КОСТИ',short:'Бросай кубики',desc:'Угадывай сумму двух кубиков. Множители до x10.',file:'dice.html'},
+      {icon:'[H]',title:'СКАЧКИ',short:'Ставь на лошадь',desc:'Выбери лошадь и смотри забег. Множители от x2 до x5.',file:'horses.html'},
+      {icon:'[P]',title:'ПИРАМИДА',short:'Найди алмаз x3',desc:'Три чаши, под одной алмаз. Угадай — получи x3.',file:'pyramid.html'},
+      {icon:'[F]',title:'РЫБАЛКА',short:'Лови рыбу',desc:'Забрось удочку и жди поклёвки. Разная рыба — разная прибыль.',file:'fishing.html'},
+      {icon:'[O]',title:'ОРЁЛ И РЕШКА',short:'Угадай сторону',desc:'Подбрось монетку. Угадал — x2. Шанс ребра 1% — x50.',file:'coin.html'},
+      {icon:'[K]',title:'ПОКЕР',short:'Собери комбинацию',desc:'Видеопокер с обменом карт. Комбинации до Роял Флеша x250.',file:'poker.html'},
+      {icon:'[L]',title:'ПЛИНКО',short:'Шарик и гвоздики',desc:'Бросай шарик. Множители: x0.5, x1, x2, x3.',file:'plinko.html'},
+      {icon:'[B]',title:'БЛЭКДЖЕК 21',short:'Набери 21 очко',desc:'Игра против дилера. Блэкджек x2.5. Победа x2.',file:'blackjack.html'}
     ];
-    function renderGames(){document.getElementById('games-list').innerHTML=games.map(function(g,i){return '<div class="game-item '+g.color+'" data-index="'+i+'"><div class="game-header" onclick="toggleGame('+i+')"><div class="game-icon">'+g.icon+'</div><div class="game-info"><div class="game-title">'+g.title+'</div><div class="game-short">'+g.short+'</div></div><div class="game-arrow">▶</div></div><div class="game-details"><div class="game-desc">'+g.desc+'</div><a href="'+g.file+'" class="game-play-btn" onclick="localStorage.setItem(\'coming_back\',\'true\')">🎮 Играть</a></div></div>';}).join('');}
-    window.toggleGame=function(i){document.querySelectorAll('.game-item').forEach(function(item,j){item.classList.toggle('open',j===i?!item.classList.contains('open'):false);});};
-    document.getElementById('burger-btn').onclick=function(){document.getElementById('burger-menu').classList.toggle('open');};
-    async function checkNews(){try{var snapshot=await database.ref('news').get();var news=snapshot.val()||{};var newsKeys=Object.keys(news);if(newsKeys.length>0){var lastRead=localStorage.getItem('last_news_read_'+currentUser);var latestKey=newsKeys[newsKeys.length-1];if(!lastRead||lastRead<latestKey){document.getElementById('news-dot').style.display='block';document.getElementById('burger-dot').style.display='block';}else{document.getElementById('news-dot').style.display='none';document.getElementById('burger-dot').style.display='none';}}}catch(e){}}
-    renderGames();
-    document.querySelectorAll('.toggle-password').forEach(function(btn){btn.addEventListener('click',function(e){e.preventDefault();var input=document.getElementById(this.dataset.target);if(input){input.type=input.type==='password'?'text':'password';this.textContent=input.type==='password'?'🔒':'👁️';}});});
-    async function loadAcc(){try{var snapshot=await database.ref('accounts').get();accountsCache=snapshot.val()||{};}catch(e){}}
-    async function saveAcc(){try{await database.ref('accounts').set(accountsCache);}catch(e){}}
+
+    function renderGames(){
+      document.getElementById('games-list').innerHTML=games.map(function(g,i){
+        return '<div class="game-item" data-index="'+i+'"><div class="game-header" onclick="toggleGame('+i+')"><div class="game-icon">'+g.icon+'</div><div class="game-info"><div class="game-title">'+g.title+'</div><div class="game-short">'+g.short+'</div></div><div class="game-arrow">></div></div><div class="game-details"><div class="game-desc">'+g.desc+'</div><a href="'+g.file+'" class="game-play-btn" onclick="localStorage.setItem(\'coming_back\',\'true\')">ИГРАТЬ</a></div></div>';
+      }).join('');
+    }
+
+    window.toggleGame=function(i){
+      document.querySelectorAll('.game-item').forEach(function(item,j){
+        item.classList.toggle('open',j===i?!item.classList.contains('open'):false);
+      });
+    };
+
+    document.getElementById('burger-btn').onclick=function(){
+      document.getElementById('burger-menu').classList.toggle('open');
+    };
+
+    function checkInternet(){
+      return new Promise(function(resolve){
+        if(!navigator.onLine){resolve(false);return;}
+        var timeout=setTimeout(function(){resolve(false);},5000);
+        fetch('https://www.google.com/favicon.ico',{mode:'no-cors',cache:'no-store'})
+          .then(function(){clearTimeout(timeout);resolve(true);})
+          .catch(function(){clearTimeout(timeout);resolve(false);});
+      });
+    }
+
+    function updateOnlineStatus(){
+      isOnline=navigator.onLine;
+      var banner=document.getElementById('offline-banner');
+      if(isOnline){banner.classList.remove('show');}
+      else{banner.classList.add('show');}
+    }
+    window.addEventListener('online',updateOnlineStatus);
+    window.addEventListener('offline',updateOnlineStatus);
+    updateOnlineStatus();
+
+    document.getElementById('menu-lb').addEventListener('click',async function(e){
+      e.preventDefault();
+      var ok=await checkInternet();
+      if(!ok){alert('НЕТ ИНТЕРНЕТА');return;}
+      window.location.href='leaderboard.html';
+    });
+
+    document.getElementById('menu-news').addEventListener('click',async function(e){
+      e.preventDefault();
+      var ok=await checkInternet();
+      if(!ok){alert('НЕТ ИНТЕРНЕТА');return;}
+      window.location.href='news.html';
+    });
+
+    document.querySelectorAll('.toggle-password').forEach(function(btn){
+      btn.addEventListener('click',function(e){
+        e.preventDefault();
+        var input=document.getElementById(this.dataset.target);
+        if(input){
+          input.type=input.type==='password'?'text':'password';
+          this.textContent=input.type==='password'?'*':'o';
+        }
+      });
+    });
+
+    async function loadAcc(){
+      try{
+        var snapshot=await database.ref('accounts').get();
+        accountsCache=snapshot.val()||{};
+        localStorage.setItem('accounts_cache',JSON.stringify(accountsCache));
+      }catch(e){
+        var cached=localStorage.getItem('accounts_cache');
+        if(cached){try{accountsCache=JSON.parse(cached);}catch(err){}}
+      }
+    }
+
+    async function saveAcc(){
+      try{await database.ref('accounts').set(accountsCache);}catch(e){}
+    }
+
     function isBanned(n){return accountsCache[n]&&accountsCache[n].banned===true;}
-    function isIPBanned(ip){if(!ip)return false;for(var nickname in accountsCache){if(accountsCache[nickname].banned&&accountsCache[nickname].ip===ip)return true;}return false;}
-    function upBal(){document.getElementById('main-balance').textContent=(parseInt(localStorage.getItem('bal_'+currentUser))||0).toLocaleString()+' ₽';}
-    async function getIP(){var services=['https://api64.ipify.org?format=json','https://api.ip.sb/ip','https://api.my-ip.io/ip.json','https://ipapi.co/json/'];for(var i=0;i<services.length;i++){try{var r=await fetch(services[i]);if(r.ok){var d=await r.json();return d.ip||'неизвестно';}}catch(e){}}return'неизвестно';}
+    function isIPBanned(ip){
+      if(!ip)return false;
+      for(var nickname in accountsCache){
+        if(accountsCache[nickname].banned&&accountsCache[nickname].ip===ip)return true;
+      }
+      return false;
+        }
+    function upBal(){
+      document.getElementById('main-balance').textContent=(parseInt(localStorage.getItem('bal_'+currentUser))||0).toLocaleString();
+    }
+
+    async function getIP(){
+      var services=['https://api64.ipify.org?format=json','https://api.ip.sb/ip','https://api.my-ip.io/ip.json'];
+      for(var i=0;i<services.length;i++){
+        try{
+          var r=await fetch(services[i]);
+          if(r.ok){var d=await r.json();return d.ip||'неизвестно';}
+        }catch(e){}
+      }
+      return'неизвестно';
+    }
+
     var acb=document.getElementById('agree-checkbox'),br=document.getElementById('btn-register');
     acb.addEventListener('change',function(){br.disabled=!acb.checked;});
-    function showLogin(){document.getElementById('login-form').style.display='block';document.getElementById('user-panel').style.display='none';document.getElementById('game-section').style.display='none';document.getElementById('login-nickname').value='';document.getElementById('register-nickname').value='';document.getElementById('login-password').value='';document.getElementById('login-password').type='password';document.getElementById('register-password').value='';document.getElementById('register-password').type='password';document.querySelectorAll('.toggle-password').forEach(function(b){b.textContent='🔒';});acb.checked=false;br.disabled=true;}
-    async function showUser(n){currentUser=n;if(n===ADMIN_NICKNAME){window.location.href='admin.html';return;}localStorage.setItem('bal_'+n,accountsCache[n]?(accountsCache[n].balance||1000):1000);document.getElementById('login-form').style.display='none';document.getElementById('user-panel').style.display='block';document.getElementById('current-user').textContent=n;var bc=document.getElementById('badge-container'),bm=document.getElementById('banned-message'),bal=document.getElementById('balance-card'),gg=document.getElementById('games-list');if((accountsCache[n]&&accountsCache[n].ip&&isIPBanned(accountsCache[n].ip))||isBanned(n)){bc.innerHTML='<span class="banned-badge">🚫 Вы забанены</span>';bm.style.display='block';bm.innerHTML='🚫 Вы заблокированы. <a href="ban.html">Подробнее</a>';bal.style.display='none';gg.style.display='none';}else{bc.innerHTML='';bm.style.display='none';bal.style.display='block';gg.style.display='flex';upBal();}document.getElementById('game-section').style.display='block';checkNews();}
-    document.getElementById('tab-login').onclick=function(){document.getElementById('tab-login').classList.add('active');document.getElementById('tab-register').classList.remove('active');document.getElementById('form-login').style.display='flex';document.getElementById('form-register').style.display='none';};
-    document.getElementById('tab-register').onclick=function(){document.getElementById('tab-register').classList.add('active');document.getElementById('tab-login').classList.remove('active');document.getElementById('form-register').style.display='flex';document.getElementById('form-login').style.display='none';};
-    br.onclick=async function(){if(!acb.checked){document.getElementById('register-error').textContent='Согласитесь с условиями';return;}var n=document.getElementById('register-nickname').value.trim(),p=document.getElementById('register-password').value.trim(),el=document.getElementById('register-error');if(!n||!p){el.textContent='Заполните поля';return;}if(n.length<3){el.textContent='Никнейм от 3 символов';return;}if(p.length<4){el.textContent='Пароль от 4 символов';return;}if(n===ADMIN_NICKNAME){el.textContent='Зарезервировано';return;}await loadAcc();if(accountsCache[n]){el.textContent='Существует';return;}accountsCache[n]={password:p,balance:1000,created:new Date().toISOString(),banned:false,ip:await getIP()};await saveAcc();localStorage.setItem('currentUser',n);localStorage.setItem('bal_'+n,1000);el.style.color='#2ed573';el.textContent='Успешно!';setTimeout(function(){showUser(n);},500);};
-    document.getElementById('btn-login').onclick=async function(){var n=document.getElementById('login-nickname').value.trim(),p=document.getElementById('login-password').value.trim(),el=document.getElementById('login-error');if(!n||!p){el.textContent='Заполните поля';return;}await loadAcc();if(n===ADMIN_NICKNAME&&accountsCache[ADMIN_NICKNAME]&&accountsCache[ADMIN_NICKNAME].password===p){localStorage.setItem('currentUser',ADMIN_NICKNAME);window.location.href='admin.html';return;}if(!accountsCache[n]){el.textContent='Не найден';return;}if(accountsCache[n].password!==p){el.textContent='Неверный пароль';return;}localStorage.setItem('currentUser',n);localStorage.setItem('bal_'+n,accountsCache[n].balance||1000);el.textContent='';showUser(n);};
-    document.getElementById('btn-logout').onclick=function(){localStorage.removeItem('currentUser');currentUser=null;showLogin();};
-    (async function(){await loadAcc();if(localStorage.getItem('coming_back')==='true'){localStorage.removeItem('coming_back');var u=localStorage.getItem('currentUser');if(u&&u!==ADMIN_NICKNAME&&accountsCache[u]){showUser(u);return;}}var u=localStorage.getItem('currentUser');if(u){if(u===ADMIN_NICKNAME){window.location.href='admin.html';return;}localStorage.setItem('bal_'+u,accountsCache[u]?(accountsCache[u].balance||1000):1000);if(accountsCache[u])showUser(u);else showLogin();}else showLogin();})();
+
+    function showLogin(){
+      document.getElementById('login-form').style.display='block';
+      document.getElementById('user-panel').style.display='none';
+      document.getElementById('game-section').style.display='none';
+      document.getElementById('login-nickname').value='';
+      document.getElementById('register-nickname').value='';
+      document.getElementById('login-password').value='';
+      document.getElementById('login-password').type='password';
+      document.getElementById('register-password').value='';
+      document.getElementById('register-password').type='password';
+      document.querySelectorAll('.toggle-password').forEach(function(b){b.textContent='*';});
+      acb.checked=false;br.disabled=true;
+    }
+
+    async function showUser(n){
+      currentUser=n;
+      if(n===ADMIN_NICKNAME){window.location.href='admin.html';return;}
+      localStorage.setItem('bal_'+n,accountsCache[n]?(accountsCache[n].balance||1000):1000);
+      document.getElementById('login-form').style.display='none';
+      document.getElementById('user-panel').style.display='block';
+      document.getElementById('current-user').textContent=n;
+      var bc=document.getElementById('badge-container');
+      var bm=document.getElementById('banned-message');
+      var bal=document.getElementById('balance-card');
+      var gg=document.getElementById('games-list');
+      if((accountsCache[n]&&accountsCache[n].ip&&isIPBanned(accountsCache[n].ip))||isBanned(n)){
+        bc.innerHTML='<span class="banned-badge">ЗАБАНЕН</span>';
+        bm.style.display='block';
+        bm.innerHTML='ВЫ ЗАБЛОКИРОВАНЫ. <a href="ban.html">ПОДРОБНЕЕ</a>';
+        bal.style.display='none';gg.style.display='none';
+      }else{
+        bc.innerHTML='';bm.style.display='none';
+        bal.style.display='block';gg.style.display='flex';
+        upBal();
+      }
+      document.getElementById('game-section').style.display='block';
+      checkNews();
+      startMusic();
+    }
+
+    function startMusic(){
+      var u=localStorage.getItem('currentUser');
+      if(!u)return;
+      var d=localStorage.getItem('set_music_'+u);
+      var v=parseInt(localStorage.getItem('set_volume_'+u))||50;
+      var on=localStorage.getItem('set_music_on_'+u)!=='false';
+      var a=document.getElementById('bg-music');
+      if(d&&on&&d!=='none'){
+        a.src=d;a.volume=v/100;
+        a.play().catch(function(){});
+      }
+    }
+
+    document.getElementById('tab-login').onclick=function(){
+      document.getElementById('tab-login').classList.add('active');
+      document.getElementById('tab-register').classList.remove('active');
+      document.getElementById('form-login').style.display='flex';
+      document.getElementById('form-register').style.display='none';
+    };
+    document.getElementById('tab-register').onclick=function(){
+      document.getElementById('tab-register').classList.add('active');
+      document.getElementById('tab-login').classList.remove('active');
+      document.getElementById('form-register').style.display='flex';
+      document.getElementById('form-login').style.display='none';
+    };
+
+    br.onclick=async function(){
+      if(!acb.checked){document.getElementById('register-error').textContent='СОГЛАСИТЕСЬ С УСЛОВИЯМИ';return;}
+      var n=document.getElementById('register-nickname').value.trim();
+      var p=document.getElementById('register-password').value.trim();
+      var el=document.getElementById('register-error');
+      if(!n||!p){el.textContent='ЗАПОЛНИТЕ ПОЛЯ';return;}
+      if(n.length<3){el.textContent='НИКНЕЙМ ОТ 3 СИМВОЛОВ';return;}
+      if(p.length<4){el.textContent='ПАРОЛЬ ОТ 4 СИМВОЛОВ';return;}
+      if(n===ADMIN_NICKNAME){el.textContent='ЗАРЕЗЕРВИРОВАНО';return;}
+      await loadAcc();
+      if(accountsCache[n]){el.textContent='СУЩЕСТВУЕТ';return;}
+      accountsCache[n]={password:p,balance:1000,created:new Date().toISOString(),banned:false,ip:await getIP()};
+      await saveAcc();
+      localStorage.setItem('currentUser',n);
+      localStorage.setItem('bal_'+n,1000);
+      el.textContent='УСПЕШНО';
+      setTimeout(function(){showUser(n);},500);
+    };
+
+    document.getElementById('btn-login').onclick=async function(){
+      var n=document.getElementById('login-nickname').value.trim();
+      var p=document.getElementById('login-password').value.trim();
+      var el=document.getElementById('login-error');
+      if(!n||!p){el.textContent='ЗАПОЛНИТЕ ПОЛЯ';return;}
+      await loadAcc();
+      if(n===ADMIN_NICKNAME&&accountsCache[ADMIN_NICKNAME]&&accountsCache[ADMIN_NICKNAME].password===p){
+        localStorage.setItem('currentUser',ADMIN_NICKNAME);
+        window.location.href='admin.html';return;
+      }
+      if(!accountsCache[n]){el.textContent='НЕ НАЙДЕН';return;}
+      if(accountsCache[n].password!==p){el.textContent='НЕВЕРНЫЙ ПАРОЛЬ';return;}
+      localStorage.setItem('currentUser',n);
+      localStorage.setItem('bal_'+n,accountsCache[n].balance||1000);
+      el.textContent='';
+      showUser(n);
+    };
+
+    document.getElementById('btn-logout').onclick=function(){
+      localStorage.removeItem('currentUser');
+      currentUser=null;
+      showLogin();
+    };
+
+    async function checkNews(){
+      try{
+        var snapshot=await database.ref('news').get();
+        var news=snapshot.val()||{};
+        var newsKeys=Object.keys(news);
+        if(newsKeys.length>0){
+          var lastRead=localStorage.getItem('last_news_read_'+currentUser);
+          var latestKey=newsKeys[newsKeys.length-1];
+          if(!lastRead||lastRead<latestKey){
+            document.getElementById('news-dot').style.display='block';
+            document.getElementById('burger-dot').style.display='block';
+          }else{
+            document.getElementById('news-dot').style.display='none';
+            document.getElementById('burger-dot').style.display='none';
+          }
+        }
+      }catch(e){}
+    }
+
+    async function syncBalance(){
+      var user=localStorage.getItem('currentUser');
+      if(!user||user===ADMIN_NICKNAME)return;
+      var ok=await checkInternet();
+      if(!ok)return;
+      var localBalance=parseInt(localStorage.getItem('bal_'+user))||0;
+      try{
+        var snapshot=await database.ref('accounts/'+user+'/balance').get();
+        var serverBalance=snapshot.val()||0;
+        if(localBalance>serverBalance){
+          await database.ref('accounts/'+user+'/balance').set(localBalance);
+        }else if(serverBalance>localBalance){
+          localStorage.setItem('bal_'+user,serverBalance);
+          if(currentUser===user)upBal();
+        }
+      }catch(e){}
+    }
+
+    setInterval(syncBalance,30000);
+
+    renderGames();
+
+    (async function(){
+      await loadAcc();
+      if(localStorage.getItem('coming_back')==='true'){
+        localStorage.removeItem('coming_back');
+        var u=localStorage.getItem('currentUser');
+        if(u&&u!==ADMIN_NICKNAME&&accountsCache[u]){showUser(u);return;}
+      }
+      var u=localStorage.getItem('currentUser');
+      if(u){
+        if(u===ADMIN_NICKNAME){window.location.href='admin.html';return;}
+        localStorage.setItem('bal_'+u,accountsCache[u]?(accountsCache[u].balance||1000):1000);
+        if(accountsCache[u])showUser(u);
+        else showLogin();
+      }else showLogin();
+    })();
   </script>
 </body>
-</html>                                                                                                                          
+</html>
