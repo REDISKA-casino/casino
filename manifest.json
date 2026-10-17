@@ -2,22 +2,22 @@
   "name": "Lucky Finger",
   "short_name": "LuckyFinger",
   "description": "Развлекательная игровая платформа",
-  "start_url": "/index.html",
-  "scope": "/",
+  "start_url": "/casino/index.html",
+  "scope": "/casino/",
   "display": "standalone",
-  "background_color": "#121212",
-  "theme_color": "#ff4757",
+  "background_color": "#0a0a0a",
+  "theme_color": "#ffffff",
   "orientation": "portrait",
   "lang": "ru",
   "icons": [
     {
-      "src": "/icon-192.png",
+      "src": "/casino/icon-192.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any maskable"
     },
     {
-      "src": "/icon-512.png",
+      "src": "/casino/icon-512.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any maskable"
