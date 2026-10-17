@@ -7,23 +7,197 @@
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
   <style>
-    :root { --bg: #121212; --panel: #1e1e1e; --text: #e0e0e0; --accent: #ff4757; --success: #2ed573; --gold: #ffd700; }
-    body { background: var(--bg); color: var(--text); font-family: system-ui, sans-serif; margin: 0; display: flex; flex-direction: column; align-items: center; min-height: 100vh; }
-    .header { width: 100%; max-width: 500px; display: flex; align-items: center; padding: 16px 16px 0 16px; gap: 12px; }
-    .back-btn { background: var(--panel); color: var(--text); border: 1px solid #333; padding: 8px 16px; border-radius: 8px; font-size: 14px; cursor: pointer; text-decoration: none; display: inline-block; }
-    h1 { margin: 16px 0; font-weight: 400; }
-    .game-container { width: 100%; max-width: 500px; padding: 16px; }
-    .board { position: relative; width: 100%; height: 320px; background: #1a1a2e; border-radius: 12px; margin-bottom: 16px; overflow: hidden; border: 2px solid #333; }
-    .peg { position: absolute; width: 12px; height: 12px; background: radial-gradient(circle at 40% 40%, #ccc, #555); border-radius: 50%; z-index: 1; box-shadow: 0 2px 4px rgba(0,0,0,0.5); }
-    .ball { position: absolute; width: 16px; height: 16px; background: radial-gradient(circle at 40% 35%, #ff6b6b, #cc0000); border-radius: 50%; z-index: 2; display: none; box-shadow: 0 0 15px rgba(255,71,87,0.8), 0 4px 8px rgba(0,0,0,0.5); }
-    .slot { position: absolute; bottom: 0; height: 45px; display: flex; justify-content: center; align-items: center; font-weight: bold; font-size: 13px; color: #fff; z-index: 0; border-top: 2px solid rgba(255,255,255,0.2); }
-    .controls-box { background: var(--panel); padding: 16px; border-radius: 12px; text-align: center; }
-    .balance-box { display: flex; justify-content: space-between; padding: 8px 0; margin-bottom: 12px; font-size: 18px; }
-    input[type="number"] { width: 100%; padding: 12px; border: 1px solid #333; border-radius: 6px; background: #000; color: #fff; text-align: center; font-size: 18px; box-sizing: border-box; margin-bottom: 12px; }
-    .btn-drop { width: 100%; padding: 14px; border: none; border-radius: 8px; font-size: 16px; cursor: pointer; font-weight: bold; color: white; background: var(--accent); }
-    .btn-drop:disabled { opacity: 0.5; }
-    .status-text { text-align: center; font-size: 20px; font-weight: bold; margin-bottom: 12px; min-height: 28px; }
-    .history-box { background: var(--panel); padding: 12px; border-radius: 8px; font-size: 13px; max-height: 120px; overflow-y: auto; color: #aaa; margin-top: 12px; }
+    @font-face {
+      font-family: 'PixelFont';
+      src: url('pixel-font.ttf') format('truetype');
+      font-display: swap;
+    }
+    :root {
+      --bg: #0a0a0a;
+      --panel: #1a1a1a;
+      --panel-light: #2a2a2a;
+      --text: #ffffff;
+      --text-dim: #888888;
+      --border: #e0e0e0;
+      --border-dim: #444444;
+    }
+    * { box-sizing: border-box; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'PixelFont', 'Courier New', monospace;
+      margin: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
+      image-rendering: pixelated;
+      -webkit-font-smoothing: none;
+    }
+    .header {
+      width: 100%;
+      max-width: 500px;
+      display: flex;
+      align-items: center;
+      padding: 16px 16px 0 16px;
+    }
+    .back-btn {
+      background: var(--panel-light);
+      color: var(--text);
+      border: 3px solid var(--border);
+      padding: 10px 16px;
+      font-size: 12px;
+      cursor: pointer;
+      text-decoration: none;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      box-shadow: 3px 3px 0 var(--border-dim);
+    }
+    .back-btn:active {
+      transform: translate(2px, 2px);
+      box-shadow: 1px 1px 0 var(--border-dim);
+    }
+    h1 {
+      margin: 16px 0;
+      font-weight: 400;
+      font-size: 20px;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      text-shadow: 2px 2px 0 var(--border-dim);
+      text-align: center;
+    }
+    .game-container {
+      width: 100%;
+      max-width: 500px;
+      padding: 16px;
+    }
+    .board {
+      position: relative;
+      width: 100%;
+      height: 320px;
+      background: var(--bg);
+      border: 3px solid var(--border);
+      margin-bottom: 16px;
+      overflow: hidden;
+      box-shadow: 4px 4px 0 var(--border-dim);
+    }
+    .peg {
+      position: absolute;
+      width: 8px;
+      height: 8px;
+      background: var(--border);
+      z-index: 1;
+      border-radius: 0;
+    }
+    .ball {
+      position: absolute;
+      width: 12px;
+      height: 12px;
+      background: var(--text);
+      z-index: 2;
+      display: none;
+      border-radius: 0;
+      box-shadow: 0 0 10px var(--border-dim);
+    }
+    .slot {
+      position: absolute;
+      bottom: 0;
+      height: 45px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-weight: 400;
+      font-size: 10px;
+      color: var(--text);
+      z-index: 0;
+      border-top: 2px solid var(--border);
+      border-left: 1px solid var(--border-dim);
+      text-transform: uppercase;
+    }
+    .controls-box {
+      background: var(--panel);
+      padding: 20px;
+      border: 3px solid var(--border);
+      text-align: center;
+      box-shadow: 4px 4px 0 var(--border-dim);
+    }
+    .balance-box {
+      display: flex;
+      justify-content: space-between;
+      padding: 8px 0;
+      margin-bottom: 12px;
+      font-size: 14px;
+      text-transform: uppercase;
+      border-bottom: 2px solid var(--border-dim);
+    }
+    input[type="number"] {
+      width: 100%;
+      padding: 12px;
+      border: 3px solid var(--border);
+      background: var(--bg);
+      color: var(--text);
+      text-align: center;
+      font-size: 16px;
+      font-family: inherit;
+      margin-bottom: 16px;
+      outline: none;
+    }
+    input[type="number"]:focus {
+      border-color: var(--text);
+    }
+    .btn-drop {
+      width: 100%;
+      padding: 14px;
+      border: 3px solid var(--border);
+      font-size: 14px;
+      cursor: pointer;
+      font-weight: 400;
+      color: var(--bg);
+      background: var(--border);
+      font-family: inherit;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      box-shadow: 4px 4px 0 var(--border-dim);
+    }
+    .btn-drop:active {
+      transform: translate(2px, 2px);
+      box-shadow: 2px 2px 0 var(--border-dim);
+    }
+    .btn-drop:disabled {
+      opacity: 0.5;
+      transform: translate(2px, 2px);
+      box-shadow: 2px 2px 0 var(--border-dim);
+    }
+    .status-text {
+      text-align: center;
+      font-size: 14px;
+      margin-bottom: 16px;
+      min-height: 20px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--text);
+    }
+    .history-box {
+      background: var(--panel);
+      padding: 16px;
+      font-size: 11px;
+      max-height: 120px;
+      overflow-y: auto;
+      color: var(--text-dim);
+      margin-top: 16px;
+      border: 3px solid var(--border);
+      box-shadow: 4px 4px 0 var(--border-dim);
+      text-transform: uppercase;
+    }
+    .history-box::-webkit-scrollbar {
+      width: 8px;
+    }
+    .history-box::-webkit-scrollbar-track {
+      background: var(--bg);
+    }
+    .history-box::-webkit-scrollbar-thumb {
+      background: var(--border-dim);
+    }
   </style>
 </head>
 <body>
@@ -47,17 +221,17 @@
     if(d&&on&&d!=='none'){a.src=d;a.volume=v/100;a.play().catch(function(){});}
   })();
   </script>
-  <div class="header"><a href="index.html" class="back-btn" onclick="localStorage.setItem('coming_back','true')">← Назад</a></div>
+  <div class="header"><a href="index.html" class="back-btn" onclick="localStorage.setItem('coming_back','true')">&lt;&lt; НАЗАД</a></div>
   <div class="game-container">
-    <h1>🎯 Плинко</h1>
-    <div class="status-text" id="status-text">Сделайте ставку и бросьте шарик</div>
+    <h1>ПЛИНКО</h1>
+    <div class="status-text" id="status-text">СДЕЛАЙТЕ СТАВКУ И БРОСЬТЕ ШАРИК</div>
     <div class="board" id="board"><div class="ball" id="ball"></div></div>
     <div class="controls-box">
-      <div class="balance-box"><span>Баланс</span><span id="balance-display">1000 ₽</span></div>
-      <input type="number" id="bet-input" min="1" value="100" placeholder="Ставка" />
-      <button class="btn-drop" id="btn-drop">🔴 Бросить шарик</button>
+      <div class="balance-box"><span>БАЛАНС</span><span id="balance-display">1000 РУБ</span></div>
+      <input type="number" id="bet-input" min="1" value="100" placeholder="СТАВКА" />
+      <button class="btn-drop" id="btn-drop">БРОСИТЬ ШАРИК</button>
     </div>
-    <div class="history-box" id="history-box">История бросков</div>
+    <div class="history-box" id="history-box">ИСТОРИЯ БРОСКОВ</div>
   </div>
   <script>
     var firebaseConfig = {
@@ -77,18 +251,17 @@
     var balance = parseInt(localStorage.getItem('bal_' + currentUser)) || 1000;
     var isDropping = false;
     var COLS = 7, ROWS = 9, multipliers = [0.5, 1, 2, 3, 2, 1, 0.5];
-    var slotColors = ['#2c3e50','#34495e','#e67e22','#e74c3c','#e67e22','#34495e','#2c3e50'];
-
+    
     async function loadAcc() { try { var snapshot = await database.ref('accounts').get(); accountsCache = snapshot.val() || {}; } catch(e) {} }
     async function saveAcc() { try { await database.ref('accounts').set(accountsCache); } catch(e) {} }
-    function saveBal() { localStorage.setItem('bal_' + currentUser, balance); document.getElementById('balance-display').textContent = balance.toLocaleString() + ' ₽'; syncNow(); }
+    function saveBal() { localStorage.setItem('bal_' + currentUser, balance); document.getElementById('balance-display').textContent = balance.toLocaleString() + ' РУБ'; syncNow(); }
     async function syncNow() { if (accountsCache[currentUser]) { accountsCache[currentUser].balance = balance; await saveAcc(); } }
-    function addHistory(text) { var box = document.getElementById('history-box'); if(!box) return; var div = document.createElement('div'); div.textContent = text; div.style.padding = '4px 0'; div.style.borderBottom = '1px solid #2a2a2a'; box.insertBefore(div, box.firstChild); while(box.children.length > 20) { box.removeChild(box.lastChild); } }
-    document.getElementById('balance-display').textContent = balance.toLocaleString() + ' ₽';
+    function addHistory(text) { var box = document.getElementById('history-box'); if(!box) return; var div = document.createElement('div'); div.textContent = text; div.style.padding = '6px 0'; div.style.borderBottom = '2px solid var(--border-dim)'; box.insertBefore(div, box.firstChild); while(box.children.length > 20) { box.removeChild(box.lastChild); } }
+    document.getElementById('balance-display').textContent = balance.toLocaleString() + ' РУБ';
 
     var board = document.getElementById('board'), ball = document.getElementById('ball');
     var marginX = 15, marginTop = 25, boardW = board.clientWidth, boardH = 320;
-    var spacingX = (boardW - marginX * 2) / (COLS - 1), spacingY = (boardH - marginTop - 50) / ROWS, ballR = 8;
+    var spacingX = (boardW - marginX * 2) / (COLS - 1), spacingY = (boardH - marginTop - 50) / ROWS, ballR = 6;
 
     for(var r = 0; r < ROWS; r++) {
       var pegsInRow = r % 2 === 0 ? COLS : COLS + 1;
@@ -96,8 +269,8 @@
       for(var c = 0; c < pegsInRow; c++) {
         var peg = document.createElement('div');
         peg.className = 'peg';
-        peg.style.left = (startX + c * spacingX - 6) + 'px';
-        peg.style.top = (marginTop + r * spacingY - 6) + 'px';
+        peg.style.left = (startX + c * spacingX - 4) + 'px';
+        peg.style.top = (marginTop + r * spacingY - 4) + 'px';
         board.appendChild(peg);
       }
     }
@@ -108,20 +281,25 @@
       slot.className = 'slot';
       slot.style.left = (marginX + c * slotWidth) + 'px';
       slot.style.width = slotWidth + 'px';
-      slot.style.background = slotColors[c];
-      slot.textContent = 'x' + multipliers[c];
+      
+      if (c === 0 || c === COLS - 1) slot.style.background = 'var(--bg)';
+      else if (c === 1 || c === COLS - 2) slot.style.background = 'var(--panel-light)';
+      else if (c === 2 || c === COLS - 3) slot.style.background = 'var(--panel)';
+      else slot.style.background = 'var(--border-dim)';
+      
+      slot.textContent = 'X' + multipliers[c];
       board.appendChild(slot);
     }
 
     function checkPegCollision(bx, by, pegX, pegY) {
-      var dx = bx - (pegX + 6), dy = by - (pegY + 6);
-      return Math.sqrt(dx * dx + dy * dy) < (ballR + 6);
+      var dx = bx - (pegX + 4), dy = by - (pegY + 4);
+      return Math.sqrt(dx * dx + dy * dy) < (ballR + 4);
     }
 
     document.getElementById('btn-drop').onclick = function() {
       if(isDropping) return;
       var bet = +document.getElementById('bet-input').value;
-      if(!bet || bet <= 0 || bet > balance) { alert('Некорректная ставка'); return; }
+      if(!bet || bet <= 0 || bet > balance) { alert('НЕКОРРЕКТНАЯ СТАВКА'); return; }
       isDropping = true; document.getElementById('btn-drop').disabled = true;
       balance -= bet; saveBal();
       var posX = marginX + Math.random() * (boardW - marginX * 2) - ballR, posY = 0;
@@ -136,9 +314,9 @@
           var landedCol = Math.min(Math.max(Math.floor((posX - marginX) / slotWidth), 0), COLS - 1);
           var mult = multipliers[landedCol], win = Math.floor(bet * mult);
           balance += win; saveBal();
-          document.getElementById('status-text').textContent = 'Выпало: x' + mult + '! ' + (win >= bet ? '+' + win + '₽' : '-' + bet + '₽');
-          document.getElementById('status-text').style.color = win >= bet ? '#2ed573' : '#ff4757';
-          addHistory('🎯 Плинко x' + mult + ': ' + (win > 0 ? '+' + win + '₽' : '-' + bet + '₽'));
+          document.getElementById('status-text').textContent = 'ВЫПАЛО: X' + mult + '! ' + (win >= bet ? '+' + win + ' РУБ' : '-' + bet + ' РУБ');
+          document.getElementById('status-text').style.color = win >= bet ? 'var(--text)' : 'var(--text-dim)';
+          addHistory('ПЛИНКО X' + mult + ': ' + (win > 0 ? '+' + win + ' РУБ' : '-' + bet + ' РУБ'));
           setTimeout(function() { ball.style.display = 'none'; isDropping = false; document.getElementById('btn-drop').disabled = false; }, 500);
           return;
         }
@@ -148,10 +326,10 @@
         board.querySelectorAll('.peg').forEach(function(peg) {
           var pegX = parseFloat(peg.style.left), pegY = parseFloat(peg.style.top);
           if(checkPegCollision(posX + ballR, posY + ballR, pegX, pegY)) {
-            var dx = (posX + ballR) - (pegX + 6), dy = (posY + ballR) - (pegY + 6);
+            var dx = (posX + ballR) - (pegX + 4), dy = (posY + ballR) - (pegY + 4);
             var dist = Math.sqrt(dx * dx + dy * dy), nx = dx / dist, ny = dy / dist;
-            posX = pegX + 6 + nx * (ballR + 6) - ballR;
-            posY = pegY + 6 + ny * (ballR + 6) - ballR;
+            posX = pegX + 4 + nx * (ballR + 4) - ballR;
+            posY = pegY + 4 + ny * (ballR + 4) - ballR;
             velX = (Math.random() - 0.5) * 3;
             velY = -Math.abs(velY) * (0.5 + Math.random() * 0.5);
           }
@@ -169,4 +347,4 @@
     (async function() { await loadAcc(); })();
   </script>
 </body>
-</html>
+  </html>
