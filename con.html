@@ -5,51 +5,139 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <title>Политика конфиденциальности</title>
   <style>
-    :root { --bg: #121212; --panel: #1e1e1e; --text: #e0e0e0; --accent: #ff4757; --gold: #ffd700; }
-    body { background: var(--bg); color: var(--text); font-family: system-ui, sans-serif; margin: 0; display: flex; flex-direction: column; align-items: center; min-height: 100vh; padding: 16px; box-sizing: border-box; }
-    .container { width: 100%; max-width: 600px; background: var(--panel); padding: 24px; border-radius: 16px; border: 2px solid #333; }
-    h1 { color: var(--gold); font-weight: 400; text-align: center; font-size: 24px; }
-    h2 { color: var(--text); font-size: 18px; margin-top: 20px; }
-    p { line-height: 1.6; color: #bbb; font-size: 14px; }
-    .back-btn { display: inline-block; background: var(--accent); color: white; padding: 10px 20px; border-radius: 8px; text-decoration: none; font-weight: bold; margin-top: 20px; }
-    .disclaimer { margin-top: 20px; padding: 16px; background: #1a1a1a; border-radius: 8px; border: 1px solid #333; font-size: 13px; color: #aaa; line-height: 1.5; }
+    @font-face {
+      font-family: 'PixelFont';
+      src: url('pixel-font.ttf') format('truetype');
+      font-display: swap;
+    }
+    :root {
+      --bg: #0a0a0a;
+      --panel: #1a1a1a;
+      --panel-light: #2a2a2a;
+      --text: #ffffff;
+      --text-dim: #888888;
+      --border: #e0e0e0;
+      --border-dim: #444444;
+    }
+    * { box-sizing: border-box; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'PixelFont', 'Courier New', monospace;
+      margin: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
+      padding: 16px;
+      image-rendering: pixelated;
+      -webkit-font-smoothing: none;
+    }
+    .container {
+      width: 100%;
+      max-width: 600px;
+      background: var(--panel);
+      padding: 24px;
+      border: 3px solid var(--border);
+      box-shadow: 4px 4px 0 var(--border-dim);
+    }
+    h1 {
+      color: var(--text);
+      font-weight: 400;
+      text-align: center;
+      font-size: 18px;
+      margin-bottom: 24px;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      text-shadow: 2px 2px 0 var(--border-dim);
+    }
+    h2 {
+      color: var(--text);
+      font-size: 14px;
+      margin-top: 24px;
+      margin-bottom: 12px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      border-bottom: 2px solid var(--border-dim);
+      padding-bottom: 8px;
+    }
+    p {
+      line-height: 1.6;
+      color: var(--text-dim);
+      font-size: 11px;
+      margin-bottom: 12px;
+    }
+    p strong {
+      color: var(--text);
+      font-weight: 400;
+    }
+    .back-btn {
+      display: block;
+      text-align: center;
+      background: var(--panel-light);
+      color: var(--text);
+      padding: 14px;
+      border: 3px solid var(--border);
+      text-decoration: none;
+      font-weight: 400;
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      box-shadow: 4px 4px 0 var(--border-dim);
+      margin-top: 24px;
+    }
+    .back-btn:active {
+      transform: translate(2px, 2px);
+      box-shadow: 2px 2px 0 var(--border-dim);
+    }
+    .disclaimer {
+      margin-top: 24px;
+      padding: 16px;
+      background: var(--bg);
+      border: 3px solid var(--border);
+      font-size: 11px;
+      color: var(--text-dim);
+      line-height: 1.6;
+      text-transform: uppercase;
+      box-shadow: 3px 3px 0 var(--border-dim);
+    }
   </style>
 </head>
 <body>
   <div class="container">
-    <h1>🔒 Политика конфиденциальности</h1>
-    <p><strong>Последнее обновление:</strong> 24 июля 2025 г.</p>
+    <h1>ПОЛИТИКА КОНФИДЕНЦИАЛЬНОСТИ</h1>
+    <p><strong>ПОСЛЕДНЕЕ ОБНОВЛЕНИЕ:</strong> 24 ИЮЛЯ 2025 Г.</p>
     
-    <h2>1. Сбор данных</h2>
-    <p>Lucky Finger © собирает минимальный объем данных, необходимый для функционирования платформы. Все данные (никнейм, пароль, игровой баланс, IP-адрес) хранятся в защищённом облачном хранилище.</p>
+    <h2>1. СБОР ДАННЫХ</h2>
+    <p>LUCKY FINGER СОБИРАЕТ МИНИМАЛЬНЫЙ ОБЪЕМ ДАННЫХ, НЕОБХОДИМЫЙ ДЛЯ ФУНКЦИОНИРОВАНИЯ ПЛАТФОРМЫ. ВСЕ ДАННЫЕ (НИКНЕЙМ, ПАРОЛЬ, ИГРОВОЙ БАЛАНС, IP-АДРЕС) ХРАНЯТСЯ В ЗАЩИЩЁННОМ ОБЛАЧНОМ ХРАНИЛИЩЕ.</p>
     
-    <h2>2. IP-адрес</h2>
-    <p>IP-адрес сохраняется исключительно в целях безопасности и предотвращения нарушений правил платформы. IP-адрес используется ТОЛЬКО для:</p>
-    <p>• Идентификации нарушителей при попытке обхода блокировки</p>
-    <p>• Предотвращения читерства и мошенничества</p>
-    <p>• Блокировки доступа к платформе для нарушителей</p>
-    <p>IP-адрес НЕ отображается другим пользователям, НЕ используется в маркетинговых целях, НЕ передаётся третьим лицам и НЕ применяется для отслеживания местоположения пользователя.</p>
+    <h2>2. IP-АДРЕС</h2>
+    <p>IP-АДРЕС СОХРАНЯЕТСЯ ИСКЛЮЧИТЕЛЬНО В ЦЕЛЯХ БЕЗОПАСНОСТИ И ПРЕДОТВРАЩЕНИЯ НАРУШЕНИЙ ПРАВИЛ ПЛАТФОРМЫ. IP-АДРЕС ИСПОЛЬЗУЕТСЯ ТОЛЬКО ДЛЯ:</p>
+    <p>- ИДЕНТИФИКАЦИИ НАРУШИТЕЛЕЙ ПРИ ПОПЫТКЕ ОБХОДА БЛОКИРОВКИ</p>
+    <p>- ПРЕДОТВРАЩЕНИЯ ЧИТЕРСТВА И МОШЕННИЧЕСТВА</p>
+    <p>- БЛОКИРОВКИ ДОСТУПА К ПЛАТФОРМЕ ДЛЯ НАРУШИТЕЛЕЙ</p>
+    <p>IP-АДРЕС НЕ ОТОБРАЖАЕТСЯ ДРУГИМ ПОЛЬЗОВАТЕЛЯМ, НЕ ИСПОЛЬЗУЕТСЯ В МАРКЕТИНГОВЫХ ЦЕЛЯХ, НЕ ПЕРЕДАЁТСЯ ТРЕТЬИМ ЛИЦАМ И НЕ ПРИМЕНЯЕТСЯ ДЛЯ ОТСЛЕЖИВАНИЯ МЕСТОПОЛОЖЕНИЯ ПОЛЬЗОВАТЕЛЯ.</p>
     
-    <h2>3. Использование данных</h2>
-    <p>Собранные данные используются исключительно для обеспечения работы игрового процесса. Никнейм и пароль используются для авторизации пользователя. Игровой баланс используется для учета виртуальных средств в играх. Данные не используются для маркетинговых целей или профилирования пользователей.</p>
+    <h2>3. ИСПОЛЬЗОВАНИЕ ДАННЫХ</h2>
+    <p>СОБРАННЫЕ ДАННЫЕ ИСПОЛЬЗУЮТСЯ ИСКЛЮЧИТЕЛЬНО ДЛЯ ОБЕСПЕЧЕНИЯ РАБОТЫ ИГРОВОГО ПРОЦЕССА. НИКНЕЙМ И ПАРОЛЬ ИСПОЛЬЗУЮТСЯ ДЛЯ АВТОРИЗАЦИИ ПОЛЬЗОВАТЕЛЯ. ИГРОВОЙ БАЛАНС ИСПОЛЬЗУЕТСЯ ДЛЯ УЧЕТА ВИРТУАЛЬНЫХ СРЕДСТВ В ИГРАХ. ДАННЫЕ НЕ ИСПОЛЬЗУЮТСЯ ДЛЯ МАРКЕТИНГОВЫХ ЦЕЛЕЙ ИЛИ ПРОФИЛИРОВАНИЯ ПОЛЬЗОВАТЕЛЕЙ.</p>
     
-    <h2>4. Хранение данных</h2>
-    <p>Все данные хранятся в облачном сервисе JSONbin.io. Доступ к данным имеет только администратор платформы через защищённый API-ключ.</p>
+    <h2>4. ХРАНЕНИЕ ДАННЫХ</h2>
+    <p>ВСЕ ДАННЫЕ ХРАНЯТСЯ В ОБЛАЧНОМ СЕРВИСЕ JSONBIN.IO. ДОСТУП К ДАННЫМ ИМЕЕТ ТОЛЬКО АДМИНИСТРАТОР ПЛАТФОРМЫ ЧЕРЕЗ ЗАЩИЩЁННЫЙ API-КЛЮЧ.</p>
     
-    <h2>5. Передача данных третьим лицам</h2>
-    <p>Данные не передаются третьим лицам. Мы не продаем, не обмениваем и не передаем ваши данные каким-либо третьим сторонам.</p>
+    <h2>5. ПЕРЕДАЧА ДАННЫХ ТРЕТЬИМ ЛИЦАМ</h2>
+    <p>ДАННЫЕ НЕ ПЕРЕДАЮТСЯ ТРЕТЬИМ ЛИЦАМ. МЫ НЕ ПРОДАЕМ, НЕ ОБМЕНИВАЕМ И НЕ ПЕРЕДАЕМ ВАШИ ДАННЫЕ КАКИМ-ЛИБО ТРЕТЬИМ СТОРОНАМ.</p>
     
-    <h2>6. Безопасность</h2>
-    <p>Платформа использует защищённое соединение (HTTPS) и API-ключи для доступа к данным. Рекомендуется использовать надежные пароли и не передавать их третьим лицам.</p>
+    <h2>6. БЕЗОПАСНОСТЬ</h2>
+    <p>ПЛАТФОРМА ИСПОЛЬЗУЕТ ЗАЩИЩЁННОЕ СОЕДИНЕНИЕ (HTTPS) И API-КЛЮЧИ ДЛЯ ДОСТУПА К ДАННЫМ. РЕКОМЕНДУЕТСЯ ИСПОЛЬЗОВАТЬ НАДЕЖНЫЕ ПАРОЛИ И НЕ ПЕРЕДАВАТЬ ИХ ТРЕТЬИМ ЛИЦАМ.</p>
     
-    <h2>7. Согласие</h2>
-    <p>Используя данную платформу, вы соглашаетесь с условиями данной политики конфиденциальности, включая сбор IP-адреса в целях безопасности. Если вы не согласны с какими-либо пунктами, пожалуйста, прекратите использование платформы.</p>
+    <h2>7. СОГЛАСИЕ</h2>
+    <p>ИСПОЛЬЗУЯ ДАННУЮ ПЛАТФОРМУ, ВЫ СОГЛАШАЕТЕСЬ С УСЛОВИЯМИ ДАННОЙ ПОЛИТИКИ КОНФИДЕНЦИАЛЬНОСТИ, ВКЛЮЧАЯ СБОР IP-АДРЕСА В ЦЕЛЯХ БЕЗОПАСНОСТИ. ЕСЛИ ВЫ НЕ СОГЛАСНЫ С КАКИМИ-ЛИБО ПУНКТАМИ, ПОЖАЛУЙСТА, ПРЕКРАТИТЕ ИСПОЛЬЗОВАНИЕ ПЛАТФОРМЫ.</p>
     
     <div class="disclaimer">
-      Любые совпадения названий, имён, торговых марок или иных элементов являются случайными. Автор данного проекта не имел намерения причинить вред или нарушить чьи-либо права. Все совпадения абсолютно случайны.
+      ЛЮБЫЕ СОВПАДЕНИЯ НАЗВАНИЙ, ИМЁН, ТОРГОВЫХ МАРОК ИЛИ ИНЫХ ЭЛЕМЕНТОВ ЯВЛЯЮТСЯ СЛУЧАЙНЫМИ. АВТОР ДАННОГО ПРОЕКТА НЕ ИМЕЛ НАМЕРЕНИЯ ПРИЧИНИТЬ ВРЕД ИЛИ НАРУШИТЬ ЧЬИ-ЛИБО ПРАВА. ВСЕ СОВПАДЕНИЯ АБСОЛЮТНО СЛУЧАЙНЫ.
     </div>
     
-    <a href="index.html" class="back-btn">← Назад</a>
+    <a href="index.html" class="back-btn">&lt;&lt; НАЗАД</a>
   </div>
 </body>
 </html>
