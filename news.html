@@ -7,17 +7,108 @@
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
   <style>
-    :root { --bg: #121212; --panel: #1e1e1e; --text: #e0e0e0; --accent: #ff4757; --gold: #ffd700; }
-    body { background: var(--bg); color: var(--text); font-family: system-ui, sans-serif; margin: 0; display: flex; flex-direction: column; align-items: center; min-height: 100vh; padding: 16px; box-sizing: border-box; }
-    .container { width: 100%; max-width: 500px; background: var(--panel); padding: 24px; border-radius: 16px; border: 2px solid #333; }
-    h1 { font-weight: 400; text-align: center; font-size: 24px; color: var(--gold); margin-bottom: 20px; }
-    .news-item { padding: 16px; border-bottom: 1px solid #2a2a2a; }
-    .news-item:last-child { border-bottom: none; }
-    .news-title { font-size: 18px; font-weight: 600; margin-bottom: 8px; }
-    .news-text { font-size: 14px; color: #bbb; line-height: 1.6; }
-    .news-date { font-size: 12px; color: #666; margin-top: 8px; }
-    .back-btn { display: block; text-align: center; margin-top: 24px; background: var(--accent); color: white; padding: 12px 20px; border-radius: 8px; text-decoration: none; font-weight: bold; }
-    .loading { text-align: center; padding: 20px; color: #666; }
+    @font-face {
+      font-family: 'PixelFont';
+      src: url('pixel-font.ttf') format('truetype');
+      font-display: swap;
+    }
+    :root {
+      --bg: #0a0a0a;
+      --panel: #1a1a1a;
+      --panel-light: #2a2a2a;
+      --text: #ffffff;
+      --text-dim: #888888;
+      --border: #e0e0e0;
+      --border-dim: #444444;
+    }
+    * { box-sizing: border-box; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'PixelFont', 'Courier New', monospace;
+      margin: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
+      padding: 16px;
+      image-rendering: pixelated;
+      -webkit-font-smoothing: none;
+    }
+    .container {
+      width: 100%;
+      max-width: 500px;
+      background: var(--panel);
+      padding: 24px;
+      border: 3px solid var(--border);
+      box-shadow: 4px 4px 0 var(--border-dim);
+    }
+    h1 {
+      font-weight: 400;
+      text-align: center;
+      font-size: 20px;
+      color: var(--text);
+      margin-bottom: 24px;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      text-shadow: 2px 2px 0 var(--border-dim);
+    }
+    .news-item {
+      padding: 16px 0;
+      border-bottom: 3px solid var(--border-dim);
+    }
+    .news-item:last-child {
+      border-bottom: none;
+      padding-bottom: 0;
+    }
+    .news-title {
+      font-size: 14px;
+      font-weight: 400;
+      margin-bottom: 12px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--text);
+    }
+    .news-text {
+      font-size: 11px;
+      color: var(--text-dim);
+      line-height: 1.6;
+      text-transform: uppercase;
+      white-space: pre-wrap;
+    }
+    .news-date {
+      font-size: 10px;
+      color: var(--text-dim);
+      margin-top: 12px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+    .back-btn {
+      display: block;
+      text-align: center;
+      margin-top: 24px;
+      background: var(--panel-light);
+      color: var(--text);
+      padding: 14px;
+      border: 3px solid var(--border);
+      text-decoration: none;
+      font-weight: 400;
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      box-shadow: 4px 4px 0 var(--border-dim);
+    }
+    .back-btn:active {
+      transform: translate(2px, 2px);
+      box-shadow: 2px 2px 0 var(--border-dim);
+    }
+    .loading {
+      text-align: center;
+      padding: 24px;
+      color: var(--text-dim);
+      font-size: 12px;
+      text-transform: uppercase;
+    }
   </style>
 </head>
 <body>
@@ -42,9 +133,9 @@
   })();
   </script>
   <div class="container">
-    <h1>📰 Новости</h1>
-    <div id="news-container"><div class="loading">Загрузка...</div></div>
-    <a href="index.html" class="back-btn">← На главную</a>
+    <h1>НОВОСТИ</h1>
+    <div id="news-container"><div class="loading">ЗАГРУЗКА...</div></div>
+    <a href="index.html" class="back-btn">&lt;&lt; НА ГЛАВНУЮ</a>
   </div>
   <script>
     var firebaseConfig = {
@@ -69,7 +160,7 @@
         var keys = Object.keys(news).reverse();
         
         if (keys.length === 0) {
-          container.innerHTML = '<div class="loading">Новостей пока нет</div>';
+          container.innerHTML = '<div class="loading">НОВОСТЕЙ ПОКА НЕТ</div>';
           return;
         }
         
@@ -84,12 +175,11 @@
             '</div>';
         }).join('');
         
-        // Сохраняем последнюю прочитанную новость
         if (currentUser && keys.length > 0) {
           localStorage.setItem('last_news_read_' + currentUser, keys[0]);
         }
       } catch(e) {
-        document.getElementById('news-container').innerHTML = '<div class="loading">Ошибка загрузки</div>';
+        document.getElementById('news-container').innerHTML = '<div class="loading">ОШИБКА ЗАГРУЗКИ</div>';
       }
     }
 
