@@ -1,4 +1,4 @@
-const CACHE_NAME = 'lucky-finger-v3';
+const CACHE_NAME = 'lucky-finger-v4';
 const urlsToCache = [
   './',
   './index.html',
