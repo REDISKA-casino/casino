@@ -7,26 +7,223 @@
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
   <style>
-    :root { --bg: #121212; --panel: #1e1e1e; --text: #e0e0e0; --accent: #ff4757; --success: #2ed573; --gold: #ffa502; }
-    body { background: var(--bg); color: var(--text); font-family: system-ui, sans-serif; margin: 0; display: flex; flex-direction: column; align-items: center; min-height: 100vh; }
-    .header { width: 100%; max-width: 500px; display: flex; align-items: center; padding: 16px 16px 0 16px; gap: 12px; }
-    .back-btn { background: var(--panel); color: var(--text); border: 1px solid #333; padding: 8px 16px; border-radius: 8px; font-size: 14px; cursor: pointer; text-decoration: none; display: inline-block; }
-    h1 { margin: 16px 0; font-weight: 400; }
-    .game-container { width: 100%; max-width: 500px; padding: 16px; }
-    .wheel-section { position: relative; display: flex; justify-content: center; margin-bottom: 16px; }
-    canvas { display: block; border-radius: 50%; border: 3px solid #444; }
-    .indicator { position: absolute; top: 2px; left: 50%; transform: translateX(-50%); z-index: 10; width: 0; height: 0; border-left: 14px solid transparent; border-right: 14px solid transparent; border-top: 24px solid #fff; filter: drop-shadow(0 0 3px rgba(0,0,0,0.8)); }
-    .status-text { text-align: center; font-size: 20px; font-weight: bold; margin-bottom: 12px; min-height: 28px; }
-    .bet-controls { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-bottom: 12px; }
-    .color-btn { padding: 14px; border: none; border-radius: 8px; font-size: 18px; font-weight: bold; cursor: pointer; color: white; text-align: center; }
-    .color-btn:disabled { opacity: 0.5; }
-    .btn-red { background: #ff4757; } .btn-black { background: #000; border: 1px solid #333; } .btn-green { background: #00b894; }
-    .controls-box { background: var(--panel); padding: 16px; border-radius: 12px; text-align: center; }
-    .balance-box { display: flex; justify-content: space-between; padding: 8px 0; margin-bottom: 12px; font-size: 18px; }
-    input[type="number"] { width: 100%; padding: 12px; border: 1px solid #333; border-radius: 6px; background: #000; color: #fff; text-align: right; font-size: 18px; box-sizing: border-box; margin-top: 8px; }
-    .btn-spin { width: 100%; padding: 14px; border: none; border-radius: 8px; font-size: 16px; cursor: pointer; font-weight: bold; color: white; background: var(--accent); margin-top: 12px; }
-    .btn-spin:disabled { opacity: 0.5; }
-    .history-box { background: var(--panel); padding: 12px; border-radius: 8px; font-size: 13px; max-height: 150px; overflow-y: auto; color: #aaa; margin-top: 12px; }
+    @font-face {
+      font-family: 'PixelFont';
+      src: url('pixel-font.ttf') format('truetype');
+      font-display: swap;
+    }
+    :root {
+      --bg: #0a0a0a;
+      --panel: #1a1a1a;
+      --panel-light: #2a2a2a;
+      --text: #ffffff;
+      --text-dim: #888888;
+      --border: #e0e0e0;
+      --border-dim: #444444;
+    }
+    * { box-sizing: border-box; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'PixelFont', 'Courier New', monospace;
+      margin: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
+      image-rendering: pixelated;
+      -webkit-font-smoothing: none;
+    }
+    .header {
+      width: 100%;
+      max-width: 500px;
+      display: flex;
+      align-items: center;
+      padding: 16px 16px 0 16px;
+    }
+    .back-btn {
+      background: var(--panel-light);
+      color: var(--text);
+      border: 3px solid var(--border);
+      padding: 10px 16px;
+      font-size: 12px;
+      cursor: pointer;
+      text-decoration: none;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      box-shadow: 3px 3px 0 var(--border-dim);
+    }
+    .back-btn:active {
+      transform: translate(2px, 2px);
+      box-shadow: 1px 1px 0 var(--border-dim);
+    }
+    h1 {
+      margin: 16px 0;
+      font-weight: 400;
+      font-size: 20px;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      text-shadow: 2px 2px 0 var(--border-dim);
+      text-align: center;
+    }
+    .game-container {
+      width: 100%;
+      max-width: 500px;
+      padding: 16px;
+    }
+    .wheel-section {
+      position: relative;
+      display: flex;
+      justify-content: center;
+      margin-bottom: 16px;
+    }
+    canvas {
+      display: block;
+      border-radius: 50%;
+      border: 3px solid var(--border);
+      box-shadow: 4px 4px 0 var(--border-dim);
+    }
+    .indicator {
+      position: absolute;
+      top: 0px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 10;
+      width: 0;
+      height: 0;
+      border-left: 14px solid transparent;
+      border-right: 14px solid transparent;
+      border-top: 24px solid var(--border);
+    }
+    .status-text {
+      text-align: center;
+      font-size: 14px;
+      margin-bottom: 16px;
+      min-height: 20px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--text);
+    }
+    .bet-controls {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+    .color-btn {
+      padding: 12px 4px;
+      border: 3px solid var(--border);
+      font-size: 10px;
+      font-weight: 400;
+      cursor: pointer;
+      text-align: center;
+      font-family: inherit;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      box-shadow: 3px 3px 0 var(--border-dim);
+    }
+    .color-btn:active {
+      transform: translate(2px, 2px);
+      box-shadow: 1px 1px 0 var(--border-dim);
+    }
+    .color-btn:disabled {
+      opacity: 0.5;
+      transform: translate(2px, 2px);
+      box-shadow: 1px 1px 0 var(--border-dim);
+    }
+    .color-btn.selected {
+      border-color: var(--text);
+      box-shadow: 2px 2px 0 var(--border-dim);
+      transform: translate(2px, 2px);
+    }
+    .btn-red { background: var(--border); color: var(--bg); }
+    .btn-black { background: var(--bg); color: var(--text); }
+    .btn-green { background: var(--panel-light); color: var(--text); }
+    
+    .controls-box {
+      background: var(--panel);
+      padding: 20px;
+      border: 3px solid var(--border);
+      text-align: center;
+      box-shadow: 4px 4px 0 var(--border-dim);
+    }
+    .balance-box {
+      display: flex;
+      justify-content: space-between;
+      padding: 8px 0;
+      margin-bottom: 12px;
+      font-size: 14px;
+      text-transform: uppercase;
+      border-bottom: 2px solid var(--border-dim);
+    }
+    input[type="number"] {
+      width: 100%;
+      padding: 12px;
+      border: 3px solid var(--border);
+      background: var(--bg);
+      color: var(--text);
+      text-align: right;
+      font-size: 16px;
+      font-family: inherit;
+      margin-top: 8px;
+      margin-bottom: 16px;
+      outline: none;
+    }
+    input[type="number"]:focus {
+      border-color: var(--text);
+    }
+    .btn-spin {
+      width: 100%;
+      padding: 14px;
+      border: 3px solid var(--border);
+      font-size: 14px;
+      cursor: pointer;
+      font-weight: 400;
+      color: var(--bg);
+      background: var(--border);
+      font-family: inherit;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      box-shadow: 4px 4px 0 var(--border-dim);
+    }
+    .btn-spin:active {
+      transform: translate(2px, 2px);
+      box-shadow: 2px 2px 0 var(--border-dim);
+    }
+    .btn-spin:disabled {
+      opacity: 0.5;
+      transform: translate(2px, 2px);
+      box-shadow: 2px 2px 0 var(--border-dim);
+    }
+    .history-box {
+      background: var(--panel);
+      padding: 16px;
+      font-size: 11px;
+      max-height: 150px;
+      overflow-y: auto;
+      color: var(--text-dim);
+      margin-top: 16px;
+      border: 3px solid var(--border);
+      box-shadow: 4px 4px 0 var(--border-dim);
+      text-transform: uppercase;
+    }
+    .history-box::-webkit-scrollbar {
+      width: 8px;
+    }
+    .history-box::-webkit-scrollbar-track {
+      background: var(--bg);
+    }
+    .history-box::-webkit-scrollbar-thumb {
+      background: var(--border-dim);
+    }
+    .label-text {
+      display: block;
+      text-align: left;
+      font-size: 12px;
+      color: var(--text-dim);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
   </style>
 </head>
 <body>
@@ -50,26 +247,26 @@
     if(d&&on&&d!=='none'){a.src=d;a.volume=v/100;a.play().catch(function(){});}
   })();
   </script>
-  <div class="header"><a href="index.html" class="back-btn" onclick="localStorage.setItem('coming_back','true')">← Назад</a></div>
+  <div class="header"><a href="index.html" class="back-btn" onclick="localStorage.setItem('coming_back','true')">&lt;&lt; НАЗАД</a></div>
   <div class="game-container">
-    <h1>🎡Рулетка</h1>
-    <div class="status-text" id="status-text">Выберите цвет и сделайте ставку</div>
+    <h1>РУЛЕТКА</h1>
+    <div class="status-text" id="status-text">ВЫБЕРИТЕ ЦВЕТ И СДЕЛАЙТЕ СТАВКУ</div>
     <div class="wheel-section">
       <div class="indicator"></div>
       <canvas id="roulette" width="300" height="300"></canvas>
     </div>
     <div class="controls-box">
-      <div class="balance-box"><span>Баланс</span><span id="balance-display">1000 ₽</span></div>
-      <label>Ставка</label>
+      <div class="balance-box"><span>БАЛАНС</span><span id="balance-display">1000 РУБ</span></div>
+      <span class="label-text">СТАВКА</span>
       <input type="number" id="bet-input" min="1" value="100" />
       <div class="bet-controls">
-        <button class="color-btn btn-red" id="btn-red">2x<br>Красное</button>
-        <button class="color-btn btn-black" id="btn-black">2x<br>Чёрное</button>
-        <button class="color-btn btn-green" id="btn-green">10x<br>Зелёное</button>
+        <button class="color-btn btn-red" id="btn-red">X2<br>КРАСНОЕ</button>
+        <button class="color-btn btn-black" id="btn-black">X2<br>ЧЁРНОЕ</button>
+        <button class="color-btn btn-green" id="btn-green">X10<br>ЗЕЛЁНОЕ</button>
       </div>
-      <button class="btn-spin" id="btn-spin">Крутить</button>
+      <button class="btn-spin" id="btn-spin">КРУТИТЬ</button>
     </div>
-    <div class="history-box" id="history-box">История раундов</div>
+    <div class="history-box" id="history-box">ИСТОРИЯ РАУНДОВ</div>
   </div>
   <script>
     var firebaseConfig = {
@@ -93,10 +290,10 @@
 
     async function loadAcc() { try { var snapshot = await database.ref('accounts').get(); accountsCache = snapshot.val() || {}; } catch(e) {} }
     async function saveAcc() { try { await database.ref('accounts').set(accountsCache); } catch(e) {} }
-    function saveBal() { localStorage.setItem('bal_' + currentUser, balance); document.getElementById('balance-display').textContent = balance.toLocaleString() + ' ₽'; syncNow(); }
+    function saveBal() { localStorage.setItem('bal_' + currentUser, balance); document.getElementById('balance-display').textContent = balance.toLocaleString() + ' РУБ'; syncNow(); }
     async function syncNow() { if (accountsCache[currentUser]) { accountsCache[currentUser].balance = balance; await saveAcc(); } }
-    function addHistory(text) { var box = document.getElementById('history-box'); if(!box) return; var div = document.createElement('div'); div.textContent = text; div.style.padding = '4px 0'; div.style.borderBottom = '1px solid #2a2a2a'; box.insertBefore(div, box.firstChild); while(box.children.length > 20) { box.removeChild(box.lastChild); } }
-    document.getElementById('balance-display').textContent = balance.toLocaleString() + ' ₽';
+    function addHistory(text) { var box = document.getElementById('history-box'); if(!box) return; var div = document.createElement('div'); div.textContent = text; div.style.padding = '6px 0'; div.style.borderBottom = '2px solid var(--border-dim)'; box.insertBefore(div, box.firstChild); while(box.children.length > 20) { box.removeChild(box.lastChild); } }
+    document.getElementById('balance-display').textContent = balance.toLocaleString() + ' РУБ';
 
     var canvas = document.getElementById('roulette');
     var ctx = canvas.getContext('2d');
@@ -105,26 +302,39 @@
     function drawWheel() {
       var sa = 2 * Math.PI / SECTORS;
       ctx.clearRect(0, 0, SIZE, SIZE);
-      ctx.beginPath(); ctx.arc(CX, CY, R, 0, Math.PI * 2); ctx.fillStyle = '#000'; ctx.fill();
+      ctx.beginPath(); ctx.arc(CX, CY, R, 0, Math.PI * 2); ctx.fillStyle = '#1a1a1a'; ctx.fill();
       for(var i = 0; i < SECTORS; i++) {
         ctx.beginPath(); ctx.moveTo(CX, CY); ctx.arc(CX, CY, R, i * sa - Math.PI / 2, (i + 1) * sa - Math.PI / 2); ctx.closePath();
-        ctx.fillStyle = colors[i] === 'green' ? '#00b894' : (colors[i] === 'red' ? '#ff4757' : '#000'); ctx.fill();
-        ctx.strokeStyle = '#222'; ctx.lineWidth = 0.5; ctx.stroke();
+        
+        if (colors[i] === 'green') ctx.fillStyle = '#888888';
+        else if (colors[i] === 'red') ctx.fillStyle = '#e0e0e0';
+        else ctx.fillStyle = '#0a0a0a';
+        
+        ctx.fill();
+        ctx.strokeStyle = '#444444'; ctx.lineWidth = 1; ctx.stroke();
       }
-      ctx.fillStyle = '#fff'; ctx.font = 'bold 10px system-ui'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      
+      ctx.fillStyle = '#ffffff'; ctx.font = '10px PixelFont, monospace'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
       for(var i = 0; i < SECTORS; i++) {
         var midAngle = i * sa + sa / 2 - Math.PI / 2;
         var textAngle = midAngle + Math.PI - Math.PI / 2;
         var x = CX + Math.cos(midAngle) * TR, y = CY + Math.sin(midAngle) * TR;
-        ctx.save(); ctx.translate(x, y); ctx.rotate(textAngle); ctx.fillText(i.toString(), 0, 0); ctx.restore();
+        ctx.save(); ctx.translate(x, y); ctx.rotate(textAngle); 
+        
+        if (colors[i] === 'red') ctx.fillStyle = '#0a0a0a';
+        else ctx.fillStyle = '#ffffff';
+        
+        ctx.fillText(i.toString(), 0, 0); 
+        ctx.restore();
       }
-      ctx.beginPath(); ctx.arc(CX, CY, CR, 0, Math.PI * 2); ctx.fillStyle = '#fff'; ctx.fill(); ctx.strokeStyle = '#333'; ctx.lineWidth = 2; ctx.stroke();
+      
+      ctx.beginPath(); ctx.arc(CX, CY, CR, 0, Math.PI * 2); ctx.fillStyle = '#e0e0e0'; ctx.fill(); ctx.strokeStyle = '#444444'; ctx.lineWidth = 2; ctx.stroke();
     }
     drawWheel();
 
     function setSelected(s) {
-      document.querySelectorAll('.color-btn').forEach(function(b) { b.style.border = 'none'; });
-      s.style.border = '2px solid #fff';
+      document.querySelectorAll('.color-btn').forEach(function(b) { b.classList.remove('selected'); });
+      s.classList.add('selected');
     }
 
     document.getElementById('btn-red').onclick = function() { if(isSpinning) return; selectedColor = 'red'; setSelected(this); };
@@ -134,7 +344,7 @@
     document.getElementById('btn-spin').onclick = function() {
       if(isSpinning || !selectedColor) return;
       bet = +document.getElementById('bet-input').value;
-      if(!bet || bet <= 0 || bet > balance) { alert('Некорректная ставка'); return; }
+      if(!bet || bet <= 0 || bet > balance) { alert('НЕКОРРЕКТНАЯ СТАВКА'); return; }
       isSpinning = true;
       document.getElementById('btn-spin').disabled = true;
       document.getElementById('btn-red').disabled = true;
@@ -147,6 +357,7 @@
       var totalAngle = rotations * 360 + targetAngle;
       canvas.style.transition = 'transform 5s cubic-bezier(0.2,0.8,0.2,1)';
       canvas.style.transform = 'rotate(' + totalAngle + 'deg)';
+      
       setTimeout(function() {
         canvas.style.transition = 'none';
         canvas.style.transform = 'rotate(' + targetAngle + 'deg)';
@@ -159,9 +370,12 @@
         var w = 0;
         if(c === selectedColor) w = c === 'green' ? bet * 10 : bet * 2;
         balance += w; saveBal();
-        document.getElementById('status-text').textContent = 'Выпало: ' + target + ' (' + (c === 'green' ? 'Зелёное' : c === 'red' ? 'Красное' : 'Чёрное') + ') ' + (w > 0 ? '+' + w + '₽' : '-' + bet + '₽');
-        document.getElementById('status-text').style.color = w > 0 ? '#2ed573' : '#ff4757';
-        addHistory((c === 'green' ? '🟢' : c === 'red' ? '🔴' : '⚫') + ' ' + target + ': ' + (w > 0 ? '+' + w + '₽' : '-' + bet + '₽'));
+        
+        var colorName = c === 'green' ? 'ЗЕЛЁНОЕ' : c === 'red' ? 'КРАСНОЕ' : 'ЧЁРНОЕ';
+        document.getElementById('status-text').textContent = 'ВЫПАЛО: ' + target + ' (' + colorName + ') ' + (w > 0 ? '+' + w + ' РУБ' : '-' + bet + ' РУБ');
+        document.getElementById('status-text').style.color = w > 0 ? 'var(--text)' : 'var(--text-dim)';
+        
+        addHistory(colorName + ' ' + target + ': ' + (w > 0 ? '+' + w + ' РУБ' : '-' + bet + ' РУБ'));
         selectedColor = null;
       }, 5100);
     };
@@ -169,4 +383,4 @@
     (async function() { await loadAcc(); })();
   </script>
 </body>
-</html>
+  </html>
