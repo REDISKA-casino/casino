@@ -7,52 +7,260 @@
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
   <style>
-    :root { --bg: #121212; --panel: #1e1e1e; --text: #e0e0e0; --accent: #ff4757; --gold: #ffd700; --success: #2ed573; }
-    body { background: var(--bg); color: var(--text); font-family: system-ui, sans-serif; margin: 0; display: flex; flex-direction: column; align-items: center; min-height: 100vh; }
-    .container { width: 100%; max-width: 600px; padding: 16px; }
-    .header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; gap: 8px; }
-    .header-btns { display: flex; gap: 8px; }
-    .logout-btn { background: #555; color: white; border: none; padding: 8px 16px; border-radius: 8px; font-size: 14px; cursor: pointer; font-weight: bold; }
-    .news-btn { background: #3498db; color: white; border: none; padding: 8px 16px; border-radius: 8px; font-size: 14px; cursor: pointer; font-weight: bold; text-decoration: none; display: inline-block; }
-    h1 { margin: 16px 0; font-weight: 400; text-align: center; font-size: 24px; color: #ff6b6b; }
-    .admin-info { background: var(--panel); padding: 16px; border-radius: 12px; margin-bottom: 20px; border: 2px solid #ff6b6b; text-align: center; }
-    .stats { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin-bottom: 20px; }
-    .stat-card { background: var(--panel); padding: 16px; border-radius: 12px; text-align: center; border: 1px solid #333; }
-    .stat-value { font-size: 24px; font-weight: bold; color: var(--gold); } .stat-label { font-size: 12px; color: #aaa; margin-top: 4px; }
-    .accounts-list { background: var(--panel); border-radius: 12px; border: 1px solid #333; overflow: hidden; margin-bottom: 16px; }
-    .accounts-header { padding: 16px; border-bottom: 1px solid #333; font-weight: bold; font-size: 18px; text-align: center; background: #1a1a1a; }
-    .account-item { padding: 14px 16px; border-bottom: 1px solid #2a2a2a; } .account-item.banned { background: rgba(255,0,0,0.1); }
-    .account-nickname { font-weight: bold; font-size: 16px; margin-bottom: 6px; }
-    .account-date { font-size: 12px; color: #aaa; margin-bottom: 4px; }
-    .account-password { font-size: 12px; color: #ffa502; margin-bottom: 4px; font-family: monospace; }
-    .account-ip { font-size: 12px; color: #3498db; margin-bottom: 4px; font-family: monospace; }
-    .account-balance { color: var(--gold); font-weight: bold; font-size: 16px; margin-bottom: 10px; }
-    .admin-badge-small { display: inline-block; background: #ff6b6b; color: white; padding: 2px 8px; border-radius: 8px; font-size: 10px; margin-left: 8px; }
-    .banned-badge-small { display: inline-block; background: #ff0000; color: white; padding: 2px 8px; border-radius: 8px; font-size: 10px; margin-left: 8px; }
-    .btn-group { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
-    .action-btn { border: none; padding: 10px 10px; border-radius: 6px; cursor: pointer; font-size: 11px; font-weight: bold; color: white; text-align: center; }
-    .btn-refill { background: #ffa502; color: #000; } .btn-reduce { background: #e67e22; color: #000; } .btn-reset { background: #c0392b; color: white; }
-    .btn-ban { background: #ff4757; } .btn-unban { background: #2ed573; }
-    .btn-delete { background: #ff6348; grid-column: 1 / -1; }
-    .refresh-btn { width: 100%; padding: 12px; border: none; border-radius: 8px; font-size: 14px; cursor: pointer; background: #ffa502; color: #000; font-weight: bold; margin-top: 16px; }
-    .loading { text-align: center; padding: 32px; color: #666; }
+    @font-face {
+      font-family: 'PixelFont';
+      src: url('pixel-font.ttf') format('truetype');
+      font-display: swap;
+    }
+    :root {
+      --bg: #0a0a0a;
+      --panel: #1a1a1a;
+      --panel-light: #2a2a2a;
+      --text: #ffffff;
+      --text-dim: #888888;
+      --border: #e0e0e0;
+      --border-dim: #444444;
+    }
+    * { box-sizing: border-box; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'PixelFont', 'Courier New', monospace;
+      margin: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
+      image-rendering: pixelated;
+      -webkit-font-smoothing: none;
+    }
+    .container {
+      width: 100%;
+      max-width: 600px;
+      padding: 16px;
+    }
+    .header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 20px;
+      gap: 8px;
+    }
+    .header-btns {
+      display: flex;
+      gap: 8px;
+    }
+    .logout-btn, .news-btn {
+      background: var(--panel-light);
+      color: var(--text);
+      border: 3px solid var(--border);
+      padding: 10px 16px;
+      font-size: 12px;
+      cursor: pointer;
+      font-weight: 400;
+      font-family: inherit;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      box-shadow: 3px 3px 0 var(--border-dim);
+      text-decoration: none;
+      display: inline-block;
+    }
+    .logout-btn:active, .news-btn:active {
+      transform: translate(2px, 2px);
+      box-shadow: 1px 1px 0 var(--border-dim);
+    }
+    h1 {
+      margin: 16px 0;
+      font-weight: 400;
+      text-align: center;
+      font-size: 18px;
+      color: var(--text);
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      text-shadow: 2px 2px 0 var(--border-dim);
+    }
+    .admin-info {
+      background: var(--panel);
+      padding: 16px;
+      margin-bottom: 20px;
+      border: 3px solid var(--border);
+      text-align: center;
+      box-shadow: 4px 4px 0 var(--border-dim);
+    }
+    .admin-info > div:first-child {
+      font-size: 16px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+    .admin-info > div:last-child {
+      color: var(--text-dim);
+      font-size: 12px;
+      margin-top: 4px;
+    }
+    .stats {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 8px;
+      margin-bottom: 20px;
+    }
+    .stat-card {
+      background: var(--panel);
+      padding: 16px 8px;
+      text-align: center;
+      border: 3px solid var(--border);
+      box-shadow: 3px 3px 0 var(--border-dim);
+    }
+    .stat-value {
+      font-size: 16px;
+      font-weight: 400;
+      color: var(--text);
+      letter-spacing: 1px;
+    }
+    .stat-label {
+      font-size: 10px;
+      color: var(--text-dim);
+      margin-top: 6px;
+      text-transform: uppercase;
+    }
+    .accounts-list {
+      background: var(--panel);
+      border: 3px solid var(--border);
+      overflow: hidden;
+      margin-bottom: 16px;
+      box-shadow: 4px 4px 0 var(--border-dim);
+    }
+    .accounts-header {
+      padding: 16px;
+      border-bottom: 3px solid var(--border);
+      font-weight: 400;
+      font-size: 14px;
+      text-align: center;
+      background: var(--panel-light);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+    .account-item {
+      padding: 16px;
+      border-bottom: 3px solid var(--border-dim);
+    }
+    .account-item:last-child {
+      border-bottom: none;
+    }
+    .account-item.banned {
+      background: rgba(255, 255, 255, 0.05);
+    }
+    .account-nickname {
+      font-weight: 400;
+      font-size: 14px;
+      margin-bottom: 8px;
+      text-transform: uppercase;
+    }
+    .account-date, .account-password, .account-ip {
+      font-size: 10px;
+      color: var(--text-dim);
+      margin-bottom: 6px;
+      text-transform: uppercase;
+    }
+    .account-balance {
+      color: var(--text);
+      font-weight: 400;
+      font-size: 14px;
+      margin-bottom: 12px;
+      text-transform: uppercase;
+    }
+    .admin-badge-small, .banned-badge-small {
+      display: inline-block;
+      background: var(--bg);
+      color: var(--text);
+      padding: 2px 6px;
+      border: 2px solid var(--border);
+      font-size: 8px;
+      margin-left: 8px;
+      vertical-align: middle;
+    }
+    .btn-group {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+    .action-btn {
+      border: 3px solid var(--border);
+      padding: 10px 4px;
+      cursor: pointer;
+      font-size: 10px;
+      font-weight: 400;
+      color: var(--text);
+      background: var(--panel-light);
+      text-align: center;
+      font-family: inherit;
+      text-transform: uppercase;
+      box-shadow: 3px 3px 0 var(--border-dim);
+    }
+    .action-btn:active {
+      transform: translate(2px, 2px);
+      box-shadow: 1px 1px 0 var(--border-dim);
+    }
+    .btn-delete {
+      grid-column: 1 / -1;
+      background: var(--bg);
+    }
+    .refresh-btn {
+      width: 100%;
+      padding: 14px;
+      border: 3px solid var(--border);
+      font-size: 14px;
+      cursor: pointer;
+      background: var(--border);
+      color: var(--bg);
+      font-weight: 400;
+      font-family: inherit;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      box-shadow: 4px 4px 0 var(--border-dim);
+    }
+    .refresh-btn:active {
+      transform: translate(2px, 2px);
+      box-shadow: 2px 2px 0 var(--border-dim);
+    }
+    .loading {
+      text-align: center;
+      padding: 32px;
+      color: var(--text-dim);
+      font-size: 12px;
+      text-transform: uppercase;
+    }
   </style>
 </head>
 <body>
   <div class="container">
     <div class="header">
-      <a href="admin-news.html" class="news-btn">📰 Новости</a>
-      <button class="logout-btn" id="logout-btn">🚪 Выйти</button>
+      <a href="admin-news.html" class="news-btn">НОВОСТИ</a>
+      <button class="logout-btn" id="logout-btn">ВЫЙТИ</button>
     </div>
-    <h1>🔧 Панель администратора</h1>
-    <div class="admin-info"><div style="font-size:18px;">👑 I-am-admin</div><div style="color:#aaa;">Управление аккаунтами</div></div>
+    <h1>ПАНЕЛЬ АДМИНИСТРАТОРА</h1>
+    <div class="admin-info">
+      <div>I-AM-ADMIN</div>
+      <div>УПРАВЛЕНИЕ АККАУНТАМИ</div>
+    </div>
     <div class="stats">
-      <div class="stat-card"><div class="stat-value" id="total-accounts">0</div><div class="stat-label">Аккаунтов</div></div>
-      <div class="stat-card"><div class="stat-value" id="total-balance">0 ₽</div><div class="stat-label">Общий баланс</div></div>
-      <div class="stat-card"><div class="stat-value" id="banned-count">0</div><div class="stat-label">Забанено</div></div>
+      <div class="stat-card">
+        <div class="stat-value" id="total-accounts">0</div>
+        <div class="stat-label">АККАУНТОВ</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value" id="total-balance">0</div>
+        <div class="stat-label">БАЛАНС</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value" id="banned-count">0</div>
+        <div class="stat-label">БАНЫ</div>
+      </div>
     </div>
-    <div class="accounts-list"><div class="accounts-header">📋 Список аккаунтов</div><div id="accounts-container"><div class="loading">Загрузка...</div></div></div>
-    <button class="refresh-btn" id="refresh-btn">🔄 Обновить</button>
+    <div class="accounts-list">
+      <div class="accounts-header">СПИСОК АККАУНТОВ</div>
+      <div id="accounts-container"><div class="loading">ЗАГРУЗКА...</div></div>
+    </div>
+    <button class="refresh-btn" id="refresh-btn">ОБНОВИТЬ</button>
   </div>
   <script>
     var firebaseConfig = {
@@ -91,46 +299,46 @@
       await loadAcc();
       var users = Object.entries(accountsCache).filter(function(item) { return item[0] !== ADMIN_NICKNAME; });
       var total = 0, banned = 0, html = '';
-      html += '<div class="account-item"><div class="account-nickname">' + ADMIN_NICKNAME + ' <span class="admin-badge-small">👑</span></div><div class="account-date">Системный аккаунт</div><div class="account-balance">-</div></div>';
+      html += '<div class="account-item"><div class="account-nickname">' + ADMIN_NICKNAME + ' <span class="admin-badge-small">ADMIN</span></div><div class="account-date">СИСТЕМНЫЙ АККАУНТ</div><div class="account-balance">-</div></div>';
       users.forEach(function(entry) {
         var n = entry[0], d = entry[1];
         total += d.balance || 0;
         if (d.banned) banned++;
         html += '<div class="account-item ' + (d.banned ? 'banned' : '') + '">' +
-          '<div class="account-nickname">' + n + (d.banned ? ' <span class="banned-badge-small">🚫 Забанен</span>' : '') + '</div>' +
-          '<div class="account-date">Создан: ' + new Date(d.created).toLocaleDateString() + '</div>' +
-          '<div class="account-password">🔑 Пароль: ' + (d.password || 'неизвестно') + '</div>' +
-          '<div class="account-ip">🌐 IP: ' + (d.ip || 'неизвестно') + '</div>' +
-          '<div class="account-balance">💰 Баланс: ' + (d.balance || 0).toLocaleString() + ' ₽</div>' +
+          '<div class="account-nickname">' + n + (d.banned ? ' <span class="banned-badge-small">БАН</span>' : '') + '</div>' +
+          '<div class="account-date">СОЗДАН: ' + new Date(d.created).toLocaleDateString() + '</div>' +
+          '<div class="account-password">ПАРОЛЬ: ' + (d.password || 'НЕИЗВЕСТНО') + '</div>' +
+          '<div class="account-ip">IP: ' + (d.ip || 'НЕИЗВЕСТНО') + '</div>' +
+          '<div class="account-balance">БАЛАНС: ' + (d.balance || 0).toLocaleString() + ' РУБ</div>' +
           '<div class="btn-group">' +
-          '<button class="action-btn btn-refill" data-action="refill" data-user="' + n + '">💰 Пополнить</button>' +
-          '<button class="action-btn btn-reduce" data-action="reduce" data-user="' + n + '">📉 Уменьшить</button>' +
-          '<button class="action-btn btn-reset" data-action="reset" data-user="' + n + '">💸 Сброс 1000</button>' +
-          (d.banned ? '<button class="action-btn btn-unban" data-action="unban" data-user="' + n + '">✓ Разбанить</button>' : '<button class="action-btn btn-ban" data-action="ban" data-user="' + n + '" data-ip="' + (d.ip || '') + '">🚫 Бан по IP</button>') +
-          '<button class="action-btn btn-delete" data-action="delete" data-user="' + n + '">🗑 Удалить</button>' +
+          '<button class="action-btn btn-refill" data-action="refill" data-user="' + n + '">ПОПОЛНИТЬ</button>' +
+          '<button class="action-btn btn-reduce" data-action="reduce" data-user="' + n + '">УМЕНЬШИТЬ</button>' +
+          '<button class="action-btn btn-reset" data-action="reset" data-user="' + n + '">СБРОС 1000</button>' +
+          (d.banned ? '<button class="action-btn btn-unban" data-action="unban" data-user="' + n + '">РАЗБАНИТЬ</button>' : '<button class="action-btn btn-ban" data-action="ban" data-user="' + n + '" data-ip="' + (d.ip || '') + '">БАН</button>') +
+          '<button class="action-btn btn-delete" data-action="delete" data-user="' + n + '">УДАЛИТЬ</button>' +
           '</div></div>';
       });
-      document.getElementById('accounts-container').innerHTML = html || '<div class="loading">Нет аккаунтов</div>';
+      document.getElementById('accounts-container').innerHTML = html || '<div class="loading">НЕТ АККАУНТОВ</div>';
       document.getElementById('total-accounts').textContent = users.length;
-      document.getElementById('total-balance').textContent = total.toLocaleString() + ' ₽';
+      document.getElementById('total-balance').textContent = total.toLocaleString();
       document.getElementById('banned-count').textContent = banned;
 
       document.querySelectorAll('.action-btn').forEach(function(btn) {
         btn.onclick = async function() {
           var action = this.dataset.action, user = this.dataset.user, ip = this.dataset.ip;
-          if (action === 'refill') { var am = parseInt(prompt('Сумма пополнения:', '100')); if (am > 0) { accountsCache[user].balance = (accountsCache[user].balance || 0) + am; await saveAcc(); render(); } }
-          else if (action === 'reduce') { var am = parseInt(prompt('Сумма уменьшения:', '100')); if (am > 0) { accountsCache[user].balance = Math.max(0, (accountsCache[user].balance || 0) - am); await saveAcc(); render(); } }
-          else if (action === 'reset') { if (confirm('Сбросить до 1000₽?')) { accountsCache[user].balance = 1000; await saveAcc(); render(); } }
+          if (action === 'refill') { var am = parseInt(prompt('СУММА ПОПОЛНЕНИЯ:', '100')); if (am > 0) { accountsCache[user].balance = (accountsCache[user].balance || 0) + am; await saveAcc(); render(); } }
+          else if (action === 'reduce') { var am = parseInt(prompt('СУММА УМЕНЬШЕНИЯ:', '100')); if (am > 0) { accountsCache[user].balance = Math.max(0, (accountsCache[user].balance || 0) - am); await saveAcc(); render(); } }
+          else if (action === 'reset') { if (confirm('СБРОСИТЬ ДО 1000?')) { accountsCache[user].balance = 1000; await saveAcc(); render(); } }
           else if (action === 'ban') {
-            if (ip && ip !== 'неизвестно') {
-              if (confirm('Забанить ВСЕ аккаунты с IP ' + ip + '?')) {
+            if (ip && ip !== 'НЕИЗВЕСТНО') {
+              if (confirm('ЗАБАНИТЬ ВСЕ АККАУНТЫ С IP ' + ip + '?')) {
                 for (var nickname in accountsCache) { if (accountsCache[nickname].ip === ip) accountsCache[nickname].banned = true; }
-                await saveAcc(); render(); alert('Все аккаунты с IP ' + ip + ' забанены!');
+                await saveAcc(); render(); alert('ВСЕ АККАУНТЫ С IP ' + ip + ' ЗАБАНЕНЫ');
               }
-            } else { if (confirm('Забанить аккаунт ' + user + '?')) { accountsCache[user].banned = true; await saveAcc(); render(); } }
+            } else { if (confirm('ЗАБАНИТЬ АККАУНТ ' + user + '?')) { accountsCache[user].banned = true; await saveAcc(); render(); } }
           }
-          else if (action === 'unban') { if (confirm('Разбанить аккаунт ' + user + '?')) { accountsCache[user].banned = false; await saveAcc(); render(); } }
-          else if (action === 'delete') { if (confirm('Удалить аккаунт ' + user + ' навсегда?')) { delete accountsCache[user]; await saveAcc(); render(); } }
+          else if (action === 'unban') { if (confirm('РАЗБАНИТЬ АККАУНТ ' + user + '?')) { accountsCache[user].banned = false; await saveAcc(); render(); } }
+          else if (action === 'delete') { if (confirm('УДАЛИТЬ АККАУНТ ' + user + ' НАВСЕГДА?')) { delete accountsCache[user]; await saveAcc(); render(); } }
         };
       });
     }
