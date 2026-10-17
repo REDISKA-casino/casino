@@ -7,27 +7,215 @@
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
   <style>
-    :root { --bg: #121212; --panel: #1e1e1e; --text: #e0e0e0; --accent: #ff4757; --success: #2ed573; --gold: #ffd700; }
-    body { background: var(--bg); color: var(--text); font-family: system-ui, sans-serif; margin: 0; display: flex; flex-direction: column; align-items: center; min-height: 100vh; }
-    .header { width: 100%; max-width: 500px; display: flex; align-items: center; padding: 16px 16px 0 16px; gap: 12px; }
-    .back-btn { background: var(--panel); color: var(--text); border: 1px solid #333; padding: 8px 16px; border-radius: 8px; font-size: 14px; cursor: pointer; text-decoration: none; display: inline-block; }
-    h1 { margin: 16px 0; font-weight: 400; }
-    .game-container { width: 100%; max-width: 500px; padding: 16px; }
-    .fishing-area { background: linear-gradient(to bottom, #1a5276, #0e3d5c); border-radius: 16px; padding: 20px; margin-bottom: 16px; text-align: center; border: 2px solid #2980b9; min-height: 180px; display: flex; flex-direction: column; align-items: center; justify-content: center; }
-    .catch-display { font-size: 80px; margin: 10px 0; }
-    .catch-display.bite { animation: bite 0.5s; }
-    @keyframes bite { 0%,100%{transform:translateY(0);} 50%{transform:translateY(-20px);} }
-    .bobber { width: 20px; height: 20px; background: #ff4757; border-radius: 50%; margin: 10px auto; }
-    .bobber.biting { animation: bob 0.3s infinite; }
-    @keyframes bob { 0%,100%{transform:translateY(0);} 50%{transform:translateY(-15px);} }
-    .controls-box { background: var(--panel); padding: 16px; border-radius: 12px; text-align: center; }
-    .balance-box { display: flex; justify-content: space-between; padding: 8px 0; margin-bottom: 12px; font-size: 18px; }
-    input[type="number"] { width: 100%; padding: 12px; border: 1px solid #333; border-radius: 6px; background: #000; color: #fff; text-align: center; font-size: 18px; box-sizing: border-box; margin-bottom: 12px; }
-    .btn-cast { width: 100%; padding: 14px; border: none; border-radius: 8px; font-size: 16px; cursor: pointer; font-weight: bold; color: white; background: #2980b9; }
-    .btn-cast:disabled { opacity: 0.5; }
-    .btn-reel { width: 100%; padding: 14px; border: none; border-radius: 8px; font-size: 16px; cursor: pointer; font-weight: bold; color: white; background: var(--success); margin-top: 8px; display: none; }
-    .status-text { text-align: center; font-size: 20px; font-weight: bold; margin-bottom: 12px; min-height: 28px; }
-    .history-box { background: var(--panel); padding: 12px; border-radius: 8px; font-size: 13px; max-height: 120px; overflow-y: auto; color: #aaa; margin-top: 12px; }
+    @font-face {
+      font-family: 'PixelFont';
+      src: url('pixel-font.ttf') format('truetype');
+      font-display: swap;
+    }
+    :root {
+      --bg: #0a0a0a;
+      --panel: #1a1a1a;
+      --panel-light: #2a2a2a;
+      --text: #ffffff;
+      --text-dim: #888888;
+      --border: #e0e0e0;
+      --border-dim: #444444;
+    }
+    * { box-sizing: border-box; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'PixelFont', 'Courier New', monospace;
+      margin: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
+      image-rendering: pixelated;
+      -webkit-font-smoothing: none;
+    }
+    .header {
+      width: 100%;
+      max-width: 500px;
+      display: flex;
+      align-items: center;
+      padding: 16px 16px 0 16px;
+    }
+    .back-btn {
+      background: var(--panel-light);
+      color: var(--text);
+      border: 3px solid var(--border);
+      padding: 10px 16px;
+      font-size: 12px;
+      cursor: pointer;
+      text-decoration: none;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      box-shadow: 3px 3px 0 var(--border-dim);
+    }
+    .back-btn:active {
+      transform: translate(2px, 2px);
+      box-shadow: 1px 1px 0 var(--border-dim);
+    }
+    h1 {
+      margin: 16px 0;
+      font-weight: 400;
+      font-size: 20px;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      text-shadow: 2px 2px 0 var(--border-dim);
+      text-align: center;
+    }
+    .game-container {
+      width: 100%;
+      max-width: 500px;
+      padding: 16px;
+    }
+    .fishing-area {
+      background: var(--bg);
+      border: 3px solid var(--border);
+      padding: 20px;
+      margin-bottom: 16px;
+      min-height: 180px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 4px 4px 0 var(--border-dim);
+    }
+    .catch-display {
+      font-size: 32px;
+      font-weight: 400;
+      margin: 10px 0;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+    }
+    .catch-display.bite {
+      animation: bite 0.5s;
+    }
+    @keyframes bite {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-10px); }
+    }
+    .bobber {
+      width: 24px;
+      height: 24px;
+      background: var(--border);
+      border: 2px solid var(--border-dim);
+      margin: 16px auto 0 auto;
+      box-shadow: 2px 2px 0 var(--border-dim);
+    }
+    .bobber.biting {
+      animation: bob 0.3s infinite;
+    }
+    @keyframes bob {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-15px); }
+    }
+    .controls-box {
+      background: var(--panel);
+      padding: 20px;
+      border: 3px solid var(--border);
+      text-align: center;
+      box-shadow: 4px 4px 0 var(--border-dim);
+    }
+    .balance-box {
+      display: flex;
+      justify-content: space-between;
+      padding: 8px 0;
+      margin-bottom: 12px;
+      font-size: 14px;
+      text-transform: uppercase;
+      border-bottom: 2px solid var(--border-dim);
+    }
+    input[type="number"] {
+      width: 100%;
+      padding: 12px;
+      border: 3px solid var(--border);
+      background: var(--bg);
+      color: var(--text);
+      text-align: center;
+      font-size: 16px;
+      font-family: inherit;
+      margin-bottom: 16px;
+      outline: none;
+    }
+    input[type="number"]:focus {
+      border-color: var(--text);
+    }
+    .btn-cast {
+      width: 100%;
+      padding: 14px;
+      border: 3px solid var(--border);
+      font-size: 14px;
+      cursor: pointer;
+      font-weight: 400;
+      color: var(--bg);
+      background: var(--border);
+      font-family: inherit;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      box-shadow: 4px 4px 0 var(--border-dim);
+    }
+    .btn-cast:active {
+      transform: translate(2px, 2px);
+      box-shadow: 2px 2px 0 var(--border-dim);
+    }
+    .btn-cast:disabled {
+      opacity: 0.5;
+      transform: translate(2px, 2px);
+      box-shadow: 2px 2px 0 var(--border-dim);
+    }
+    .btn-reel {
+      width: 100%;
+      padding: 14px;
+      border: 3px solid var(--border);
+      font-size: 14px;
+      cursor: pointer;
+      font-weight: 400;
+      color: var(--text);
+      background: var(--panel-light);
+      font-family: inherit;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      box-shadow: 4px 4px 0 var(--border-dim);
+      margin-top: 12px;
+      display: none;
+    }
+    .btn-reel:active {
+      transform: translate(2px, 2px);
+      box-shadow: 2px 2px 0 var(--border-dim);
+    }
+    .status-text {
+      text-align: center;
+      font-size: 14px;
+      margin-bottom: 16px;
+      min-height: 20px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--text);
+    }
+    .history-box {
+      background: var(--panel);
+      padding: 16px;
+      font-size: 11px;
+      max-height: 120px;
+      overflow-y: auto;
+      color: var(--text-dim);
+      margin-top: 16px;
+      border: 3px solid var(--border);
+      box-shadow: 4px 4px 0 var(--border-dim);
+      text-transform: uppercase;
+    }
+    .history-box::-webkit-scrollbar {
+      width: 8px;
+    }
+    .history-box::-webkit-scrollbar-track {
+      background: var(--bg);
+    }
+    .history-box::-webkit-scrollbar-thumb {
+      background: var(--border-dim);
+    }
   </style>
 </head>
 <body>
@@ -51,21 +239,21 @@
     if(d&&on&&d!=='none'){a.src=d;a.volume=v/100;a.play().catch(function(){});}
   })();
   </script>
-  <div class="header"><a href="index.html" class="back-btn" onclick="localStorage.setItem('coming_back','true')">← Назад</a></div>
+  <div class="header"><a href="index.html" class="back-btn" onclick="localStorage.setItem('coming_back','true')">&lt;&lt; НАЗАД</a></div>
   <div class="game-container">
-    <h1>🎣 Рыбалка</h1>
-    <div class="status-text" id="status-text">Забросьте удочку</div>
+    <h1>РЫБАЛКА</h1>
+    <div class="status-text" id="status-text">ЗАБРОСЬТЕ УДОЧКУ</div>
     <div class="fishing-area">
-      <div class="catch-display" id="catch-display">🐟</div>
+      <div class="catch-display" id="catch-display">[ ? ]</div>
       <div class="bobber" id="bobber"></div>
     </div>
     <div class="controls-box">
-      <div class="balance-box"><span>Баланс</span><span id="balance-display">1000 ₽</span></div>
-      <input type="number" id="bet-input" min="1" value="100" placeholder="Ставка" />
-      <button class="btn-cast" id="btn-cast">🎣 Забросить удочку</button>
-      <button class="btn-reel" id="btn-reel">🐟 Тянуть!</button>
+      <div class="balance-box"><span>БАЛАНС</span><span id="balance-display">1000 РУБ</span></div>
+      <input type="number" id="bet-input" min="1" value="100" placeholder="СТАВКА" />
+      <button class="btn-cast" id="btn-cast">ЗАБРОСИТЬ УДОЧКУ</button>
+      <button class="btn-reel" id="btn-reel">ТЯНУТЬ!</button>
     </div>
-    <div class="history-box" id="history-box">История улова</div>
+    <div class="history-box" id="history-box">ИСТОРИЯ УЛОВА</div>
   </div>
   <script>
     var firebaseConfig = {
@@ -84,14 +272,22 @@
     if (!currentUser) window.location.href = 'index.html';
     var balance = parseInt(localStorage.getItem('bal_' + currentUser)) || 1000;
     var isFishing = false, currentBet = 0, ct = null, bt = null;
-    var fishList = [{n:'Мал. рыбка',i:'🐟',m:0.5,c:30},{n:'Карась',i:'🐠',m:1,c:25},{n:'Щука',i:'🐊',m:2,c:15},{n:'Сом',i:'🐋',m:5,c:8},{n:'Золотая',i:'🌟',m:10,c:3},{n:'Сапог',i:'👢',m:0,c:10},{n:'Водоросли',i:'🌿',m:0,c:9}];
+    var fishList = [
+      {n:'МАЛ. РЫБКА', i:'[FISH]', m:0.5, c:30},
+      {n:'КАРАСЬ', i:'[FISH2]', m:1, c:25},
+      {n:'ЩУКА', i:'[PIKE]', m:2, c:15},
+      {n:'СОМ', i:'[CATFISH]', m:5, c:8},
+      {n:'ЗОЛОТАЯ', i:'[GOLD]', m:10, c:3},
+      {n:'САПОГ', i:'[BOOT]', m:0, c:10},
+      {n:'ВОДОРОСЛИ', i:'[WEED]', m:0, c:9}
+    ];
 
     async function loadAcc() { try { var snapshot = await database.ref('accounts').get(); accountsCache = snapshot.val() || {}; } catch(e) {} }
     async function saveAcc() { try { await database.ref('accounts').set(accountsCache); } catch(e) {} }
-    function saveBal() { localStorage.setItem('bal_' + currentUser, balance); document.getElementById('balance-display').textContent = balance.toLocaleString() + ' ₽'; syncNow(); }
+    function saveBal() { localStorage.setItem('bal_' + currentUser, balance); document.getElementById('balance-display').textContent = balance.toLocaleString() + ' РУБ'; syncNow(); }
     async function syncNow() { if (accountsCache[currentUser]) { accountsCache[currentUser].balance = balance; await saveAcc(); } }
-    function addHistory(text) { var box = document.getElementById('history-box'); if(!box) return; var div = document.createElement('div'); div.textContent = text; div.style.padding = '4px 0'; div.style.borderBottom = '1px solid #2a2a2a'; box.insertBefore(div, box.firstChild); while(box.children.length > 20) { box.removeChild(box.lastChild); } }
-    document.getElementById('balance-display').textContent = balance.toLocaleString() + ' ₽';
+    function addHistory(text) { var box = document.getElementById('history-box'); if(!box) return; var div = document.createElement('div'); div.textContent = text; div.style.padding = '6px 0'; div.style.borderBottom = '2px solid var(--border-dim)'; box.insertBefore(div, box.firstChild); while(box.children.length > 20) { box.removeChild(box.lastChild); } }
+    document.getElementById('balance-display').textContent = balance.toLocaleString() + ' РУБ';
 
     function getFish() { var t = fishList.reduce(function(s, f) { return s + f.c; }, 0); var r = Math.random() * t; for(var i = 0; i < fishList.length; i++) { r -= fishList[i].c; if(r <= 0) return fishList[i]; } return fishList[0]; }
     function reset() { isFishing = false; document.getElementById('btn-cast').disabled = false; document.getElementById('btn-reel').style.display = 'none'; document.getElementById('bobber').classList.remove('biting'); clearTimeout(ct); clearTimeout(bt); }
@@ -99,19 +295,19 @@
     document.getElementById('btn-cast').onclick = function() {
       if(isFishing) return;
       currentBet = +document.getElementById('bet-input').value;
-      if(!currentBet || currentBet <= 0 || currentBet > balance) { alert('Некорректная ставка'); return; }
+      if(!currentBet || currentBet <= 0 || currentBet > balance) { alert('НЕКОРРЕКТНАЯ СТАВКА'); return; }
       isFishing = true; document.getElementById('btn-cast').disabled = true; balance -= currentBet; saveBal();
       document.getElementById('catch-display').classList.remove('bite');
       document.getElementById('bobber').classList.remove('biting');
-      document.getElementById('status-text').textContent = 'Ждём поклёвку...';
+      document.getElementById('status-text').textContent = 'ЖДЁМ ПОКЛЁВКУ...';
       bt = setTimeout(function() {
         document.getElementById('bobber').classList.add('biting');
-        document.getElementById('status-text').textContent = 'Клюёт! Тяните!';
+        document.getElementById('status-text').textContent = 'КЛЮЁТ! ТЯНИТЕ!';
         document.getElementById('btn-reel').style.display = 'block';
         ct = setTimeout(function() {
           if(isFishing) {
             document.getElementById('bobber').classList.remove('biting');
-            document.getElementById('status-text').textContent = 'Сорвалась!';
+            document.getElementById('status-text').textContent = 'СОРВАЛАСЬ!';
             reset();
           }
         }, 2000);
@@ -127,9 +323,9 @@
       document.getElementById('bobber').classList.remove('biting');
       var w = Math.floor(currentBet * f.m);
       balance += w; saveBal();
-      document.getElementById('status-text').textContent = f.m > 0 ? f.n + '! +' + w + '₽' : f.n + '! -' + currentBet + '₽';
-      document.getElementById('status-text').style.color = f.m > 0 ? '#2ed573' : '#ff4757';
-      addHistory(f.i + ' ' + f.n + ': ' + (f.m > 0 ? '+' + w + '₽' : '-' + currentBet + '₽'));
+      document.getElementById('status-text').textContent = f.m > 0 ? f.n + '! +' + w + ' РУБ' : f.n + '! -' + currentBet + ' РУБ';
+      document.getElementById('status-text').style.color = f.m > 0 ? 'var(--text)' : 'var(--text-dim)';
+      addHistory(f.i + ' ' + f.n + ': ' + (f.m > 0 ? '+' + w + ' РУБ' : '-' + currentBet + ' РУБ'));
       document.getElementById('btn-reel').style.display = 'none';
       setTimeout(reset, 2000);
     };
